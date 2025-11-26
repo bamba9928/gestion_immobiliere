@@ -1,0 +1,33 @@
+joli et moderne respecte le dark ---{% extends "base.html" %}
+
+{% block content %}
+<div class="flex items-center justify-center h-[80vh]">
+    <div class="w-full max-w-md bg-neutral-900 border border-neutral-800 p-8 rounded-lg shadow-2xl">
+        <h2 class="text-2xl font-bold text-center mb-6 text-white">Connexion MADA IMMO</h2>
+
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="bg-red-900/50 text-red-200 p-3 rounded mb-4 text-sm text-center">
+                    Identifiants incorrects.
+                </div>
+            {% endif %}
+
+            <div class="mb-4">
+                <label class="block text-neutral-400 text-sm mb-2">Nom d'utilisateur</label>
+                <input type="text" name="username" class="w-full bg-black border border-neutral-700 text-white p-3 rounded focus:outline-none focus:border-white transition-colors" placeholder="Votre identifiant">
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-neutral-400 text-sm mb-2">Mot de passe</label>
+                <input type="password" name="password" class="w-full bg-black border border-neutral-700 text-white p-3 rounded focus:outline-none focus:border-white transition-colors" placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="w-full bg-white text-black font-bold py-3 px-4 rounded hover:bg-neutral-200 transition-colors">
+                Se connecter
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MADA IMMO | Gestion</title>
+
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
+    <script src="{% static 'js/alpine.min.js' %}" defer></script>
+</head>
+<body class="bg-neutral-950 text-neutral-200 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="border-b border-neutral-800/80 bg-gradient-to-b from-black via-neutral-950 to-black/95 backdrop-blur">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <!-- Logo minimal -->
+                <div class="h-9 w-9 rounded-2xl bg-gradient-to-br from-emerald-400 to-indigo-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <span class="text-black font-extrabold text-lg">M</span>
+                </div>
+                <div class="flex flex-col leading-tight">
+                    <span class="text-sm font-semibold tracking-tight text-white">
+                        MADA IMMO
+                    </span>
+                    <span class="text-[11px] text-neutral-500">
+                        Console d’administration
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4 text-xs sm:text-sm">
+                {% if user.is_authenticated %}
+                    <div class="hidden sm:flex flex-col items-end leading-tight">
+                        <span class="text-neutral-300 font-medium">
+                            {{ user.username }}
+                        </span>
+                        <span class="text-[11px] text-neutral-500">
+                            Connecté
+                        </span>
+                    </div>
+                    <form action="{% url 'admin:logout' %}" method="post" class="inline">
+                        {% csrf_token %}
+                        <button
+                            type="submit"
+                            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-neutral-700/80
+                                   bg-neutral-900/80 text-neutral-300 text-xs font-medium
+                                   hover:border-emerald-500 hover:text-emerald-300 hover:bg-neutral-900
+                                   focus:outline-none focus:ring-2 focus:ring-emerald-500/70 focus:ring-offset-2 focus:ring-offset-black
+                                   transition-all"
+                        >
+                            <span>Sortir</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M15 17l5-5-5-5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M20 12H9" stroke-width="1.6" stroke-linecap="round" />
+                                <path d="M11 5V4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                    </form>
+                {% else %}
+                    <a
+                        href="{% url 'admin:login' %}"
+                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-neutral-700/80
+                               bg-neutral-900/80 text-neutral-200 text-xs font-medium
+                               hover:border-emerald-500 hover:text-emerald-300 hover:bg-neutral-900
+                               focus:outline-none focus:ring-2 focus:ring-emerald-500/70 focus:ring-offset-2 focus:ring-offset-black
+                               transition-all"
+                    >
+                        <span>Connexion</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M9 17l-5-5 5-5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M4 12h11" stroke-width="1.6" stroke-linecap="round" />
+                            <path d="M13 5V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenu principal -->
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-neutral-900/80 bg-black/95">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p class="text-[11px] text-neutral-600">
+                &copy; {% now "Y" %} MADA IMMO. Plateforme administrative.
+            </p>
+            <p class="text-[10px] text-neutral-700">
+                Accès réservé aux utilisateurs autorisés.
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Thème global dark MADA IMMO */
+@layer base {
+  html {
+    @apply bg-neutral-950 text-neutral-200;
+  }
+
+  body {
+    @apply bg-neutral-950 text-neutral-200 antialiased;
+  }
+
+  a {
+    @apply text-emerald-400;
+  }
+
+  a:hover {
+    @apply text-emerald-300;
+  }
+
+  /* Titres */
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-white font-semibold;
+  }
+
+  /* Labels de formulaires */
+  label {
+    @apply text-neutral-300 text-sm;
+  }
+
+  /* Inputs par défaut (si tu oublies des classes) */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  select,
+  textarea {
+    @apply bg-black/70 border border-neutral-700/80 text-white text-sm rounded-lg
+           px-3 py-2.5 placeholder:text-neutral-500
+           focus:outline-none focus:ring-2 focus:ring-emerald-500/70 focus:border-emerald-500;
+  }
+
+  button {
+    @apply font-medium;
+  }
+}
+
+/* Composants réutilisables */
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-emerald-500 text-black text-sm font-semibold py-2.5 px-4 rounded-lg
+           hover:bg-emerald-400 active:bg-emerald-500/90
+           focus:outline-none focus:ring-2 focus:ring-emerald-500/70 focus:ring-offset-2 focus:ring-offset-neutral-950
+           transition-all;
+  }
+
+  .card-dark {
+    @apply bg-neutral-900/90 border border-neutral-800 rounded-2xl shadow-2xl shadow-black/60 backdrop-blur-xl;
+  }
+}
