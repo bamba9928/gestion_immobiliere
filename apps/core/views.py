@@ -1,16 +1,14 @@
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Count
-from .models import Bien, Bail, Loyer
 from datetime import date
 
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+from django.shortcuts import render
 
+from .models import Bail, Bien, Loyer
+
+
+@login_required
 def dashboard(request):
-    # 1. Si l'utilisateur n'est pas connecté, on affiche la page de login publique (à faire)
-    # Pour l'instant, on redirige vers le login standard si pas connecté
-    if not request.user.is_authenticated:
-        return render(request, 'registration/login.html')
-
     context = {}
 
     # 2. Logique ADMIN (Superuser ou Staff)
