@@ -5,8 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MADA IMMO | Gestion</title>
+    <meta name="theme-color" content="#000000" />
 
     <link href="{% static 'css/output.css' %}" rel="stylesheet">
+    <link rel="manifest" href="{% static 'manifest.json' %}">
     <script src="{% static 'js/alpine.min.js' %}" defer></script>
 </head>
 <body class="bg-neutral-950 text-neutral-200 font-sans antialiased min-h-screen flex flex-col">
@@ -95,6 +97,12 @@
             </p>
         </div>
     </footer>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('{% static "service-worker.js" %}').catch(() => {});
+        }
+    </script>
 
 </body>
 </html>

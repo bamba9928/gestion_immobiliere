@@ -1,0 +1,10 @@
+{
+  "name": "MADA IMMO",
+  "short_name": "MADA IMMO",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "description": "Console de gestion immobilière dark mode.",
+  "icons": []
+}

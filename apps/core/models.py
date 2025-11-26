@@ -1,7 +1,7 @@
-from django.db import models
-from django.conf import settings
-from django.utils import timezone
 from datetime import date
+
+from django.conf import settings
+from django.db import models
 
 
 class Bien(models.Model):
@@ -29,6 +29,10 @@ class Bien(models.Model):
     # Financier
     loyer_ref = models.DecimalField(max_digits=10, decimal_places=0, verbose_name="Loyer de référence (FCFA/Ar)")
     charges_ref = models.DecimalField(max_digits=10, decimal_places=0, default=0, verbose_name="Charges estimées")
+    disponible = models.BooleanField(
+        default=True,
+        help_text="Disponible immédiatement tant qu'aucun bail actif n'est en cours",
+    )
 
     # Gestion
     proprietaire = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='biens_possedes')
@@ -50,6 +54,10 @@ class Bien(models.Model):
     def est_occupe(self):
         # Retourne True si un bail actif existe
         return self.baux.filter(date_fin__gte=date.today(), est_signe=True).exists()
+
+    @property
+    def est_disponible(self):
+        return self.est_actif and self.disponible and not self.est_occupe
 
 
 class Bail(models.Model):

@@ -10,8 +10,8 @@ admin.site.index_title = "Pilotage de l'agence"
 
 @admin.register(Bien)
 class BienAdmin(admin.ModelAdmin):
-    list_display = ('titre', 'type_bien', 'ville', 'loyer_ref', 'etat_badge', 'est_actif')
-    list_filter = ('type_bien', 'ville', 'est_actif')
+    list_display = ('titre', 'type_bien', 'ville', 'loyer_ref', 'etat_badge', 'est_actif', 'disponible')
+    list_filter = ('type_bien', 'ville', 'est_actif', 'disponible')
     search_fields = ('titre', 'adresse', 'ville')
     list_per_page = 20
 
