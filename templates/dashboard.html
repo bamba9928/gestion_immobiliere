@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="space-y-8">
+<div class="max-w-6xl mx-auto px-4 py-6 space-y-8">
 
     <div class="flex justify-between items-center">
         <h1 class="text-3xl font-bold text-white tracking-tight">Tableau de bord</h1>
@@ -11,98 +11,121 @@
     </div>
 
     {% if user.is_staff %}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {# --- DASHBOARD ADMIN --- #}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-        <div class="bg-neutral-900 border border-neutral-800 p-6 rounded-lg">
-            <div class="text-neutral-500 text-sm uppercase font-semibold">Taux d'occupation</div>
-            <div class="mt-2 text-4xl font-bold text-white">{{ taux_occupation }}%</div>
-            <div class="text-xs text-neutral-400 mt-1">{{ biens_occupes }} / {{ total_biens }} biens loués</div>
-        </div>
-
-        <div class="bg-neutral-900 border border-neutral-800 p-6 rounded-lg">
-            <div class="text-neutral-500 text-sm uppercase font-semibold">Impayés (En cours)</div>
-            <div class="mt-2 text-4xl font-bold text-red-500">{{ montant_impayes }} <span class="text-lg text-neutral-500">FCFA</span></div>
-            <div class="text-xs text-neutral-400 mt-1">Nécessite une action de relance</div>
-        </div>
-
-        <div class="bg-neutral-900 border border-neutral-800 p-6 rounded-lg flex flex-col justify-center gap-3">
-            <a href="/admin/core/bien/add/" class="block w-full text-center bg-white text-black py-2 rounded font-medium hover:bg-neutral-200">
-                + Ajouter un bien
-            </a>
-            <a href="/admin/core/loyer/" class="block w-full text-center border border-neutral-700 text-neutral-300 py-2 rounded hover:bg-neutral-800">
-                Gérer les loyers
-            </a>
-        </div>
-    </div>
-
-    <div class="bg-neutral-900 border border-neutral-800 rounded-lg p-6">
-        <h3 class="text-lg font-bold text-white mb-4">Derniers mouvements</h3>
-        <p class="text-neutral-500 text-sm">Le journal d'audit sera affiché ici.</p>
-    </div>
-
-    {% else %}
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        <div class="bg-neutral-900 border border-neutral-800 p-6 rounded-lg relative overflow-hidden">
-            <div class="absolute top-0 right-0 p-4 opacity-10">
-                <svg class="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/></svg>
+            <div class="card-dark p-6">
+                <div class="text-neutral-500 text-xs uppercase font-semibold">Taux d'occupation</div>
+                <div class="mt-2 text-4xl font-bold text-white">{{ taux_occupation }}%</div>
+                <div class="text-xs text-neutral-400 mt-1">
+                    {{ biens_occupes }} / {{ total_biens }} biens loués
+                </div>
             </div>
 
-            <h2 class="text-xl font-bold text-white mb-4">Situation Loyers</h2>
+            <div class="card-dark p-6">
+                <div class="text-neutral-500 text-xs uppercase font-semibold">Impayés (En cours)</div>
+                <div class="mt-2 text-4xl font-bold text-red-500">
+                    {{ montant_impayes }} <span class="text-lg text-neutral-500">FCFA</span>
+                </div>
+                <div class="text-xs text-neutral-400 mt-1">Nécessite une action de relance</div>
+            </div>
 
-            {% if dernier_loyer %}
-                <div class="mb-4">
-                    <span class="text-sm text-neutral-400">Mois de {{ dernier_loyer.periode_debut|date:"F Y" }}</span>
-                    <div class="text-3xl font-bold text-white mt-1">{{ dernier_loyer.montant_du }} FCFA</div>
+            <div class="card-dark p-6 flex flex-col justify-center gap-3">
+                <a href="/admin/core/bien/add/" class="btn-primary w-full justify-center">
+                    + Ajouter un bien
+                </a>
+                <a href="/admin/core/loyer/"
+                   class="block w-full text-center border border-neutral-700 text-neutral-300 py-2 rounded-lg
+                          hover:bg-neutral-800 hover:text-white transition">
+                    Gérer les loyers
+                </a>
+            </div>
+        </div>
 
-                    <div class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                        {% if dernier_loyer.statut == 'PAYE' %} bg-green-900 text-green-200
-                        {% elif dernier_loyer.statut == 'RETARD' %} bg-red-900 text-red-200
-                        {% else %} bg-yellow-900 text-yellow-200 {% endif %}">
-                        {{ dernier_loyer.get_statut_display }}
-                    </div>
+        <div class="card-dark p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-white">Derniers mouvements</h3>
+                <span class="text-xs text-neutral-500">Journal d'audit</span>
+            </div>
+            <p class="text-neutral-500 text-sm">Le journal d'audit sera affiché ici.</p>
+        </div>
+
+    {% else %}
+        {# --- DASHBOARD LOCATAIRE / NON-ADMIN --- #}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <div class="card-dark p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                    <svg class="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+                        <path fill-rule="evenodd"
+                              d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                              clip-rule="evenodd"/>
+                    </svg>
                 </div>
 
-                {% if dernier_loyer.statut != 'PAYE' %}
-                <button class="w-full bg-white text-black font-bold py-3 rounded mt-2 hover:bg-neutral-200 transition">
-                    Payer maintenant (Wave/OM)
-                </button>
+                <h2 class="text-xl font-bold text-white mb-4">Situation Loyers</h2>
+
+                {% if dernier_loyer %}
+                    <div class="mb-4">
+                        <span class="text-sm text-neutral-400">
+                            Mois de {{ dernier_loyer.periode_debut|date:"F Y" }}
+                        </span>
+                        <div class="text-3xl font-bold text-white mt-1">
+                            {{ dernier_loyer.montant_du }} FCFA
+                        </div>
+
+                        <div class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            {% if dernier_loyer.statut == 'PAYE' %} bg-green-900 text-green-200
+                            {% elif dernier_loyer.statut == 'RETARD' %} bg-red-900 text-red-200
+                            {% else %} bg-yellow-900 text-yellow-200 {% endif %}">
+                            {{ dernier_loyer.get_statut_display }}
+                        </div>
+                    </div>
+
+                    {% if dernier_loyer.statut != 'PAYE' %}
+                        <button class="w-full bg-white text-black font-bold py-3 rounded mt-2 hover:bg-neutral-200 transition">
+                            Payer maintenant (Wave/OM)
+                        </button>
+                    {% else %}
+                        <a href="{% url 'download_quittance' dernier_loyer.id %}"
+                           target="_blank"
+                           class="block w-full text-center border border-neutral-700 text-neutral-300 py-2 rounded mt-2
+                                  hover:bg-neutral-800 hover:text-white transition-colors">
+                            Télécharger la quittance
+                        </a>
+                    {% endif %}
                 {% else %}
-                <button class="w-full border border-neutral-700 text-neutral-300 py-2 rounded mt-2 hover:bg-neutral-800">
-                    Télécharger la quittance
-                </button>
+                    <p class="text-neutral-500">Aucun loyer émis pour le moment.</p>
                 {% endif %}
-            {% else %}
-                <p class="text-neutral-500">Aucun loyer émis pour le moment.</p>
-            {% endif %}
-        </div>
+            </div>
 
-        <div class="bg-neutral-900 border border-neutral-800 p-6 rounded-lg">
-            <h2 class="text-xl font-bold text-white mb-4">Mon Logement</h2>
-            {% if bail %}
-                <p class="text-lg text-white">{{ bail.bien.titre }}</p>
-                <p class="text-neutral-400 text-sm mb-4">{{ bail.bien.adresse }}</p>
+            <div class="card-dark p-6">
+                <h2 class="text-xl font-bold text-white mb-4">Mon Logement</h2>
+                {% if bail %}
+                    <p class="text-lg text-white">{{ bail.bien.titre }}</p>
+                    <p class="text-neutral-400 text-sm mb-4">{{ bail.bien.adresse }}</p>
 
-                <div class="border-t border-neutral-800 pt-4 mt-4 space-y-2">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-neutral-500">Début du bail</span>
-                        <span class="text-white">{{ bail.date_debut }}</span>
+                    <div class="border-t border-neutral-800 pt-4 mt-4 space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-neutral-500">Début du bail</span>
+                            <span class="text-white">{{ bail.date_debut }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-neutral-500">Échéance</span>
+                            <span class="text-white">{{ bail.date_fin }}</span>
+                        </div>
                     </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-neutral-500">Échéance</span>
-                        <span class="text-white">{{ bail.date_fin }}</span>
-                    </div>
-                </div>
 
-                <button class="w-full mt-6 border border-neutral-700 text-neutral-300 py-2 rounded hover:bg-neutral-800 text-sm">
-                    Signaler un problème / Intervention
-                </button>
-            {% else %}
-                <p class="text-neutral-500">Aucun bail actif associé à ce compte.</p>
-            {% endif %}
+                    <button class="w-full mt-6 border border-neutral-700 text-neutral-300 py-2 rounded
+                                   hover:bg-neutral-800 text-sm">
+                        Signaler un problème / Intervention
+                    </button>
+                {% else %}
+                    <p class="text-neutral-500">Aucun bail actif associé à ce compte.</p>
+                {% endif %}
+            </div>
         </div>
-    </div>
     {% endif %}
 </div>
 {% endblock %}

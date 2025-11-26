@@ -1,33 +1,475 @@
-joli et moderne respecte le dark ---{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description" content="Connexion à la plateforme MADA IMMO - Gestion immobilière">
+    <title>Connexion - MADA IMMO</title>
 
-{% block content %}
-<div class="flex items-center justify-center h-[80vh]">
-    <div class="w-full max-w-md bg-neutral-900 border border-neutral-800 p-8 rounded-lg shadow-2xl">
-        <h2 class="text-2xl font-bold text-center mb-6 text-white">Connexion MADA IMMO</h2>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏢</text></svg>">
 
-        <form method="post" action="{% url 'login' %}">
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        :root {
+            --primary-dark: #0a0a0a;
+            --secondary-dark: #1a1a1a;
+            --glass-bg: rgba(20, 20, 20, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-gradient: linear-gradient(135deg, #ffffff 0%, #a3a3a3 100%);
+        }
+
+        * {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 10% 20%, rgba(30, 30, 30, 0.3) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(40, 40, 40, 0.2) 0%, transparent 25%),
+                linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%);
+            position: relative;
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 50%;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .particle:nth-child(1) { width: 200px; height: 200px; top: 10%; left: 5%; animation-delay: 0s; }
+        .particle:nth-child(2) { width: 150px; height: 150px; top: 70%; right: 10%; animation-delay: 5s; }
+        .particle:nth-child(3) { width: 100px; height: 100px; bottom: 10%; left: 20%; animation-delay: 10s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            33% { transform: translateY(-30px) scale(1.05); }
+            66% { transform: translateY(30px) scale(0.95); }
+        }
+
+        .login-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow:
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .login-card:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                0 30px 60px -15px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-field {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            padding: 1rem 1rem 1rem 3rem;
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-field:focus {
+            background: rgba(0, 0, 0, 0.7);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+            outline: none;
+        }
+
+        .input-field::placeholder {
+            color: rgba(163, 163, 163, 0.4);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(163, 163, 163, 0.6);
+            pointer-events: none;
+            transition: color 0.3s ease;
+        }
+
+        .input-field:focus ~ .input-icon {
+            color: #fff;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            border: none;
+            border-radius: 12px;
+            color: #0a0a0a;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 1rem 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .logo-section {
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            background: var(--accent-gradient);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .logo-text {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 2.25rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1;
+        }
+
+        .tagline {
+            color: #a3a3a3;
+            font-size: 0.875rem;
+            font-weight: 400;
+            margin-top: 0.5rem;
+        }
+
+        .error-alert {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            color: #fecaca;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+            padding: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.92) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .checkbox-label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #a3a3a3;
+            transition: color 0.3s ease;
+        }
+
+        .checkbox-label:hover {
+            color: #fff;
+        }
+
+        .checkbox-input {
+            appearance: none;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            cursor: pointer;
+            width: 1.125rem;
+            height: 1.125rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-input:checked {
+            background: var(--accent-gradient);
+            border-color: transparent;
+        }
+
+        .checkbox-input:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #0a0a0a;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(163, 163, 163, 0.6);
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #fff;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .login-card {
+                margin: 1rem;
+                padding: 2rem !important;
+            }
+
+            .logo-text {
+                font-size: 1.875rem;
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- Animated Background -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <main class="login-card w-full max-w-md p-10 fade-in">
+
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <div class="logo-icon">
+                <span class="material-symbols-rounded">apartment</span>
+            </div>
+            <h1 class="logo-text">MADA IMMO</h1>
+            <p class="tagline">Plateforme de gestion immobilière</p>
+        </div>
+
+        <!-- Error Alert -->
+        {% if form.errors %}
+        <div class="error-alert" role="alert">
+            <span class="material-symbols-rounded text-base">error</span>
+            <div>
+                <strong>Identifiants incorrects</strong>
+                <p class="text-xs mt-1 text-red-300">Veuillez vérifier vos informations et réessayer.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Login Form -->
+        <form method="post" action="{% url 'login' %}" id="loginForm" novalidate>
             {% csrf_token %}
 
-            {% if form.errors %}
-                <div class="bg-red-900/50 text-red-200 p-3 rounded mb-4 text-sm text-center">
-                    Identifiants incorrects.
-                </div>
-            {% endif %}
-
-            <div class="mb-4">
-                <label class="block text-neutral-400 text-sm mb-2">Nom d'utilisateur</label>
-                <input type="text" name="username" class="w-full bg-black border border-neutral-700 text-white p-3 rounded focus:outline-none focus:border-white transition-colors" placeholder="Votre identifiant">
+            <!-- Username Field -->
+            <div class="input-group">
+                <input
+                    type="text"
+                    name="username"
+                    id="username"
+                    required
+                    autocomplete="username"
+                    class="input-field"
+                    placeholder=" "
+                    autofocus
+                >
+                <label for="username" class="input-icon">
+                    <span class="material-symbols-rounded">person</span>
+                </label>
+                <label for="username" class="input-label">Nom d'utilisateur</label>
             </div>
 
-            <div class="mb-6">
-                <label class="block text-neutral-400 text-sm mb-2">Mot de passe</label>
-                <input type="password" name="password" class="w-full bg-black border border-neutral-700 text-white p-3 rounded focus:outline-none focus:border-white transition-colors" placeholder="••••••••">
+            <!-- Password Field -->
+            <div class="input-group">
+                <input
+                    type="password"
+                    name="password"
+                    id="password"
+                    required
+                    autocomplete="current-password"
+                    class="input-field"
+                    placeholder=" "
+                >
+                <label for="password" class="input-icon">
+                    <span class="material-symbols-rounded">lock</span>
+                </label>
+                <button type="button" class="password-toggle" id="togglePassword" aria-label="Afficher le mot de passe">
+                    <span class="material-symbols-rounded" id="eyeIcon">visibility</span>
+                </button>
+                <label for="password" class="input-label">Mot de passe</label>
             </div>
 
-            <button type="submit" class="w-full bg-white text-black font-bold py-3 px-4 rounded hover:bg-neutral-200 transition-colors">
-                Se connecter
+            <!-- Options -->
+            <div class="flex items-center justify-between mb-6 mt-4">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="remember" class="checkbox-input" checked>
+                    <span>Se souvenir de moi</span>
+                </label>
+
+                <a href="{% url 'password_reset' %}" class="text-neutral-400 text-sm hover:text-white transition-colors font-medium">
+                    Mot de passe oublié ?
+                </a>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-primary" id="submitBtn">
+                <span class="btn-text">Se connecter</span>
             </button>
         </form>
-    </div>
-</div>
-{% endblock %}
+
+        <!-- Footer -->
+        <footer class="mt-8 text-center text-neutral-500 text-xs">
+            <p>&copy; 2025 MADA IMMO. Tous droits réservés.</p>
+            <p class="mt-1">Protégé par une authentification sécurisée</p>
+        </footer>
+    </main>
+
+    <script>
+        // Toggle password visibility
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            eyeIcon.textContent = type === 'password' ? 'visibility' : 'visibility_off';
+        });
+
+        // Form validation and loading state
+        const loginForm = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = submitBtn.querySelector('.btn-text');
+
+        loginForm.addEventListener('submit', (e) => {
+            if (!loginForm.checkValidity()) {
+                e.preventDefault();
+                return;
+            }
+
+            // Add loading state
+            submitBtn.disabled = true;
+            btnText.textContent = 'Connexion en cours...';
+            submitBtn.style.opacity = '0.8';
+        });
+
+        // Focus management
+        const usernameInput = document.getElementById('username');
+        usernameInput.addEventListener('invalid', (e) => {
+            e.preventDefault();
+            usernameInput.focus();
+            usernameInput.classList.add('shake');
+            setTimeout(() => usernameInput.classList.remove('shake'), 400);
+        });
+
+        // Add shake animation for invalid fields
+        const style = document.createElement('style');
+        style.textContent = `
+            .shake {
+                animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            }
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+                20%, 40%, 60%, 80% { transform: translateX(6px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Remove error message on input
+        usernameInput.addEventListener('input', () => {
+            const errorAlert = document.querySelector('.error-alert');
+            if (errorAlert) errorAlert.style.display = 'none';
+        });
+
+        passwordInput.addEventListener('input', () => {
+            const errorAlert = document.querySelector('.error-alert');
+            if (errorAlert) errorAlert.style.display = 'none';
+        });
+
+        // Auto-focus username field
+        window.addEventListener('load', () => {
+            usernameInput.focus();
+        });
+    </script>
+</body>
+</html>

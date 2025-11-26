@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Quittance de Loyer</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 12pt;
+            color: #000; /* Noir pur pour l'impression */
+            background: #fff;
+            line-height: 1.5;
+        }
+        .header {
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .titre {
+            font-size: 24pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .ref {
+            font-size: 10pt;
+            color: #666;
+        }
+        .parties {
+            width: 100%;
+            margin-bottom: 40px;
+        }
+        .col {
+            width: 45%;
+            float: left;
+        }
+        .col.right {
+            float: right;
+            text-align: right;
+        }
+        .box {
+            background-color: #f0f0f0;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .details-table th, .details-table td {
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .details-table th {
+            background-color: #eee;
+        }
+        .total-row td {
+            font-weight: bold;
+            font-size: 14pt;
+            border-top: 2px solid #000;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            font-size: 8pt;
+            text-align: center;
+            color: #888;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        /* Utile pour nettoyer les floats */
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header clearfix">
+        <div class="col">
+            <div class="titre">Quittance</div>
+            <div class="ref">N° {{ loyer.id }}-{{ loyer.date_echeance|date:"Ymd" }}</div>
+        </div>
+        <div class="col right">
+            <strong>MADA IMMO GESTION</strong><br>
+            Point E, Dakar<br>
+            contact@mada-immo.sn
+        </div>
+    </div>
+
+    <div class="parties clearfix">
+        <div class="col">
+            <strong>BAILLEUR :</strong><br>
+            {{ loyer.bail.bien.proprietaire.get_full_name|default:loyer.bail.bien.proprietaire.username }}<br>
+            Représenté par MADA IMMO
+        </div>
+        <div class="col right">
+            <strong>LOCATAIRE :</strong><br>
+            {{ loyer.bail.locataire.get_full_name|default:loyer.bail.locataire.username }}<br>
+            {{ loyer.bail.bien.adresse }}
+        </div>
+    </div>
+
+    <p>
+        <strong>Période du :</strong> {{ loyer.periode_debut }}
+        <strong>au :</strong> {{ loyer.periode_fin }}
+    </p>
+
+    <div class="box">
+        Je soussigné, MADA IMMO, gérant du bien sus-désigné, déclare avoir reçu de la part du locataire la somme mentionnée ci-dessous au titre du loyer et des charges.
+    </div>
+
+    <table class="details-table">
+        <thead>
+            <tr>
+                <th>Désignation</th>
+                <th style="text-align: right;">Montant</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Loyer mensuel</td>
+                <td style="text-align: right;">{{ loyer.bail.montant_loyer }} FCFA</td>
+            </tr>
+            <tr>
+                <td>Provisions sur charges</td>
+                <td style="text-align: right;">{{ loyer.bail.montant_charges }} FCFA</td>
+            </tr>
+            <tr class="total-row">
+                <td>TOTAL PAYÉ</td>
+                <td style="text-align: right;">{{ loyer.montant_verse }} FCFA</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        <strong>Date de paiement :</strong> {{ loyer.date_paiement|default:"-" }}<br>
+        <strong>Mode de règlement :</strong> Mobile Money / Virement
+    </p>
+
+    <div style="margin-top: 50px;">
+        <p><em>Cette quittance annule tous les reçus qui auraient pu être donnés pour acompte versé sur la présente somme.</em></p>
+        <br>
+        <p style="text-align: right;"><strong>Pour MADA IMMO, le Gérant</strong></p>
+        </div>
+
+    <div class="footer">
+        Document généré automatiquement par MADA IMMO - {{ now }}
+    </div>
+
+</body>
+</html>
