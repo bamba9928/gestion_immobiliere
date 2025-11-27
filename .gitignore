@@ -1,0 +1,24 @@
+# Environnement virtuel
+.venv/
+venv/
+
+# PyCharm / IDE
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Base SQLite (si tu l'utilises)
+db.sqlite3
+
+# Fichiers temporaires / logs
+*.log
+*.pot
+*.pyc
+
+# Static build
+staticfiles/
+media/
