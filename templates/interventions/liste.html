@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-6">Mes Signalements</h1>
+
+    {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="p-4 rounded {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-8">
+        <h2 class="text-xl font-semibold mb-4">Nouveau Signalement</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="id_objet">Objet</label>
+                {{ form.objet }}
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="id_description">Description</label>
+                {{ form.description }}
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="id_photo_avant">Photo (optionnel)</label>
+                {{ form.photo_avant }}
+            </div>
+
+            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                Envoyer le signalement
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8">
+        <h2 class="text-xl font-semibold mb-4">Historique</h2>
+        {% if interventions %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full leading-normal">
+                    <thead>
+                        <tr>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Objet</th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inter in interventions %}
+                        <tr>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                {{ inter.created_at|date:"d/m/Y" }}
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap">{{ inter.objet }}</p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                                <span class="relative inline-block px-3 py-1 font-semibold leading-tight
+                                    {% if inter.statut == 'RESOLU' %}text-green-900{% elif inter.statut == 'EN_COURS' %}text-orange-900{% else %}text-red-900{% endif %}">
+                                    <span aria-hidden class="absolute inset-0 opacity-50 rounded-full
+                                        {% if inter.statut == 'RESOLU' %}bg-green-200{% elif inter.statut == 'EN_COURS' %}bg-orange-200{% else %}bg-red-200{% endif %}"></span>
+                                    <span class="relative">{{ inter.get_statut_display }}</span>
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600">Aucun signalement pour le moment.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

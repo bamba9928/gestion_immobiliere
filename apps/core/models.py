@@ -118,26 +118,25 @@ class Bail(models.Model):
 
     def save(self, *args, **kwargs) -> None:
         super().save(*args, **kwargs)
-        # Determine if this lease makes the property unavailable
+
         bien = self.bien
-        # If this lease is signed and still active, mark property as unavailable
-        if self.est_signe and self.date_fin >= date.today():
+        today = date.today()
+
+        # Logique de mise à jour de la disponibilité du bien
+        if self.est_signe and self.date_fin >= today:
             if bien.disponible:
                 bien.disponible = False
                 bien.save(update_fields=['disponible'])
         else:
-            # If there are no other active signed leases, mark property available
-            from apps.core.models import Bail  # local import to avoid circular import at module load
-            active_baux = Bail.objects.filter(
+            active_baux = self.__class__.objects.filter(
                 bien=bien,
                 est_signe=True,
-                date_fin__gte=date.today(),
+                date_fin__gte=today,
             ).exclude(pk=self.pk)
+
             if not active_baux.exists() and not bien.disponible:
                 bien.disponible = True
                 bien.save(update_fields=['disponible'])
-
-
 class Loyer(models.Model):
     STATUT_CHOICES = [
         ('A_PAYER', 'À payer'),
