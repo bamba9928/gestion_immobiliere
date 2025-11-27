@@ -1,24 +1,9 @@
-"""
-Models for the core application of the MADA IMMO platform.
-
-This module defines the primary entities used to represent properties
-(biens), leases (baux), rent invoices (loyers), public announcements
-(annonces) and maintenance interventions. The design follows the
-requirements laid out in the project specification, including
-properties and convenience methods for common business logic.
-"""
 from datetime import date
 from django.conf import settings
 from django.db import models
-
+from django.utils import timezone
 
 class Bien(models.Model):
-    """
-    Represents a real estate asset (apartment, house, shop or land).
-    Each property can be associated with multiple leases and
-    advertisements and may optionally include a principal photo.
-    """
-
     TYPE_CHOICES = [
         ('APPARTEMENT', 'Appartement'),
         ('MAISON', 'Maison'),
@@ -132,18 +117,6 @@ class Bail(models.Model):
         return int(self.montant_loyer + self.montant_charges)
 
     def save(self, *args, **kwargs) -> None:
-        """
-        Save the lease and update the availability of the associated property.
-
-        When a lease is created or updated, the associated property's
-        ``disponible`` flag is synchronised based on whether there are any
-        active, signed leases. A property becomes unavailable as soon as a
-        lease is signed and its end date is in the future; conversely it
-        becomes available again once all active leases have finished. This
-        logic ensures that the ``Bien.est_disponible`` property reported via
-        the API and admin accurately reflects real‐time availability without
-        requiring manual toggles by administrators or owners.
-        """
         super().save(*args, **kwargs)
         # Determine if this lease makes the property unavailable
         bien = self.bien
@@ -166,11 +139,6 @@ class Bail(models.Model):
 
 
 class Loyer(models.Model):
-    """
-    Represents a monthly rent invoice. Invoices are generated automatically
-    based on the lease information and track payment status.
-    """
-
     STATUT_CHOICES = [
         ('A_PAYER', 'À payer'),
         ('PARTIEL', 'Paiement partiel'),
@@ -218,13 +186,6 @@ class Loyer(models.Model):
 
 
 class Annonce(models.Model):
-    """
-    Public advertisement for a property. Annonce objects follow a simple
-    workflow from draft to publication. Pricing is captured separately
-    from the reference rent to allow the owner to adjust marketing
-    information without affecting existing leases.
-    """
-
     STATUT_CHOICES = [
         ('BROUILLON', 'Brouillon'),
         ('ATTENTE', 'En attente'),
@@ -248,15 +209,7 @@ class Annonce(models.Model):
 
     def __str__(self) -> str:
         return f"{self.bien} - {self.get_statut_display()}"
-
-
 class Intervention(models.Model):
-    """
-    Maintenance or repair request linked to a property. Tenants can
-    submit a request, which is then assigned to an agent. Before and
-    after photos may be attached to illustrate the intervention.
-    """
-
     STATUT_CHOICES = [
         ('NOUVEAU', 'Nouveau'),
         ('EN_COURS', 'En cours'),
@@ -291,3 +244,47 @@ class Intervention(models.Model):
 
     def __str__(self) -> str:
         return f"{self.objet} - {self.get_statut_display()}"
+class EtatDesLieux(models.Model):
+    TYPE_CHOICES = [
+        ('ENTREE', 'Entrée'),
+        ('SORTIE', 'Sortie'),
+    ]
+
+    bail = models.ForeignKey(
+        Bail,
+        on_delete=models.CASCADE,
+        related_name='etats_des_lieux'
+    )
+    type_edl = models.CharField(
+        max_length=10,
+        choices=TYPE_CHOICES
+    )
+    date_realisation = models.DateField(default=timezone.now)
+
+    # Pour rester simple au début : une grosse zone de texte
+    checklist = models.TextField(
+        blank=True,
+        help_text="Checklist ou notes détaillées de l'état des lieux."
+    )
+
+    commentaire_general = models.TextField(blank=True)
+
+    signature_bailleur = models.BooleanField(default=False)
+    signature_locataire = models.BooleanField(default=False)
+
+    pdf = models.FileField(
+        upload_to='edl/',
+        blank=True,
+        null=True,
+        help_text="PDF de l'état des lieux signé."
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "État des lieux"
+        verbose_name_plural = "États des lieux"
+        ordering = ['-date_realisation']
+
+    def __str__(self):
+        return f"EDL {self.get_type_edl_display()} - {self.bail.numero_contrat}"
