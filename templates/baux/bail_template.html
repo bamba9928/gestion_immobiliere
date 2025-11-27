@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Bail n°{{ bail.numero_contrat }}</title>
+    <style>
+        body { font-family: sans-serif; font-size: 12px; }
+        h1, h2 { text-align: center; }
+        .section { margin-bottom: 16px; }
+        .label { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>CONTRAT DE BAIL D'HABITATION</h1>
+
+    <div class="section">
+        <h2>Entre les soussignés</h2>
+        <p>
+            <span class="label>Bailleur :</span>
+            {{ bail.bien.proprietaire.get_full_name }} ({{ bail.bien.proprietaire.email }})
+        </p>
+        <p>
+            <span class="label>Locataire :</span>
+            {{ bail.locataire.get_full_name }} ({{ bail.locataire.email }})
+        </p>
+    </div>
+
+    <div class="section">
+        <h2>Bien loué</h2>
+        <p>{{ bail.bien.titre }} – {{ bail.bien.adresse }} – {{ bail.bien.ville }}</p>
+        <p>Surface : {{ bail.bien.surface }} m² – {{ bail.bien.nb_pieces }} pièce(s)</p>
+    </div>
+
+    <div class="section">
+        <h2>Conditions financières</h2>
+        <p>Loyer mensuel : {{ bail.loyer_initial }} FCFA</p>
+        <p>Charges mensuelles : {{ bail.charges_mensuelles }} FCFA</p>
+        <p>Caution : {{ bail.bien.caution }} FCFA</p>
+        <p>Mode de paiement : {{ bail.get_mode_paiement_display }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Durée</h2>
+        <p>Du {{ bail.date_debut }} au {{ bail.date_fin }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Signatures</h2>
+        <p>Fait à ............................................ le {{ bail.date_signature|default:today }}</p>
+        <p>
+            <span class="label">Le bailleur</span> : _______________________
+        </p>
+        <p>
+            <span class="label">Le locataire</span> : _______________________
+        </p>
+    </div>
+</body>
+</html>
