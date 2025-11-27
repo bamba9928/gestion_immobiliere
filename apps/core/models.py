@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import date, timedelta
+from decimal import Decimal
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -183,6 +184,34 @@ class Loyer(models.Model):
         """Return True if the payment due date has passed and the invoice isn't paid."""
         return self.statut != 'PAYE' and date.today() > self.date_echeance
 
+    def enregistrer_paiement(self, montant: Decimal) -> None:
+        """Enregistre un paiement et ajuste le statut en conséquence."""
+
+        if montant <= 0:
+            raise ValueError("Le montant du paiement doit être positif.")
+
+        nouveau_total = self.montant_verse + Decimal(montant)
+        self.montant_verse = min(nouveau_total, self.montant_du)
+
+        if self.montant_verse >= self.montant_du:
+            self.statut = 'PAYE'
+            self.date_paiement = timezone.now()
+            self.montant_verse = self.montant_du
+        else:
+            self.statut = 'PARTIEL'
+            self.date_paiement = None
+
+        self.save(update_fields=['montant_verse', 'statut', 'date_paiement'])
+
+    def actualiser_statut_retard(self) -> None:
+        """Passe le loyer en RETARD si l'échéance est dépassée et non réglé."""
+
+        if self.statut == 'PAYE':
+            return
+
+        if date.today() > self.date_echeance:
+            self.statut = 'RETARD'
+            self.save(update_fields=['statut'])
 
 class Annonce(models.Model):
     STATUT_CHOICES = [
@@ -286,4 +315,4 @@ class EtatDesLieux(models.Model):
         ordering = ['-date_realisation']
 
     def __str__(self):
-        return f"EDL {self.get_type_edl_display()} - {self.bail.numero_contrat}"
+        return f"EDL {self.get_type_edl_display()} - {self.bail_id}"

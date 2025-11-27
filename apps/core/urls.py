@@ -11,4 +11,5 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('document/quittance/<int:loyer_id>/', views.download_quittance, name='download_quittance'),
     path('interventions/', views.interventions_list, name='interventions_list'),
+    path('admin/actions/generate-rents/', views.trigger_rent_generation, name='trigger_rent_generation'),
 ]

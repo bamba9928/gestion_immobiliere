@@ -1,18 +1,21 @@
 {
-  "name": "gestion_immobiliere",
+  "name": "mada-immo",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Plateforme MADA IMMO - Styles Tailwind",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --watch",
+    "build": "npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --minify",
+    "build:prod": "NODE_ENV=production npx tailwindcss -i ./static/css/input.css -o ./static/css/output.css --minify"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "devDependencies": {
-    "autoprefixer": "^10.4.22",
-    "postcss": "^8.5.6",
+    "@tailwindcss/forms": "^0.5.9",
     "tailwindcss": "^3.4.18"
-  }
+  },
+  "keywords": [
+    "django",
+    "tailwindcss",
+    "mada-immo"
+  ],
+  "author": "MADA IMMO Team",
+  "license": "MIT"
 }

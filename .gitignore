@@ -2,23 +2,55 @@
 .venv/
 venv/
 
-# PyCharm / IDE
+# IDE
 .idea/
+.vscode/
 
 # Python
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
 
-# Base SQLite (si tu l'utilises)
-db.sqlite3
+# Bases de données
+*.sqlite3
+*.db
 
-# Fichiers temporaires / logs
-*.log
-*.pot
-*.pyc
+# Fichiers sensibles
+.env
+.env.*
+!.env.example
 
-# Static build
+# Static & media
 staticfiles/
 media/
+
+# Tailwind compilé
+static/css/output.css
+static/css/output.css.map
+
+# Node
+node_modules/
+package-lock.json
+
+# Tests
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
+
+# Backup
+*~
+*.swp
