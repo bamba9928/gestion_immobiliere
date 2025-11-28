@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Contact | MADA IMMO</title>
+    <meta name="description" content="Contactez MADA IMMO pour toute demande d'information, visite ou gestion locative.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Tailwind CSS CDN (à remplacer par ta build locale si besoin) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        .hero-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.65);
+        }
+
+        .input-base {
+            @apply w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-50">
+
+<!-- HERO -->
+<section class="hero-gradient relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl opacity-60"></div>
+    <div class="absolute bottom-0 left-0 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl opacity-60"></div>
+
+    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-24">
+        <p class="text-xs tracking-[0.25em] text-blue-200/70 uppercase mb-4">
+            MADA IMMO / Contact
+        </p>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-purple-100 mb-4">
+            Parlons de votre projet immobilier.
+        </h1>
+        <p class="text-base md:text-lg text-slate-200/80 max-w-2xl">
+            Une question sur un bien, une mise en location ou la gestion complète de votre patrimoine ?
+            Laissez-nous un message, nous reviendrons vers vous rapidement.
+        </p>
+    </div>
+</section>
+
+<!-- CONTACT SECTION -->
+<section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 md:-mt-16 pb-16 relative z-20">
+    <div class="glass-card rounded-3xl p-6 md:p-8">
+        <div class="grid grid-cols-1 lg:grid-cols-[1.2fr,1fr] gap-8 md:gap-10">
+
+            <!-- FORMULAIRE -->
+            <div>
+                <h2 class="text-xl md:text-2xl font-bold mb-2">
+                    Envoyer un message
+                </h2>
+                <p class="text-sm text-slate-400 mb-6">
+                    Renseignez le formulaire ci-dessous. Les champs marqués d’un <span class="text-red-400">*</span> sont obligatoires.
+                </p>
+
+                <!-- Remplacer action="#" par l'URL de traitement côté serveur -->
+                <form method="post" action="#" class="space-y-5">
+                    <!-- Nom -->
+                    <div>
+                        <label for="id_nom" class="block text-sm font-medium text-slate-200 mb-1.5">
+                            Nom complet <span class="text-red-400">*</span>
+                        </label>
+                        <input
+                            id="id_nom"
+                            name="nom"
+                            type="text"
+                            autocomplete="name"
+                            placeholder="Ex : Mouhamadou Bamba Dieng"
+                            class="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                        >
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="id_email" class="block text-sm font-medium text-slate-200 mb-1.5">
+                            Adresse e-mail <span class="text-red-400">*</span>
+                        </label>
+                        <input
+                            id="id_email"
+                            name="email"
+                            type="email"
+                            autocomplete="email"
+                            placeholder="vous@example.com"
+                            class="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                        >
+                    </div>
+
+                    <!-- Téléphone -->
+                    <div>
+                        <label for="id_telephone" class="block text-sm font-medium text-slate-200 mb-1.5">
+                            Téléphone (optionnel)
+                        </label>
+                        <input
+                            id="id_telephone"
+                            name="telephone"
+                            type="text"
+                            autocomplete="tel"
+                            placeholder="Ex : +221 77 000 00 00"
+                            class="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                    </div>
+
+                    <!-- Sujet -->
+                    <div>
+                        <label for="id_sujet" class="block text-sm font-medium text-slate-200 mb-1.5">
+                            Sujet <span class="text-red-400">*</span>
+                        </label>
+                        <input
+                            id="id_sujet"
+                            name="sujet"
+                            type="text"
+                            placeholder="Visite d'un appartement, mise en location, gestion complète..."
+                            class="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                        >
+                    </div>
+
+                    <!-- Message -->
+                    <div>
+                        <label for="id_message" class="block text-sm font-medium text-slate-200 mb-1.5">
+                            Message <span class="text-red-400">*</span>
+                        </label>
+                        <textarea
+                            id="id_message"
+                            name="message"
+                            rows="5"
+                            placeholder="Décrivez votre demande, vos critères ou le bien qui vous intéresse..."
+                            class="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                            required
+                        ></textarea>
+                    </div>
+
+                    <!-- Bouton -->
+                    <div class="pt-2">
+                        <button
+                            type="submit"
+                            class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-sm font-semibold text-white shadow-lg shadow-blue-900/40 transition-transform duration-200 hover:scale-[1.02]"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M3 8l7.89 3.26a2 2 0 001.5 0L21 8m-9 4v7"/>
+                            </svg>
+                            Envoyer mon message
+                        </button>
+                        <p class="mt-2 text-xs text-slate-500">
+                            En envoyant ce formulaire, vous acceptez d’être recontacté(e) par MADA IMMO.
+                        </p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- INFOS CONTACT / BLOC DROITE -->
+            <div class="space-y-6">
+                <div class="rounded-2xl bg-slate-900/60 border border-slate-700/70 p-4 md:p-5">
+                    <h3 class="text-sm font-semibold text-slate-200 mb-3">
+                        Coordonnées MADA IMMO
+                    </h3>
+                    <ul class="space-y-3 text-sm text-slate-300">
+                        <li class="flex items-start gap-3">
+                            <span class="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0L6.343 16.657A8 8 0 1117.657 16.657z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </span>
+                            <span>
+                                Dakar, Sénégal<br>
+                                <span class="text-slate-400">Quartier / adresse à préciser</span>
+                            </span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.69l1.5 4.49a1 1 0 01-.51 1.21l-2.26 1.13a11.05 11.05 0 005.52 5.52l1.13-2.26a1 1 0 011.21-.51l4.49 1.5a1 1 0 01.69.95V19a2 2 0 01-2 2h-1C9.72 21 3 14.28 3 6V5z"/>
+                                </svg>
+                            </span>
+                            <span>
+                                Service client&nbsp;: <span class="font-semibold text-slate-100">+221 78 010 36 36</span><br>
+                                <span class="text-slate-400">WhatsApp &amp; appels</span>
+                            </span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-xl bg-fuchsia-600/10 text-fuchsia-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M16 12a4 4 0 10-8 0 4 4 0 008 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 2a10 10 0 00-9.14 5.69A1 1 0 003 9h18a1 1 0 00.88-1.45A10 10 0 0012 2z"/>
+                                </svg>
+                            </span>
+                            <span>
+                                contact@mada-immo.com<br>
+                                <span class="text-slate-400">Réponse sous 24 à 48h ouvrées</span>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4 md:p-5">
+                    <h3 class="text-sm font-semibold text-slate-200 mb-3">
+                        Vous suivez déjà une annonce ?
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-3">
+                        Si votre message concerne une annonce en particulier, merci de préciser le
+                        <span class="font-semibold text-slate-200">titre du bien</span> ou sa
+                        <span class="font-semibold text-slate-200">référence</span> dans le champ “Sujet”
+                        ou dans votre message.
+                    </p>
+                    <div class="text-xs text-slate-500">
+                        Exemple&nbsp;: <span class="italic text-slate-300">“Visite T3 Centre Ville - Résidence MADA”</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

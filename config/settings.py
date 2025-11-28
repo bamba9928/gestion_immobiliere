@@ -37,11 +37,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
+    'widget_tweaks',
     # Third party
     'rest_framework',
     # Local Apps
     'apps.core',
     'apps.api',
+    "tailwind",
+    "theme",
 ]
 
 MIDDLEWARE = [
@@ -129,3 +133,4 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
 
+TAILWIND_APP_NAME = "theme"

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}À propos – MADA IMMO{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] px-4 py-10 bg-neutral-950 text-neutral-100">
+    <div class="max-w-5xl mx-auto space-y-10">
+
+        <!-- Hero -->
+        <header class="space-y-4">
+            <p class="text-xs uppercase tracking-[0.25em] text-neutral-500">
+                Mada Immo
+            </p>
+            <h1 class="text-3xl md:text-4xl font-semibold">
+                À propos de la plateforme de gestion immobilière MADA IMMO
+            </h1>
+            <p class="text-neutral-400 max-w-2xl text-sm md:text-base">
+                MADA IMMO est une plateforme de gestion immobilière en mode sombre,
+                pensée pour centraliser les biens, les baux, les loyers et les échanges
+                entre administrateurs, bailleurs, locataires et agents, dans une seule
+                interface claire et maîtrisée.
+            </p>
+        </header>
+
+        <!-- Vision + Pour qui -->
+        <section class="grid gap-8 md:grid-cols-2">
+            <div class="space-y-4">
+                <h2 class="text-lg font-semibold">
+                    Notre vision
+                </h2>
+                <p class="text-sm text-neutral-400">
+                    Offrir un tableau de bord unique où l’administrateur contrôle toute
+                    l’activité, tandis que chaque acteur voit uniquement ce dont il a
+                    besoin pour travailler efficacement, sans distraction inutile.
+                </p>
+                <ul class="mt-4 space-y-2 text-sm text-neutral-300">
+                    <li class="flex gap-2">
+                        <span class="mt-1 h-1.5 w-1.5 rounded-full bg-neutral-200"></span>
+                        Centraliser les biens, baux et locataires dans une seule base.
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="mt-1 h-1.5 w-1.5 rounded-full bg-neutral-200"></span>
+                        Suivre les loyers (payés / en attente / en retard) en temps réel.
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="mt-1 h-1.5 w-1.5 rounded-full bg-neutral-200"></span>
+                        Gérer les incidents et demandes des locataires.
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="mt-1 h-1.5 w-1.5 rounded-full bg-neutral-200"></span>
+                        Préparer une API REST pour une future application mobile.
+                    </li>
+                </ul>
+            </div>
+
+            <div class="space-y-4">
+                <h2 class="text-lg font-semibold">
+                    Pour qui ?
+                </h2>
+                <div class="space-y-3 text-sm text-neutral-300">
+                    <div>
+                        <p class="font-medium text-neutral-100">Administrateur</p>
+                        <p class="text-neutral-400 text-xs mt-1">
+                            Accès complet à toutes les données, configuration des
+                            référentiels, validation des annonces, exports et suivi global
+                            du parc immobilier.
+                        </p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-neutral-100">Bailleur</p>
+                        <p class="text-neutral-400 text-xs mt-1">
+                            Visualise ses biens, ses contrats de location, propose des
+                            annonces (soumis à validation) et suit les loyers associés.
+                        </p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-neutral-100">Locataire</p>
+                        <p class="text-neutral-400 text-xs mt-1">
+                            Accède à son bail, consulte son historique de paiements,
+                            télécharge ses quittances et peut signaler un problème.
+                        </p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-neutral-100">Agent</p>
+                        <p class="text-neutral-400 text-xs mt-1">
+                            Gère les tâches opérationnelles en lecture/écriture (visites,
+                            suivis, mises à jour d’état), sans accès aux paramètres sensibles.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comment ça fonctionne -->
+        <section class="space-y-4">
+            <h2 class="text-lg font-semibold">
+                Comment fonctionne MADA IMMO ?
+            </h2>
+            <div class="grid gap-4 md:grid-cols-3 text-sm">
+                <div class="border border-neutral-800 rounded-xl p-4 bg-neutral-900/40">
+                    <p class="text-xs uppercase tracking-[0.2em] text-neutral-500">
+                        Étape 1
+                    </p>
+                    <p class="mt-2 font-medium">
+                        L’administrateur paramètre
+                    </p>
+                    <p class="mt-2 text-neutral-400 text-xs">
+                        Création des profils utilisateurs, enregistrement des biens,
+                        définition des loyers, charges et référentiels (types de biens,
+                        statuts, modes de paiement, etc.).
+                    </p>
+                </div>
+                <div class="border border-neutral-800 rounded-xl p-4 bg-neutral-900/40">
+                    <p class="text-xs uppercase tracking-[0.2em] text-neutral-500">
+                        Étape 2
+                    </p>
+                    <p class="mt-2 font-medium">
+                        Les bailleurs et agents opèrent
+                    </p>
+                    <p class="mt-2 text-neutral-400 text-xs">
+                        Propositions d’annonces, suivi des baux, mise à jour des entrées
+                        et sorties des locataires, remontée des incidents.
+                    </p>
+                </div>
+                <div class="border border-neutral-800 rounded-xl p-4 bg-neutral-900/40">
+                    <p class="text-xs uppercase tracking-[0.2em] text-neutral-500">
+                        Étape 3
+                    </p>
+                    <p class="mt-2 font-medium">
+                        Les locataires interagissent
+                    </p>
+                    <p class="mt-2 text-neutral-400 text-xs">
+                        Consultation de leur bail, paiements en ligne (à terme),
+                        téléchargement des quittances et suivi de leurs demandes.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dark mode & philosophie -->
+        <section class="space-y-4">
+            <h2 class="text-lg font-semibold">
+                Pourquoi uniquement en mode sombre ?
+            </h2>
+            <p class="text-sm text-neutral-400 max-w-3xl">
+                Le choix du mode sombre n’est pas seulement esthétique. Il permet une
+                interface plus reposante, une meilleure lisibilité dans des environnements
+                à faible luminosité et une identité graphique forte : noir, blanc et
+                contrastes nets, sans couleurs superflues.
+            </p>
+        </section>
+
+        <!-- Contact / évolution -->
+        <section class="border-t border-neutral-900 pt-6 mt-4">
+            <h2 class="text-lg font-semibold">
+                Évolution de la plateforme
+            </h2>
+            <p class="text-sm text-neutral-400 mt-2 max-w-3xl">
+                MADA IMMO est pensée comme une plateforme en évolution continue :
+                intégration progressive de l’API REST, version mobile dédiée, automatisation
+                des rappels de paiement, export des données et reporting avancé pour
+                l’administrateur.
+            </p>
+            <p class="text-xs text-neutral-500 mt-4">
+                Pour toute question ou suggestion :
+                <span class="font-mono text-neutral-300">contact@mada-immo.sn</span>
+                <!-- Remplace cette adresse par tes vraies coordonnées -->
+            </p>
+        </section>
+
+    </div>
+</div>
+{% endblock %}

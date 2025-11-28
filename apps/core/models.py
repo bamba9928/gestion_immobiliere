@@ -49,7 +49,7 @@ class Bien(models.Model):
     photo_principale = models.ImageField(upload_to='biens/', blank=True, null=True)
     est_actif = models.BooleanField(
         default=True,
-        help_text="Décochez si le bien est vendu ou retiré de la gestion",
+        help_text="Décochez si le biens est vendu ou retiré de la gestion",
     )
 
     # Dates
@@ -123,7 +123,7 @@ class Bail(models.Model):
         bien = self.bien
         today = date.today()
 
-        # Logique de mise à jour de la disponibilité du bien
+        # Logique de mise à jour de la disponibilité du biens
         if self.est_signe and self.date_fin >= today:
             if bien.disponible:
                 bien.disponible = False
@@ -316,3 +316,17 @@ class EtatDesLieux(models.Model):
 
     def __str__(self):
         return f"EDL {self.get_type_edl_display()} - {self.bail_id}"
+class ContactMessage(models.Model):
+    nom = models.CharField(max_length=150)
+    email = models.EmailField()
+    telephone = models.CharField(max_length=30, blank=True)
+    message = models.TextField()
+    annonce = models.ForeignKey(
+        Annonce,
+        on_delete=models.CASCADE,
+        related_name="messages",
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+

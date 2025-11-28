@@ -4,6 +4,6 @@ from .views import MobileBienListView, BienDetailView, InterventionListCreateVie
 
 urlpatterns = [
     path('mobile/biens/', MobileBienListView.as_view(), name='api-mobile-biens'),
-    path('mobile/biens/<int:pk>/', BienDetailView.as_view(), name='api-mobile-bien-detail'),
+    path('mobile/biens/<int:pk>/', BienDetailView.as_view(), name='api-mobile-biens-detail'),
     path('mobile/interventions/', InterventionListCreateView.as_view(), name='api-mobile-interventions'),
 ]

@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+    <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+            <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 font-semibold">Support & maintenance</p>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Interventions</h1>
+            <p class="text-neutral-400 text-sm mt-1">Suivez vos demandes et tenez vos occupants informés.</p>
+        </div>
+
+        <span class="px-3 py-1 text-xs border border-neutral-800 rounded-full text-neutral-400 bg-neutral-900/70">
+            {{ user_role }}
+        </span>
+    </div>
+
+    {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+                <div class="p-4 rounded-lg border text-sm
+                            {% if message.tags == 'error' %}
+                                bg-red-900/20 border-red-900 text-red-200
+                            {% else %}
+                                bg-emerald-900/20 border-emerald-900 text-emerald-200
+                            {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if bail %}
+        <div class="grid md:grid-cols-3 gap-4">
+            <div class="md:col-span-2 card-dark p-6 border border-neutral-800/60">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-xs uppercase tracking-[0.3em] text-neutral-500 font-semibold">Logement</p>
+                        <h2 class="text-xl font-bold text-white mt-1">{{ bail.bien.titre }}</h2>
+                        <p class="text-neutral-400 text-sm">{{ bail.bien.adresse }}</p>
+                    </div>
+                    <div class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 text-xs font-semibold border border-emerald-700/40">
+                        Bail actif
+                    </div>
+                </div>
+
+                <div class="grid sm:grid-cols-3 gap-4 mt-6 text-sm">
+                    <div class="bg-neutral-900/60 border border-neutral-800 rounded-lg p-4">
+                        <p class="text-neutral-500 text-xs">Date de début</p>
+                        <p class="text-white font-semibold">{{ bail.date_debut }}</p>
+                    </div>
+                    <div class="bg-neutral-900/60 border border-neutral-800 rounded-lg p-4">
+                        <p class="text-neutral-500 text-xs">Échéance</p>
+                        <p class="text-white font-semibold">{{ bail.date_fin }}</p>
+                    </div>
+                    <div class="bg-neutral-900/60 border border-neutral-800 rounded-lg p-4">
+                        <p class="text-neutral-500 text-xs">Loyer + charges</p>
+                        <p class="text-white font-semibold">{{ bail.montant_loyer|add:bail.montant_charges }} FCFA</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-dark p-6 border border-neutral-800/60 space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-lg bg-emerald-500/15 text-emerald-300 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M3 4h18v4H3z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8 4l1-2h6l1 2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M5 8h14v12H5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-neutral-500 uppercase tracking-[0.2em]">Temps de réponse</p>
+                        <p class="text-white font-semibold">Sous 48h ouvrées</p>
+                    </div>
+                </div>
+
+                <p class="text-sm text-neutral-400">Ajoutez un maximum de détails (pièce concernée, symptômes, photo) afin d'accélérer le diagnostic par nos équipes techniques.</p>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if user_role == 'LOCATAIRE' and bail %}
+        <div class="card-dark border border-neutral-800/60 p-6 space-y-6">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 font-semibold">Nouvelle intervention</p>
+                    <h2 class="text-xl font-bold text-white">Signaler un incident</h2>
+                </div>
+                <span class="text-xs px-3 py-1 rounded-full bg-neutral-900 text-neutral-400 border border-neutral-800">Sous garantie location</span>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" class="space-y-4">
+                {% csrf_token %}
+
+                <div class="space-y-2">
+                    <label class="text-sm text-neutral-300 font-semibold" for="id_objet">Objet</label>
+                    {{ form.objet }}
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm text-neutral-300 font-semibold" for="id_description">Description</label>
+                    {{ form.description }}
+                    <p class="text-xs text-neutral-500">Précisez la pièce, la fréquence et tout élément utile pour l'équipe technique.</p>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm text-neutral-300 font-semibold" for="id_photo_avant">Photo (optionnel)</label>
+                    {{ form.photo_avant }}
+                    <p class="text-xs text-neutral-500">Formats acceptés : JPG, PNG. Taille max 5 Mo.</p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button type="submit" class="btn-primary inline-flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M5 12h14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M12 5l7 7-7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Envoyer le signalement
+                    </button>
+                    <span class="text-xs text-neutral-500">Une confirmation vous sera envoyée par email.</span>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+
+    <div class="card-dark border border-neutral-800/60 p-6">
+        <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+            <div>
+                <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 font-semibold">Historique</p>
+                <h2 class="text-xl font-bold text-white">Vos interventions</h2>
+            </div>
+            <span class="text-xs px-3 py-1 rounded-full bg-neutral-900 text-neutral-400 border border-neutral-800">{{ interventions|length }} au total</span>
+        </div>
+
+        {% if interventions %}
+            <div class="overflow-hidden border border-neutral-800 rounded-lg">
+                <table class="min-w-full divide-y divide-neutral-800">
+                    <thead class="bg-neutral-900/70 text-neutral-400 text-xs uppercase tracking-wider">
+                        <tr>
+                            <th class="px-4 py-3 text-left">Date</th>
+                            <th class="px-4 py-3 text-left">Objet</th>
+                            <th class="px-4 py-3 text-left">Statut</th>
+                            <th class="px-4 py-3 text-left">Bien</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-neutral-900">
+                        {% for inter in interventions %}
+                            <tr class="hover:bg-neutral-900/50 transition-colors">
+                                <td class="px-4 py-3 text-sm text-neutral-300">{{ inter.created_at|date:"d/m/Y" }}</td>
+                                <td class="px-4 py-3 text-sm text-white font-semibold">{{ inter.objet }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border
+                                        {% if inter.statut == 'RESOLU' %}
+                                            bg-emerald-500/10 text-emerald-200 border-emerald-700/40
+                                        {% elif inter.statut == 'EN_COURS' %}
+                                            bg-amber-500/10 text-amber-200 border-amber-700/40
+                                        {% else %}
+                                            bg-red-500/10 text-red-200 border-red-700/40
+                                        {% endif %}">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                                        {{ inter.get_statut_display }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-neutral-400">{{ inter.bien.titre }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="flex items-center gap-3 text-neutral-400 text-sm bg-neutral-900/60 border border-dashed border-neutral-800 rounded-lg p-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 8v4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 16h.01" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="12" cy="12" r="9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Aucun signalement pour le moment.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

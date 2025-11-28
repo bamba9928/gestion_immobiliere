@@ -24,7 +24,7 @@ class InterventionCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        # On lie automatiquement le locataire et son bien actuel
+        # On lie automatiquement le locataire et son biens actuel
         user = self.request.user
         # On suppose ici une logique simple où le user a un bail actif
         bail = user.baux.filter(est_signe=True).first()
@@ -42,7 +42,7 @@ class InterventionListCreateView(generics.ListCreateAPIView):
         return Intervention.objects.filter(locataire=self.request.user).order_by('-created_at')
 
     def perform_create(self, serializer):
-        # Associe automatiquement le locataire et son bien
+        # Associe automatiquement le locataire et son biens
         user = self.request.user
         # On cherche le bail actif
         bail = user.baux.filter(est_signe=True).first()

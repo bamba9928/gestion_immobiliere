@@ -1,11 +1,9 @@
 import logging
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
-
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
-
 from apps.core.models import Bail, Loyer
 
 logger = logging.getLogger(__name__)

@@ -33,8 +33,8 @@ class BienSerializer(serializers.ModelSerializer):
 class InterventionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
-        fields = ['id', 'bien', 'objet', 'description', 'photo_avant', 'statut', 'created_at']
-        read_only_fields = ['statut', 'bien'] # Le locataire ne décide pas du statut
+        fields = ['id', 'biens', 'objet', 'description', 'photo_avant', 'statut', 'created_at']
+        read_only_fields = ['statut', 'biens'] # Le locataire ne décide pas du statut
 
         class InterventionSerializer(serializers.ModelSerializer):
             statut_display = serializers.CharField(source='get_statut_display', read_only=True)

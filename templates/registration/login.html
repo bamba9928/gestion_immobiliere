@@ -1,152 +1,98 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="fr" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <meta name="description" content="Connexion à la plateforme MADA IMMO - Gestion immobilière">
     <title>Connexion - MADA IMMO</title>
-
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏢</text></svg>">
 
-    <!-- Fonts & Icons -->
+    <!-- Fonts optimisés -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS compilé -->
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
 
     <style>
+        /* Variables CSS custom pour cette page */
         :root {
-            --primary-dark: #0a0a0a;
-            --secondary-dark: #1a1a1a;
-            --glass-bg: rgba(20, 20, 20, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --accent-gradient: linear-gradient(135deg, #ffffff 0%, #a3a3a3 100%);
+            --particle-1: rgba(255, 255, 255, 0.02);
+            --particle-2: rgba(255, 255, 255, 0.015);
         }
 
-        * {
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            height: 100%;
-            overflow: hidden;
-        }
-
-        body {
-            background:
-                radial-gradient(circle at 10% 20%, rgba(30, 30, 30, 0.3) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(40, 40, 40, 0.2) 0%, transparent 25%),
-                linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%);
-            position: relative;
-        }
-
-        /* Animated background particles */
-        .particles {
-            position: absolute;
-            inset: 0;
-            z-index: -1;
-            overflow: hidden;
+        /* Animation des particules de fond */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+            33% { transform: translateY(-30px) scale(1.05); opacity: 0.9; }
+            66% { transform: translateY(30px) scale(0.95); opacity: 0.5; }
         }
 
         .particle {
             position: absolute;
-            background: rgba(255, 255, 255, 0.02);
+            background: var(--particle-1);
             border-radius: 50%;
             animation: float 20s infinite ease-in-out;
-        }
-
-        .particle:nth-child(1) { width: 200px; height: 200px; top: 10%; left: 5%; animation-delay: 0s; }
-        .particle:nth-child(2) { width: 150px; height: 150px; top: 70%; right: 10%; animation-delay: 5s; }
-        .particle:nth-child(3) { width: 100px; height: 100px; bottom: 10%; left: 20%; animation-delay: 10s; }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0) scale(1); }
-            33% { transform: translateY(-30px) scale(1.05); }
-            66% { transform: translateY(30px) scale(0.95); }
-        }
-
-        .login-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px) saturate(180%);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            box-shadow:
-                0 25px 50px -12px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .login-card:hover {
-            transform: translateY(-4px);
-            box-shadow:
-                0 30px 60px -15px rgba(0, 0, 0, 0.6),
-                inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
-        }
-
-        .input-group {
-            position: relative;
-            margin-bottom: 1.5rem;
-        }
-
-        .input-field {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 12px;
-            color: #fff;
-            font-size: 0.95rem;
-            padding: 1rem 1rem 1rem 3rem;
-            width: 100%;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .input-field:focus {
-            background: rgba(0, 0, 0, 0.7);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
-            outline: none;
-        }
-
-        .input-field::placeholder {
-            color: rgba(163, 163, 163, 0.4);
-        }
-
-        .input-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: rgba(163, 163, 163, 0.6);
             pointer-events: none;
-            transition: color 0.3s ease;
         }
 
-        .input-field:focus ~ .input-icon {
-            color: #fff;
+        .particle:nth-child(1) {
+            width: 200px; height: 200px;
+            top: 10%; left: 5%;
+            animation-delay: 0s;
         }
 
-        .btn-primary {
-            background: var(--accent-gradient);
-            border: none;
-            border-radius: 12px;
-            color: #0a0a0a;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 600;
-            padding: 1rem 2rem;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 100%;
-            letter-spacing: 0.5px;
+        .particle:nth-child(2) {
+            width: 150px; height: 150px;
+            top: 70%; right: 10%;
+            animation-delay: 5s;
+            background: var(--particle-2);
         }
 
-        .btn-primary::before {
+        .particle:nth-child(3) {
+            width: 100px; height: 100px;
+            bottom: 10%; left: 20%;
+            animation-delay: 10s;
+        }
+
+        /* Animation d'entrée */
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.92) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .fade-in-scale {
+            animation: fadeInScale 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Animation shake pour erreurs */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+            20%, 40%, 60%, 80% { transform: translateX(6px); }
+        }
+
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* Effet de brillance sur le bouton */
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .btn-shimmer::before {
             content: '';
             position: absolute;
             top: 0;
@@ -154,255 +100,185 @@
             width: 100%;
             height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            transition: left 0.6s ease;
+            animation: shimmer 2s infinite;
         }
 
-        .btn-primary:hover::before {
-            left: 100%;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(255, 255, 255, 0.25);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .logo-section {
-            margin-bottom: 2.5rem;
-            text-align: center;
-        }
-
-        .logo-icon {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 1rem;
-            background: var(--accent-gradient);
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-        }
-
-        .logo-text {
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-size: 2.25rem;
-            font-weight: 700;
-            letter-spacing: -0.03em;
-            line-height: 1;
-        }
-
-        .tagline {
-            color: #a3a3a3;
-            font-size: 0.875rem;
-            font-weight: 400;
-            margin-top: 0.5rem;
-        }
-
-        .error-alert {
-            background: rgba(239, 68, 68, 0.12);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 12px;
-            color: #fecaca;
-            font-size: 0.875rem;
-            margin-bottom: 1.5rem;
-            padding: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.92) translateY(20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        .checkbox-label {
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            color: #a3a3a3;
-            transition: color 0.3s ease;
-        }
-
-        .checkbox-label:hover {
-            color: #fff;
-        }
-
-        .checkbox-input {
-            appearance: none;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 6px;
-            cursor: pointer;
-            width: 1.125rem;
-            height: 1.125rem;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .checkbox-input:checked {
-            background: var(--accent-gradient);
-            border-color: transparent;
-        }
-
-        .checkbox-input:checked::after {
-            content: '✓';
+        /* Labels flottants */
+        .input-floating-label {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #0a0a0a;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-
-        .password-toggle {
-            position: absolute;
-            right: 1rem;
+            left: 3rem;
             top: 50%;
             transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: rgba(163, 163, 163, 0.6);
-            cursor: pointer;
-            padding: 0.25rem;
-            transition: color 0.3s ease;
+            color: rgb(115 115 115);
+            font-size: 0.95rem;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .password-toggle:hover {
-            color: #fff;
-        }
-
-        /* Responsive */
-        @media (max-width: 640px) {
-            .login-card {
-                margin: 1rem;
-                padding: 2rem !important;
-            }
-
-            .logo-text {
-                font-size: 1.875rem;
-            }
+        .input-field:focus ~ .input-floating-label,
+        .input-field:not(:placeholder-shown) ~ .input-floating-label {
+            top: -0.5rem;
+            left: 0.75rem;
+            font-size: 0.75rem;
+            color: rgb(255 255 255);
+            background: rgb(10 10 10);
+            padding: 0 0.5rem;
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="h-full flex items-center justify-center p-4 overflow-hidden">
 
-    <!-- Animated Background -->
-    <div class="particles">
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
+    <!-- Background avec gradient et particules -->
+    <div class="fixed inset-0 -z-10">
+        <!-- Gradient de fond -->
+        <div class="absolute inset-0 bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950"></div>
+
+        <!-- Radial gradients subtils -->
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(30,30,30,0.3)_0%,transparent_20%)]"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_90%_80%,rgba(40,40,40,0.2)_0%,transparent_25%)]"></div>
+
+        <!-- Particules animées -->
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
     </div>
 
-    <main class="login-card w-full max-w-md p-10 fade-in">
+    <!-- Card de connexion -->
+    <main class="w-full max-w-md fade-in-scale">
+        <div class="glass card-dark card-hover p-10">
 
-        <!-- Logo Section -->
-        <div class="logo-section">
-            <div class="logo-icon">
-                <span class="material-symbols-rounded">apartment</span>
+            <!-- Logo et titre -->
+            <div class="text-center mb-8">
+                <!-- Icône logo -->
+                <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-white to-neutral-400 rounded-2xl flex items-center justify-center">
+                    <svg class="w-8 h-8 text-neutral-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                </div>
+
+                <!-- Titre avec gradient -->
+                <h1 class="text-4xl font-bold mb-2">
+                    <span class="text-gradient">MADA IMMO</span>
+                </h1>
+                <p class="text-neutral-400 text-sm">Plateforme de gestion immobilière</p>
             </div>
-            <h1 class="logo-text">MADA IMMO</h1>
-            <p class="tagline">Plateforme de gestion immobilière</p>
-        </div>
 
-        <!-- Error Alert -->
-        {% if form.errors %}
-        <div class="error-alert" role="alert">
-            <span class="material-symbols-rounded text-base">error</span>
-            <div>
-                <strong>Identifiants incorrects</strong>
-                <p class="text-xs mt-1 text-red-300">Veuillez vérifier vos informations et réessayer.</p>
+            <!-- Message d'erreur -->
+            {% if form.errors %}
+            <div class="alert alert-error mb-6 animate-slide-up">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div>
+                        <strong class="font-semibold">Identifiants incorrects</strong>
+                        <p class="text-xs mt-1 opacity-90">Veuillez vérifier vos informations et réessayer.</p>
+                    </div>
+                </div>
             </div>
-        </div>
-        {% endif %}
+            {% endif %}
 
-        <!-- Login Form -->
-        <form method="post" action="{% url 'login' %}" id="loginForm" novalidate>
-            {% csrf_token %}
+            <!-- Formulaire de connexion -->
+            <form method="post" action="{% url 'login' %}" id="loginForm" novalidate class="space-y-5">
+                {% csrf_token %}
 
-            <!-- Username Field -->
-            <div class="input-group">
-                <input
-                    type="text"
-                    name="username"
-                    id="username"
-                    required
-                    autocomplete="username"
-                    class="input-field"
-                    placeholder=" "
-                    autofocus
+                <!-- Champ Username -->
+                <div class="relative">
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </div>
+                    <input
+                        type="text"
+                        name="username"
+                        id="username"
+                        required
+                        autocomplete="username"
+                        placeholder=" "
+                        autofocus
+                        class="input-field w-full pl-10 pr-4 py-3 bg-black/50 border border-neutral-700/80 rounded-xl text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 focus:bg-black/70 transition-all"
+                    >
+                    <label for="username" class="input-floating-label">Nom d'utilisateur</label>
+                </div>
+
+                <!-- Champ Password -->
+                <div class="relative">
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                    </div>
+                    <input
+                        type="password"
+                        name="password"
+                        id="password"
+                        required
+                        autocomplete="current-password"
+                        placeholder=" "
+                        class="input-field w-full pl-10 pr-12 py-3 bg-black/50 border border-neutral-700/80 rounded-xl text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 focus:bg-black/70 transition-all"
+                    >
+                    <button
+                        type="button"
+                        id="togglePassword"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors p-1"
+                        aria-label="Afficher le mot de passe"
+                    >
+                        <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </button>
+                    <label for="password" class="input-floating-label">Mot de passe</label>
+                </div>
+
+                <!-- Options : Remember me + Forgot password -->
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center gap-2 cursor-pointer text-neutral-400 hover:text-white transition-colors">
+                        <input
+                            type="checkbox"
+                            name="remember"
+                            checked
+                            class="w-4 h-4 rounded border-neutral-700 bg-black/40 text-white focus:ring-2 focus:ring-white/20 focus:ring-offset-0 transition-all"
+                        >
+                        <span>Se souvenir de moi</span>
+                    </label>
+
+                    <a href="{% url 'password_reset' %}" class="text-neutral-400 hover:text-white transition-colors font-medium">
+                        Mot de passe oublié ?
+                    </a>
+                </div>
+
+                <!-- Bouton de soumission -->
+                <button
+                    type="submit"
+                    id="submitBtn"
+                    class="relative w-full py-3 px-4 bg-gradient-to-r from-white to-neutral-300 text-neutral-950 font-semibold text-sm rounded-xl overflow-hidden transition-all hover:shadow-lg hover:shadow-white/25 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-neutral-950"
                 >
-                <label for="username" class="input-icon">
-                    <span class="material-symbols-rounded">person</span>
-                </label>
-                <label for="username" class="input-label">Nom d'utilisateur</label>
-            </div>
-
-            <!-- Password Field -->
-            <div class="input-group">
-                <input
-                    type="password"
-                    name="password"
-                    id="password"
-                    required
-                    autocomplete="current-password"
-                    class="input-field"
-                    placeholder=" "
-                >
-                <label for="password" class="input-icon">
-                    <span class="material-symbols-rounded">lock</span>
-                </label>
-                <button type="button" class="password-toggle" id="togglePassword" aria-label="Afficher le mot de passe">
-                    <span class="material-symbols-rounded" id="eyeIcon">visibility</span>
+                    <span class="relative z-10" id="btnText">Se connecter</span>
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 </button>
-                <label for="password" class="input-label">Mot de passe</label>
-            </div>
+            </form>
 
-            <!-- Options -->
-            <div class="flex items-center justify-between mb-6 mt-4">
-                <label class="checkbox-label">
-                    <input type="checkbox" name="remember" class="checkbox-input" checked>
-                    <span>Se souvenir de moi</span>
-                </label>
+            <!-- Séparateur -->
+            <div class="divider my-6"></div>
 
-                <a href="{% url 'password_reset' %}" class="text-neutral-400 text-sm hover:text-white transition-colors font-medium">
-                    Mot de passe oublié ?
-                </a>
-            </div>
-
-            <!-- Submit Button -->
-            <button type="submit" class="btn-primary" id="submitBtn">
-                <span class="btn-text">Se connecter</span>
-            </button>
-        </form>
-
-        <!-- Footer -->
-        <footer class="mt-8 text-center text-neutral-500 text-xs">
-            <p>&copy; 2025 MADA IMMO. Tous droits réservés.</p>
-            <p class="mt-1">Protégé par une authentification sécurisée</p>
-        </footer>
+            <!-- Footer -->
+            <footer class="text-center text-neutral-500 text-xs space-y-1">
+                <p>&copy; 2025 MADA IMMO. Tous droits réservés.</p>
+                <p class="flex items-center justify-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    Protégé par une authentification sécurisée
+                </p>
+            </footer>
+        </div>
     </main>
 
+    <!-- Scripts -->
     <script>
         // Toggle password visibility
         const togglePassword = document.getElementById('togglePassword');
@@ -410,65 +286,78 @@
         const eyeIcon = document.getElementById('eyeIcon');
 
         togglePassword.addEventListener('click', () => {
-            const type = passwordInput.type === 'password' ? 'text' : 'password';
-            passwordInput.type = type;
-            eyeIcon.textContent = type === 'password' ? 'visibility' : 'visibility_off';
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+
+            // Change l'icône
+            eyeIcon.innerHTML = isPassword
+                ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>'
+                : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
         });
 
         // Form validation and loading state
         const loginForm = document.getElementById('loginForm');
         const submitBtn = document.getElementById('submitBtn');
-        const btnText = submitBtn.querySelector('.btn-text');
+        const btnText = document.getElementById('btnText');
 
         loginForm.addEventListener('submit', (e) => {
-            if (!loginForm.checkValidity()) {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!username || !password) {
                 e.preventDefault();
+
+                if (!username) {
+                    document.getElementById('username').classList.add('shake');
+                    setTimeout(() => document.getElementById('username').classList.remove('shake'), 400);
+                }
+                if (!password) {
+                    document.getElementById('password').classList.add('shake');
+                    setTimeout(() => document.getElementById('password').classList.remove('shake'), 400);
+                }
                 return;
             }
 
-            // Add loading state
+            // Loading state
             submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
             btnText.textContent = 'Connexion en cours...';
-            submitBtn.style.opacity = '0.8';
-        });
 
-        // Focus management
-        const usernameInput = document.getElementById('username');
-        usernameInput.addEventListener('invalid', (e) => {
-            e.preventDefault();
-            usernameInput.focus();
-            usernameInput.classList.add('shake');
-            setTimeout(() => usernameInput.classList.remove('shake'), 400);
+            // Ajouter un spinner
+            btnText.innerHTML = `
+                <span class="flex items-center justify-center gap-2">
+                    <span class="spinner"></span>
+                    Connexion en cours...
+                </span>
+            `;
         });
-
-        // Add shake animation for invalid fields
-        const style = document.createElement('style');
-        style.textContent = `
-            .shake {
-                animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-            }
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
-                20%, 40%, 60%, 80% { transform: translateX(6px); }
-            }
-        `;
-        document.head.appendChild(style);
 
         // Remove error message on input
-        usernameInput.addEventListener('input', () => {
-            const errorAlert = document.querySelector('.error-alert');
-            if (errorAlert) errorAlert.style.display = 'none';
+        const usernameInput = document.getElementById('username');
+        const errorAlert = document.querySelector('.alert-error');
+
+        [usernameInput, passwordInput].forEach(input => {
+            input.addEventListener('input', () => {
+                if (errorAlert) {
+                    errorAlert.style.opacity = '0';
+                    errorAlert.style.transform = 'translateY(-10px)';
+                    setTimeout(() => errorAlert.remove(), 300);
+                }
+            });
         });
 
-        passwordInput.addEventListener('input', () => {
-            const errorAlert = document.querySelector('.error-alert');
-            if (errorAlert) errorAlert.style.display = 'none';
-        });
-
-        // Auto-focus username field
+        // Auto-focus username on load
         window.addEventListener('load', () => {
             usernameInput.focus();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Alt + V pour toggle password
+            if (e.altKey && e.key === 'v') {
+                e.preventDefault();
+                togglePassword.click();
+            }
         });
     </script>
 </body>

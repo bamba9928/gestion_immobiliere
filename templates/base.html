@@ -1,9 +1,14 @@
 <!DOCTYPE html>
 {% load static %}
+{% load tailwind_tags %}
+{% tailwind_css %}
 <html lang="fr" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% tailwind_css %}
+    <!-- Alpine JS -->
+    <script src="{% static 'js/alpine.min.js' %}" defer></script>
     <title>{% block title %}MADA IMMO | Gestion{% endblock %}</title>
 
     <!-- SEO et métadonnées -->
@@ -13,14 +18,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <!-- CSS et PWA -->
-    <link href="{% static 'css/output.css' %}" rel="stylesheet">
+
     <link rel="manifest" href="{% static 'manifest.json' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Alpine JS -->
-    <script src="{% static 'js/alpine.min.js' %}" defer></script>
+
 
     <style>
         * {

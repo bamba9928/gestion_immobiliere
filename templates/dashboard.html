@@ -1,21 +1,39 @@
 {% extends "base.html" %}
-
+{% load humanize %}
 {% block content %}
-<div class="max-w-6xl mx-auto px-4 py-6 space-y-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-white tracking-tight">Tableau de bord</h1>
-        <span class="px-3 py-1 text-xs border border-neutral-700 rounded-full text-neutral-400">
+    <!-- En-tête Dashboard -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-300">
+                Tableau de bord
+            </h1>
+            <p class="text-neutral-400 mt-1">Gestion immobilière Vue d'ensemble</p>
+        </div>
+        <span class="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full
+                     bg-gradient-to-r from-emerald-500/20 to-emerald-600/20
+                     text-emerald-400 border border-emerald-500/30 backdrop-blur-sm">
             {{ user_role }}
         </span>
     </div>
 
-    {# Affichage des messages flash (Succès/Erreur) pour la génération des loyers #}
+    <!-- Messages Flash -->
     {% if messages %}
-        <div class="space-y-2">
+        <div class="space-y-3 mb-8">
             {% for message in messages %}
-                <div class="p-4 rounded border {% if message.tags == 'error' %}bg-red-900/20 border-red-900 text-red-200{% else %}bg-emerald-900/20 border-emerald-900 text-emerald-200{% endif %}">
-                    {{ message }}
+                <div class="flex items-center gap-3 p-4 rounded-xl border-l-4
+                            {% if message.tags == 'error' %}bg-red-900/15 border-red-500 text-red-200
+                            {% else %}bg-emerald-900/15 border-emerald-500 text-emerald-200{% endif %}
+                            backdrop-blur-sm transition-all duration-300 hover:translate-x-1">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        {% if message.tags == 'error' %}
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/>
+                        {% else %}
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                        {% endif %}
+                    </svg>
+                    <span class="font-medium">{{ message }}</span>
                 </div>
             {% endfor %}
         </div>
@@ -23,124 +41,273 @@
 
     {% if user.is_staff %}
         {# --- DASHBOARD ADMIN --- #}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 
-            <div class="card-dark p-6">
-                <div class="text-neutral-500 text-xs uppercase font-semibold">Taux d'occupation</div>
-                <div class="mt-2 text-4xl font-bold text-white">{{ taux_occupation }}%</div>
-                <div class="text-xs text-neutral-400 mt-1">
-                    {{ biens_occupes }} / {{ total_biens }} biens loués
+            <!-- Carte Taux Occupation -->
+            <div class="card-hover group relative overflow-hidden rounded-2xl p-6
+                        bg-gradient-to-br from-blue-900/20 to-blue-800/10
+                        border border-blue-500/20 backdrop-blur-sm">
+                <div class="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform"></div>
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-neutral-400 text-xs uppercase tracking-wider font-semibold">Taux d'occupation</p>
+                        <p class="text-3xl md:text-4xl font-extrabold text-white mt-2">{{ taux_occupation }}%</p>
+                        <p class="text-neutral-400 text-sm mt-1">{{ biens_occupes }} / {{ total_biens }} biens loués</p>
+                    </div>
+                    <div class="p-3 rounded-xl bg-blue-500/15 group-hover:bg-blue-500/25 transition-colors">
+                        <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                    </div>
                 </div>
             </div>
 
-            <div class="card-dark p-6">
-                <div class="text-neutral-500 text-xs uppercase font-semibold">Impayés (En cours)</div>
-                <div class="mt-2 text-4xl font-bold text-red-500">
-                    {{ montant_impayes }} <span class="text-lg text-neutral-500">FCFA</span>
+            <!-- Carte Impayés -->
+            <div class="card-hover group relative overflow-hidden rounded-2xl p-6
+                        bg-gradient-to-br from-red-900/20 to-red-800/10
+                        border border-red-500/20 backdrop-blur-sm">
+                <div class="absolute top-0 right-0 w-20 h-20 bg-red-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform"></div>
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-neutral-400 text-xs uppercase tracking-wider font-semibold">Impayés (En cours)</p>
+                        <p class="text-3xl md:text-4xl font-extrabold text-red-400 mt-2">
+                            {{ montant_impayes }} <span class="text-lg text-neutral-500 font-medium">FCFA</span>
+                        </p>
+                        <p class="text-neutral-400 text-sm mt-1">Nécessite une action de relance</p>
+                    </div>
+                    <div class="p-3 rounded-xl bg-red-500/15 group-hover:bg-red-500/25 transition-colors">
+                        <svg class="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
                 </div>
-                <div class="text-xs text-neutral-400 mt-1">Nécessite une action de relance</div>
             </div>
 
-            <div class="card-dark p-6 flex flex-col justify-center gap-3">
-                <a href="/admin/core/bien/add/" class="btn-primary w-full justify-center">
-                    + Ajouter un bien
-                </a>
-
-                <a href="{% url 'trigger_rent_generation' %}"
-                   onclick="return confirm('Voulez-vous lancer la génération des loyers pour le mois en cours ?')"
-                   class="block w-full text-center bg-neutral-800 border border-neutral-700 text-neutral-300 py-2 rounded-lg hover:bg-neutral-700 hover:text-white transition text-sm">
-                    ⚡ Générer les loyers
-                </a>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <a href="/admin/core/loyer/"
-                       class="block w-full text-center border border-neutral-700 text-neutral-300 py-2 rounded-lg
-                              hover:bg-neutral-800 hover:text-white transition text-sm flex items-center justify-center">
-                        Gestion Loyers
+            <!-- Carte Actions Rapides -->
+            <div class="card-hover rounded-2xl p-6 bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm">
+                <p class="text-neutral-400 text-xs uppercase tracking-wider font-semibold mb-4">Actions Rapides</p>
+                <div class="space-y-3">
+                    <a href="{% url 'add_bien' %}"
+                       class="group flex items-center gap-3 w-full p-3 rounded-xl
+                              bg-gradient-to-r from-emerald-500/20 to-emerald-600/20
+                              border border-emerald-500/30 hover:border-emerald-500/50
+                              text-white font-semibold transition-all duration-300 hover:translate-x-1">
+                        <svg class="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"/>
+                        </svg>
+                        Ajouter un bien
                     </a>
+
+                    <a href="{% url 'trigger_rent_generation' %}"
+                       onclick="return confirm('🚀 Voulez-vous lancer la génération des loyers pour le mois en cours ?')"
+                       class="group flex items-center gap-3 w-full p-3 rounded-xl
+                              bg-gradient-to-r from-amber-500/20 to-amber-600/20
+                              border border-amber-500/30 hover:border-amber-500/50
+                              text-amber-400 font-semibold transition-all duration-300 hover:translate-x-1">
+                        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
+                        </svg>
+                        Générer les loyers
+                    </a>
+
+                    <a href="{% url 'loyers_list' %}"
+                       class="group flex items-center gap-3 w-full p-3 rounded-xl
+                              bg-slate-700/50 border border-slate-600 hover:border-slate-500
+                              text-slate-300 font-medium transition-all duration-300 hover:translate-x-1">
+                        <svg class="w-5 h-5 text-slate-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                        </svg>
+                        Gestion des loyers
+                    </a>
+
                     <a href="{% url 'interventions_list' %}"
-                       class="block w-full text-center border border-neutral-700 text-neutral-300 py-2 rounded-lg
-                              hover:bg-neutral-800 hover:text-white transition text-sm flex items-center justify-center">
-                        Incidents
+                       class="group flex items-center gap-3 w-full p-3 rounded-xl
+                              bg-slate-700/50 border border-slate-600 hover:border-slate-500
+                              text-slate-300 font-medium transition-all duration-300 hover:translate-x-1">
+                        <svg class="w-5 h-5 text-slate-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        Gestion des incidents
                     </a>
                 </div>
             </div>
         </div>
-    {# ... Reste du fichier (section Locataire) inchangé ... #}
+
+        <!-- Dernières Activités -->
+        <div class="card-hover rounded-2xl p-6 bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                    </svg>
+                    Dernières Activités
+                </h3>
+                <span class="text-xs text-neutral-500">Journal d'audit</span>
+            </div>
+
+            <div class="space-y-4">
+                {% for activity in recent_activities|slice:":5" %}
+                    <div class="flex items-center gap-4 p-4 rounded-xl bg-slate-900/40 border border-slate-700/30 hover:border-slate-600/50 transition-all">
+                        <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-white text-sm font-medium">{{ activity.message }}</p>
+                            <p class="text-neutral-500 text-xs">{{ activity.timestamp|timesince }} ago</p>
+                        </div>
+                        <div class="text-xs px-2 py-1 rounded-full bg-slate-700 text-slate-300">
+                            {{ activity.user }}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center py-8 text-neutral-500">
+                        <svg class="w-12 h-12 mx-auto mb-3 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <p>Aucune activité récente</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
     {% else %}
-        {# --- DASHBOARD LOCATAIRE / NON-ADMIN --- #}
+        {# --- DASHBOARD LOCATAIRE --- #}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            <div class="card-dark p-6 relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-                    <svg class="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
-                        <path fill-rule="evenodd"
-                              d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
-                              clip-rule="evenodd"/>
-                    </svg>
+            <!-- Situation Loyers -->
+            <div class="card-hover group rounded-2xl p-6 bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl group-hover:scale-150 transition-transform"></div>
+
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                            </svg>
+                            Situation des Loyers
+                        </h2>
+                        <p class="text-neutral-400 text-sm">Mois en cours</p>
+                    </div>
+                    {% if dernier_loyer %}
+                        <span class="px-3 py-1 text-xs font-bold rounded-full
+                                    {% if dernier_loyer.statut == 'PAYE' %}bg-green-900/30 text-green-400 border border-green-500/30
+                                    {% elif dernier_loyer.statut == 'RETARD' %}bg-red-900/30 text-red-400 border border-red-500/30
+                                    {% else %}bg-yellow-900/30 text-yellow-400 border border-yellow-500/30{% endif %}">
+                            {{ dernier_loyer.get_statut_display }}
+                        </span>
+                    {% endif %}
                 </div>
 
-                <h2 class="text-xl font-bold text-white mb-4">Situation Loyers</h2>
-
                 {% if dernier_loyer %}
-                    <div class="mb-4">
+                    <div class="mb-6">
                         <span class="text-sm text-neutral-400">
-                            Mois de {{ dernier_loyer.periode_debut|date:"F Y" }}
+                            {{ dernier_loyer.periode_debut|date:"F Y"|capfirst }}
                         </span>
-                        <div class="text-3xl font-bold text-white mt-1">
-                            {{ dernier_loyer.montant_du }} FCFA
-                        </div>
-
-                        <div class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            {% if dernier_loyer.statut == 'PAYE' %} bg-green-900 text-green-200
-                            {% elif dernier_loyer.statut == 'RETARD' %} bg-red-900 text-red-200
-                            {% else %} bg-yellow-900 text-yellow-200 {% endif %}">
-                            {{ dernier_loyer.get_statut_display }}
+                        <div class="text-3xl md:text-4xl font-extrabold text-white mt-1">
+                            {{ dernier_loyer.montant_du|intcomma }}
+                            <span class="text-lg text-neutral-500 font-medium">FCFA</span>
                         </div>
                     </div>
 
                     {% if dernier_loyer.statut != 'PAYE' %}
-                        <button class="w-full bg-white text-black font-bold py-3 rounded mt-2 hover:bg-neutral-200 transition">
-                            Payer maintenant (Wave/OM)
+                        <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700
+                                       text-white font-bold py-3 rounded-xl transition-all duration-300
+                                       hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/25">
+                            <span class="flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+                                    <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+                                </svg>
+                                Payer maintenant (Wave/OM)
+                            </span>
                         </button>
                     {% else %}
-                        <a href="{% url 'download_quittance' dernier_loyer.id %}"
-                           target="_blank"
-                           class="block w-full text-center border border-neutral-700 text-neutral-300 py-2 rounded mt-2
-                                  hover:bg-neutral-800 hover:text-white transition-colors">
-                            Télécharger la quittance
+                        <a href="{% url 'download_quittance' dernier_loyer.id %}" target="_blank"
+                           class="block w-full text-center bg-slate-700/50 hover:bg-slate-700
+                                  border border-slate-600 text-slate-300 py-3 rounded-xl
+                                  transition-all duration-300 hover:translate-x-1 font-medium">
+                            <span class="flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Télécharger la quittance
+                            </span>
                         </a>
                     {% endif %}
                 {% else %}
-                    <p class="text-neutral-500">Aucun loyer émis pour le moment.</p>
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <p class="text-neutral-300 font-medium">Aucun paiement en attente</p>
+                        <p class="text-sm text-neutral-500 mt-1">Les prochains loyers apparaîtront ici</p>
+                    </div>
                 {% endif %}
             </div>
 
-            <div class="card-dark p-6">
-                <h2 class="text-xl font-bold text-white mb-4">Mon Logement</h2>
-                {% if bail %}
-                    <p class="text-lg text-white">{{ bail.bien.titre }}</p>
-                    <p class="text-neutral-400 text-sm mb-4">{{ bail.bien.adresse }}</p>
-
-                    <div class="border-t border-neutral-800 pt-4 mt-4 space-y-2">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-neutral-500">Début du bail</span>
-                            <span class="text-white">{{ bail.date_debut }}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-neutral-500">Échéance</span>
-                            <span class="text-white">{{ bail.date_fin }}</span>
-                        </div>
+            <!-- Mon Logement -->
+            <div class="card-hover group rounded-2xl p-6 bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                        </svg>
                     </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Mon Logement</h2>
+                        <p class="text-neutral-400 text-sm">Gérer votre bien</p>
+                    </div>
+                </div>
 
-                    <a href="{% url 'interventions_list' %}"
-                       class="block w-full text-center mt-6 border border-neutral-700 text-neutral-300 py-2 rounded
-                              hover:bg-neutral-800 text-sm transition-colors">
-                        Signaler un problème / Intervention
-                    </a>
+                {% if bail %}
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">{{ bail.bien.titre }}</h3>
+                            <p class="text-neutral-400 text-sm flex items-center gap-1 mt-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                {{ bail.bien.adresse }}
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 p-4 rounded-xl bg-slate-900/40 border border-slate-700/30">
+                            <div class="text-center sm:text-left">
+                                <p class="text-neutral-500 text-xs uppercase tracking-wider">Début du bail</p>
+                                <p class="text-white font-semibold">{{ bail.date_debut|date:"d M Y" }}</p>
+                            </div>
+                            <div class="text-center sm:text-left">
+                                <p class="text-neutral-500 text-xs uppercase tracking-wider">Échéance</p>
+                                <p class="text-white font-semibold">{{ bail.date_fin|date:"d M Y" }}</p>
+                            </div>
+                        </div>
+
+                        <a href="{% url 'interventions_list' %}"
+                           class="flex items-center justify-center gap-2 w-full p-3 rounded-xl
+                                  bg-gradient-to-r from-amber-500/20 to-amber-600/20
+                                  border border-amber-500/30 hover:border-amber-500/50
+                                  text-amber-400 font-semibold transition-all duration-300 hover:translate-x-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            Signaler un problème / Intervention
+                        </a>
+                    </div>
                 {% else %}
-                    <p class="text-neutral-500">Aucun bail actif associé à ce compte.</p>
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                            </svg>
+                        </div>
+                        <p class="text-neutral-300 font-medium">Aucun bail actif</p>
+                        <p class="text-sm text-neutral-500 mt-1">Contactez l'administration</p>
+                    </div>
                 {% endif %}
             </div>
         </div>

@@ -30,7 +30,7 @@ class BailAdmin(admin.ModelAdmin):
     list_filter = ('est_signe', 'date_fin')
     search_fields = ('locataire__username', 'locataire__last_name', 'bien__titre')
     date_hierarchy = 'date_debut'
-    autocomplete_fields = ['bien', 'locataire']  # Utile quand tu auras beaucoup de users
+    autocomplete_fields = ['bien', 'locataire']
 
     def est_signe_badge(self, obj):
         return obj.est_signe
