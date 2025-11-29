@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Page non trouvée | MADA IMMO{% endblock %}
+
+{% block content %}
+<div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+    <div class="space-y-6">
+        <div class="relative">
+            <h1 class="text-9xl font-extrabold text-neutral-800 select-none">404</h1>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="px-4 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-emerald-500 text-sm font-bold uppercase tracking-widest shadow-2xl">
+                    Page Introuvable
+                </span>
+            </div>
+        </div>
+
+        <div class="space-y-2 max-w-md mx-auto">
+            <h2 class="text-2xl font-bold text-white">Oups ! Vous semblez perdu.</h2>
+            <p class="text-neutral-400">
+                La page que vous recherchez a peut-être été supprimée, déplacée ou n'a jamais existé.
+            </p>
+        </div>
+
+        <a href="{% url 'home' %}" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black font-bold hover:bg-neutral-200 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            Retour à l'accueil
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -4,18 +4,6 @@ from celery.schedules import crontab
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# ===================== CONFIGURATION WINDOWS (WEASYPRINT) =====================
-if os.name == 'nt':  # Windows uniquement
-    GTK_FOLDER = r'C:\Program Files\GTK3-Runtime Win64\bin'
-    if os.path.exists(GTK_FOLDER):
-        os.environ['PATH'] = f"{GTK_FOLDER};{os.environ['PATH']}"
-        try:
-            os.add_dll_directory(GTK_FOLDER)  # Python 3.8+
-        except AttributeError:
-            pass
-# ===========================================================================
-
 # ===================== CORE SETTINGS =====================
 SECRET_KEY = 'django-insecure-y)wq&$_qu-m-6-^fc@j)ge+xq=^5ri53uokr2ynu^&zi8lgjq+'
 
@@ -114,7 +102,7 @@ USE_TZ = True
 # ===================== STATIC & MEDIA FILES ========================
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
-
+STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 # ================================================================

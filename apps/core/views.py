@@ -105,7 +105,7 @@ class HomeView(ListView):
 class AnnonceDetailView(FormMixin, DetailView):
     """Page de détail d'une annonce publique + formulaire de contact."""
     model = Annonce
-    template_name = 'annonce_detail.html'
+    template_name = 'biens/annonce_detail.html'
     context_object_name = 'annonce'
     form_class = ContactAnnonceForm
 

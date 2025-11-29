@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Interventions | MADA IMMO{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8 space-y-8">
+
+    <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+            <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 font-semibold">Support & Maintenance</p>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Gestion des Incidents</h1>
+            <p class="text-neutral-400 text-sm mt-1">Suivez les demandes techniques et signalez de nouveaux problèmes.</p>
+        </div>
+
+        <span class="px-3 py-1 text-xs border border-neutral-800 rounded-full text-neutral-400 bg-neutral-900/70">
+            {{ user_role }}
+        </span>
+    </div>
+
+    {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+                <div class="p-4 rounded-lg border text-sm flex items-center gap-2
+                            {% if message.tags == 'error' %}bg-red-900/20 border-red-900 text-red-200
+                            {% else %}bg-emerald-900/20 border-emerald-900 text-emerald-200{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="grid lg:grid-cols-3 gap-8">
+
+        {% if user_role == 'LOCATAIRE' and bail %}
+        <div class="lg:col-span-1">
+            <div class="card-dark border border-neutral-800/60 p-6 sticky top-24 rounded-2xl bg-neutral-900/50 backdrop-blur-sm">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        Nouveau signalement
+                    </h2>
+                    <p class="text-xs text-neutral-500 mt-1">Concerne : {{ bail.bien.titre }}</p>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="space-y-4">
+                    {% csrf_token %}
+
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-400 mb-1">Objet de la demande</label>
+                        {{ form.objet|add_class:"w-full px-4 py-2 bg-black/50 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors placeholder-neutral-600" }}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-400 mb-1">Description détaillée</label>
+                        {{ form.description|add_class:"w-full px-4 py-2 bg-black/50 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors placeholder-neutral-600 resize-none h-32" }}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-400 mb-1">Photo (optionnel)</label>
+                        <div class="relative">
+                            {{ form.photo_avant|add_class:"block w-full text-sm text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-neutral-800 file:text-emerald-400 hover:file:bg-neutral-700 cursor-pointer" }}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full mt-4 py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                        Envoyer la demande
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="{% if user_role == 'LOCATAIRE' %}lg:col-span-2{% else %}col-span-3{% endif %} space-y-6">
+
+            {% if not interventions %}
+                <div class="flex flex-col items-center justify-center py-16 px-4 border border-dashed border-neutral-800 rounded-2xl bg-neutral-900/30 text-center">
+                    <div class="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-white">Aucune intervention</h3>
+                    <p class="text-neutral-500 text-sm max-w-sm mt-1">L'historique des incidents et des demandes d'assistance apparaîtra ici.</p>
+                </div>
+            {% else %}
+                {% for inter in interventions %}
+                <div class="card-dark border border-neutral-800/60 rounded-xl overflow-hidden hover:border-neutral-700 transition-colors group">
+                    <div class="p-5 flex flex-col sm:flex-row gap-5">
+
+                        <div class="sm:w-32 flex-shrink-0 flex sm:flex-col items-center sm:items-start justify-between sm:justify-start gap-2">
+                            <span class="px-3 py-1 text-xs font-bold rounded-full border
+                                {% if inter.statut == 'NOUVEAU' %}bg-blue-500/10 text-blue-400 border-blue-500/20
+                                {% elif inter.statut == 'EN_COURS' %}bg-amber-500/10 text-amber-400 border-amber-500/20
+                                {% elif inter.statut == 'RESOLU' %}bg-emerald-500/10 text-emerald-400 border-emerald-500/20{% endif %}">
+                                {{ inter.get_statut_display }}
+                            </span>
+                            <span class="text-xs text-neutral-500 font-mono">{{ inter.created_at|date:"d/m/Y" }}</span>
+                        </div>
+
+                        <div class="flex-1 space-y-2">
+                            <h3 class="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                                {{ inter.objet }}
+                            </h3>
+
+                            {% if user_role == 'ADMIN' %}
+                                <div class="text-xs text-neutral-400 flex items-center gap-2 mb-2">
+                                    <span class="flex items-center gap-1 bg-neutral-800 px-2 py-0.5 rounded">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                        {{ inter.locataire.get_full_name|default:inter.locataire.username }}
+                                    </span>
+                                    <span class="flex items-center gap-1 bg-neutral-800 px-2 py-0.5 rounded">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                        {{ inter.bien.titre }}
+                                    </span>
+                                </div>
+                            {% endif %}
+
+                            <p class="text-sm text-neutral-400 leading-relaxed">{{ inter.description|linebreaksbr }}</p>
+
+                            {% if inter.photo_avant %}
+                                <div class="mt-4">
+                                    <p class="text-xs uppercase tracking-wider text-neutral-600 font-bold mb-2">Pièce jointe</p>
+                                    <a href="{{ inter.photo_avant.url }}" target="_blank" class="inline-block relative group/img overflow-hidden rounded-lg border border-neutral-700">
+                                        <img src="{{ inter.photo_avant.url }}" alt="Preuve" class="h-24 w-auto object-cover opacity-80 group-hover/img:opacity-100 transition-opacity">
+                                        <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                        </div>
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
