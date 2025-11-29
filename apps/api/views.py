@@ -1,62 +1,68 @@
+from django.utils import timezone
 from rest_framework import generics, permissions
-from apps.core.models import Bien
-from .serializers import BienSerializer
-from apps.core.models import Intervention
-from .serializers import InterventionSerializer
-
-class MobileBienListView(generics.ListAPIView):
+from rest_framework.exceptions import PermissionDenied
+from apps.api.permissions import IsTenant
+from apps.core.models import Bien, Intervention
+from .serializers import BienSerializer, InterventionSerializer
+class BienListView(generics.ListAPIView):
     """
-    Endpoint mobile pour lister les biens disponibles.
+    Liste publique des biens disponibles.
     Accessible sans authentification pour la vitrine.
     """
     serializer_class = BienSerializer
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        # Version simple : tous les biens disponibles
-        return (
-            Bien.objects.disponibles()
-            .order_by('-created_at')
-        )
+        return Bien.objects.disponibles().order_by('-created_at')
+
+
 class BienDetailView(generics.RetrieveAPIView):
+    """
+    Détail public d'un bien actif.
+    Utilise la même logique que la liste pour la cohérence.
+    """
     serializer_class = BienSerializer
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        # On limite aux biens actifs
-        return Bien.objects.filter(est_actif=True)
-
-class InterventionCreateView(generics.CreateAPIView):
-    queryset = Intervention.objects.all()
-    serializer_class = InterventionSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def perform_create(self, serializer):
-        # On lie automatiquement le locataire et son biens actuel
-        user = self.request.user
-        # On suppose ici une logique simple où le user a un bail actif
-        bail = user.baux.filter(est_signe=True).first()
-        if bail:
-            serializer.save(locataire=user, bien=bail.bien)
-        else:
-            # Gérer l'erreur si pas de bail
-            pass
+        # Utilise disponibles() pour rester cohérent avec la liste
+        return Bien.objects.disponibles()
 class InterventionListCreateView(generics.ListCreateAPIView):
+    """
+    Endpoint pour lister et créer des interventions.
+    - GET : liste les interventions du locataire connecté
+    - POST : crée une nouvelle intervention (auto-associe le bail/bien)
+    """
     serializer_class = InterventionSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsTenant]
 
     def get_queryset(self):
-        # Retourne uniquement les interventions du locataire connecté
-        return Intervention.objects.filter(locataire=self.request.user).order_by('-created_at')
+        user = self.request.user
+        return (
+            Intervention.objects
+            .filter(locataire=user)
+            .select_related('bien')   # optionnel mais utile pour réduire les requêtes
+            .order_by('-created_at')
+        )
 
     def perform_create(self, serializer):
-        # Associe automatiquement le locataire et son biens
         user = self.request.user
-        # On cherche le bail actif
-        bail = user.baux.filter(est_signe=True).first()
+        today = timezone.now().date()
 
-        if bail:
-            serializer.save(locataire=user, bien=bail.bien)
-        else:
+        # Récupération sécurisée du bail actif avec select_related sur le bien
+        bail = (
+            user.baux
+            .filter(
+                est_signe=True,
+                date_debut__lte=today,
+                date_fin__gte=today,
+            )
+            .select_related('bien')
+            .first()
+        )
 
-            pass
+        if not bail:
+            raise PermissionDenied("Aucun bail actif trouvé pour ce locataire.")
+
+        # Une seule sauvegarde, sans doublon
+        serializer.save(locataire=user, bien=bail.bien)

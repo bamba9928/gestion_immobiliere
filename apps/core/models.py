@@ -295,7 +295,10 @@ class Loyer(models.Model):
             self.date_paiement = None
 
         self.save(update_fields=['montant_verse', 'statut', 'date_paiement'])
+        if self.statut == 'PAYE':
+            from apps.core.services.quittance import attacher_quittance
 
+            attacher_quittance(self)
     def actualiser_statut_retard(self) -> None:
         if self.statut == 'PAYE':
             return

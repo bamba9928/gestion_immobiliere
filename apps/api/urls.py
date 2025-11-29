@@ -1,8 +1,8 @@
 from django.urls import path
-from .views import MobileBienListView, BienDetailView, InterventionListCreateView
+from .views import BienDetailView, InterventionListCreateView, BienListView
 
 urlpatterns = [
-    path('mobile/biens/', MobileBienListView.as_view(), name='api-mobile-biens'),
+    path('biens/mobile/', BienListView.as_view()),
     path('mobile/biens/<int:pk>/', BienDetailView.as_view(), name='api-mobile-biens-detail'),
     path('mobile/interventions/', InterventionListCreateView.as_view(), name='api-mobile-interventions'),
 ]

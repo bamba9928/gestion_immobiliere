@@ -6,13 +6,14 @@ Usage:
     python manage.py generer_loyers
     python manage.py generer_loyers --month 2025-06  # Pour un mois spécifique
     python manage.py generer_loyers --dry-run  # Simulation sans écriture
+    Cette commande est pensée pour être planifiée via cron ou un scheduler (exemple)
+    0 6 1 * * /path/to/venv/bin/python manage.py generer_loyers --verbosity 1
 """
 import logging
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
-from django.utils import timezone
 from apps.core.models import Bail, Loyer
 
 logger = logging.getLogger(__name__)
@@ -84,6 +85,7 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.WARNING("⚠ Aucun bail actif trouvé pour cette période.")
             )
+            self._actualiser_statuts_retard()
             return
 
         self.stdout.write(f"📋 {baux_actifs.count()} baux actifs détectés")
@@ -164,6 +166,7 @@ class Command(BaseCommand):
                     "\n✓ Tous les loyers sont déjà générés pour ce mois."
                 )
             )
+            self._actualiser_statuts_retard()
             return
 
         try:
@@ -217,12 +220,34 @@ class Command(BaseCommand):
             raise
 
         # ========================================
-        # 8. RÉSUMÉ FINAL
+        # 8. MISE À JOUR STATUTS RETARD & RÉSUMÉ FINAL
         # ========================================
         self.stdout.write(
             self.style.SUCCESS(
                 f"\n{'=' * 60}\n"
                 f"OPÉRATION TERMINÉE\n"
                 f"{'=' * 60}\n"
+            )
+        )
+
+    def _actualiser_statuts_retard(self):
+        loyers_a_mettre_a_jour = Loyer.objects.filter(
+            statut__in=["A_PAYER", "PARTIEL"],
+        ).order_by("date_echeance")
+
+        if not loyers_a_mettre_a_jour.exists():
+            self.stdout.write("Aucun loyer à vérifier pour le statut RETARD.")
+            return
+
+        mis_a_jour = 0
+        for loyer in loyers_a_mettre_a_jour:
+            statut_initial = loyer.statut
+            loyer.actualiser_statut_retard()
+            if loyer.statut != statut_initial:
+                mis_a_jour += 1
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Statut RETARD mis à jour pour {mis_a_jour} loyers"
             )
         )
