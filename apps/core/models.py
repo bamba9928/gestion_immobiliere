@@ -1,8 +1,42 @@
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+
+
+# ================== QUERYSET PERSONNALISÉ ==================
+
+class BienQuerySet(models.QuerySet):
+    """Manager personnalisé avec méthodes métier."""
+
+    def disponibles(self):
+        """Retourne les biens disponibles à la location."""
+        aujourd_hui = date.today()
+        return (
+            self.filter(est_actif=True)
+            .exclude(
+                baux__est_signe=True,
+                baux__date_fin__gte=aujourd_hui,
+            )
+            .distinct()
+        )
+
+    def occupes(self):
+        """Retourne les biens actuellement loués."""
+        aujourd_hui = date.today()
+        return (
+            self.filter(
+                est_actif=True,
+                baux__est_signe=True,
+                baux__date_fin__gte=aujourd_hui,
+            )
+            .distinct()
+        )
+
+
+# ===================== MODEL BIEN =====================
 
 class Bien(models.Model):
     TYPE_CHOICES = [
@@ -13,14 +47,24 @@ class Bien(models.Model):
     ]
 
     # Infos principales
-    titre = models.CharField(max_length=200, help_text="Ex: T3 Centre Ville - Résidence Mada")
-    type_bien = models.CharField(max_length=20, choices=TYPE_CHOICES, default='APPARTEMENT')
+    titre = models.CharField(
+        max_length=200,
+        help_text="Ex: T3 Centre Ville - Résidence Mada",
+    )
+    type_bien = models.CharField(
+        max_length=20,
+        choices=TYPE_CHOICES,
+        default='APPARTEMENT',
+    )
     adresse = models.TextField()
     ville = models.CharField(max_length=100, default='Dakar')
 
     # Caractéristiques
     surface = models.PositiveIntegerField(help_text="En m²")
-    nb_pieces = models.PositiveIntegerField(verbose_name="Nombre de pièces", default=1)
+    nb_pieces = models.PositiveIntegerField(
+        verbose_name="Nombre de pièces",
+        default=1,
+    )
     description = models.TextField(blank=True)
 
     # Financier
@@ -35,10 +79,6 @@ class Bien(models.Model):
         default=0,
         verbose_name="Charges estimées",
     )
-    disponible = models.BooleanField(
-        default=True,
-        help_text="Disponible immédiatement tant qu'aucun bail actif n'est en cours",
-    )
 
     # Gestion
     proprietaire = models.ForeignKey(
@@ -46,38 +86,69 @@ class Bien(models.Model):
         on_delete=models.PROTECT,
         related_name='biens_possedes',
     )
-    photo_principale = models.ImageField(upload_to='biens/', blank=True, null=True)
+    photo_principale = models.ImageField(
+        upload_to='biens/',
+        blank=True,
+        null=True,
+    )
     est_actif = models.BooleanField(
         default=True,
-        help_text="Décochez si le biens est vendu ou retiré de la gestion",
+        help_text="Décochez si le bien est vendu ou retiré de la gestion",
     )
 
     # Dates
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Manager personnalisé
+    objects = BienQuerySet.as_manager()
+
     class Meta:
         verbose_name = "Bien Immobilier"
         verbose_name_plural = "Biens Immobiliers"
+        indexes = [
+            models.Index(fields=['est_actif', 'created_at']),
+        ]
 
     def __str__(self) -> str:
         return f"{self.get_type_bien_display()} - {self.titre}"
 
     @property
     def est_occupe(self) -> bool:
-        """Return True if an active lease exists for this property."""
-        return self.baux.filter(date_fin__gte=date.today(), est_signe=True).exists()
+        """Vérifie si un bail actif et signé existe."""
+        return self.baux.filter(
+            date_fin__gte=date.today(),
+            est_signe=True,
+        ).exists()
 
     @property
     def est_disponible(self) -> bool:
-        """Return True if the property is active, marked available and not occupied."""
-        return self.est_actif and self.disponible and not self.est_occupe
+        """
+        Un bien est disponible si :
+        - Il est marqué actif (non vendu/retiré)
+        - Aucun bail actif signé n'existe
+        """
+        return self.est_actif and not self.est_occupe
 
+    @property
+    def bail_actif(self):
+        """Retourne le bail en cours s'il existe."""
+        return self.baux.filter(
+            date_fin__gte=date.today(),
+            est_signe=True,
+        ).first()
+
+
+# ===================== MODEL BAIL =====================
 
 class Bail(models.Model):
-    """Represents a lease binding a property and a tenant."""
+    """Contrat de location liant un bien et un locataire."""
 
-    bien = models.ForeignKey(Bien, on_delete=models.PROTECT, related_name='baux')
+    bien = models.ForeignKey(
+        Bien,
+        on_delete=models.PROTECT,
+        related_name='baux',
+    )
     locataire = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -88,9 +159,13 @@ class Bail(models.Model):
     date_debut = models.DateField()
     date_fin = models.DateField()
 
-    # Financier (Gelé à la signature du bail)
+    # Financier (gelé à la signature)
     montant_loyer = models.DecimalField(max_digits=10, decimal_places=0)
-    montant_charges = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+    montant_charges = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=0,
+    )
     depot_garantie = models.DecimalField(max_digits=10, decimal_places=0)
     jour_paiement = models.PositiveIntegerField(
         default=5,
@@ -100,7 +175,10 @@ class Bail(models.Model):
     # État du dossier
     est_signe = models.BooleanField(default=False)
     fichier_contrat = models.FileField(
-        upload_to='baux_signes/', blank=True, null=True, help_text="PDF signé",
+        upload_to='baux_signes/',
+        blank=True,
+        null=True,
+        help_text="PDF signé",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -109,35 +187,47 @@ class Bail(models.Model):
         verbose_name = "Bail / Contrat"
         verbose_name_plural = "Baux"
         ordering = ['-date_debut']
+        indexes = [
+            models.Index(fields=['bien', 'est_signe', 'date_fin']),
+        ]
 
     def __str__(self) -> str:
         return f"Bail {self.locataire.last_name} - {self.bien.titre}"
 
     def loyer_total(self) -> int:
-        """Return the monthly rent plus charges."""
+        """Retourne le loyer mensuel charges comprises."""
         return int(self.montant_loyer + self.montant_charges)
 
-    def save(self, *args, **kwargs) -> None:
-        super().save(*args, **kwargs)
+    def clean(self):
+        """Validation métier avant enregistrement."""
+        from django.core.exceptions import ValidationError
 
-        bien = self.bien
-        today = date.today()
-
-        # Logique de mise à jour de la disponibilité du biens
-        if self.est_signe and self.date_fin >= today:
-            if bien.disponible:
-                bien.disponible = False
-                bien.save(update_fields=['disponible'])
-        else:
-            active_baux = self.__class__.objects.filter(
-                bien=bien,
+        # Empêcher la création de baux qui se chevauchent
+        if self.est_signe:
+            chevauchements = Bail.objects.filter(
+                bien=self.bien,
                 est_signe=True,
-                date_fin__gte=today,
+                date_debut__lte=self.date_fin,
+                date_fin__gte=self.date_debut,
             ).exclude(pk=self.pk)
 
-            if not active_baux.exists() and not bien.disponible:
-                bien.disponible = True
-                bien.save(update_fields=['disponible'])
+            if chevauchements.exists():
+                raise ValidationError(
+                    f"Ce bien a déjà un bail actif pour cette période. "
+                    f"Bail existant : {chevauchements.first()}"
+                )
+
+    def save(self, *args, **kwargs):
+        """
+        Aucune logique de mise à jour de disponibilité.
+        La propriété calculée sur Bien gère tout automatiquement.
+        """
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
+# ===================== MODEL LOYER =====================
+
 class Loyer(models.Model):
     STATUT_CHOICES = [
         ('A_PAYER', 'À payer'),
@@ -146,47 +236,50 @@ class Loyer(models.Model):
         ('RETARD', 'En retard'),
     ]
 
-    bail = models.ForeignKey(Bail, on_delete=models.PROTECT, related_name='loyers')
-
-    # Période concernée
+    bail = models.ForeignKey(
+        Bail,
+        on_delete=models.PROTECT,
+        related_name='loyers',
+    )
     periode_debut = models.DateField()
     periode_fin = models.DateField()
     date_echeance = models.DateField(help_text="Date limite de paiement")
-
-    # Montants
     montant_du = models.DecimalField(max_digits=10, decimal_places=0)
-    montant_verse = models.DecimalField(max_digits=10, decimal_places=0, default=0)
-
-    # Suivi
-    statut = models.CharField(max_length=10, choices=STATUT_CHOICES, default='A_PAYER')
+    montant_verse = models.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        default=0,
+    )
+    statut = models.CharField(
+        max_length=10,
+        choices=STATUT_CHOICES,
+        default='A_PAYER',
+    )
     date_paiement = models.DateTimeField(null=True, blank=True)
-
-    # Documents
-    quittance = models.FileField(upload_to='quittances/', null=True, blank=True)
-
+    quittance = models.FileField(
+        upload_to='quittances/',
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Loyer / Échéance"
         verbose_name_plural = "Loyers"
-        unique_together = ('bail', 'periode_debut')  # Un seul loyer par mois pour un bail
+        unique_together = ('bail', 'periode_debut')
 
     def __str__(self) -> str:
         return f"{self.bail.locataire.username} - {self.periode_debut.strftime('%B %Y')}"
 
     @property
     def reste_a_payer(self) -> int:
-        """Return the remaining amount due for this invoice."""
         return int(self.montant_du - self.montant_verse)
 
     @property
     def est_en_retard(self) -> bool:
-        """Return True if the payment due date has passed and the invoice isn't paid."""
         return self.statut != 'PAYE' and date.today() > self.date_echeance
 
     def enregistrer_paiement(self, montant: Decimal) -> None:
-        """Enregistre un paiement et ajuste le statut en conséquence."""
-
         if montant <= 0:
             raise ValueError("Le montant du paiement doit être positif.")
 
@@ -204,14 +297,14 @@ class Loyer(models.Model):
         self.save(update_fields=['montant_verse', 'statut', 'date_paiement'])
 
     def actualiser_statut_retard(self) -> None:
-        """Passe le loyer en RETARD si l'échéance est dépassée et non réglé."""
-
         if self.statut == 'PAYE':
             return
-
         if date.today() > self.date_echeance:
             self.statut = 'RETARD'
             self.save(update_fields=['statut'])
+
+
+# ===================== MODEL ANNONCE =====================
 
 class Annonce(models.Model):
     STATUT_CHOICES = [
@@ -221,11 +314,19 @@ class Annonce(models.Model):
         ('ARCHIVE', 'Archivée'),
     ]
 
-    bien = models.ForeignKey(Bien, on_delete=models.PROTECT, related_name='annonces')
+    bien = models.ForeignKey(
+        Bien,
+        on_delete=models.PROTECT,
+        related_name='annonces',
+    )
     titre = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     prix = models.DecimalField(max_digits=10, decimal_places=0)
-    statut = models.CharField(max_length=10, choices=STATUT_CHOICES, default='BROUILLON')
+    statut = models.CharField(
+        max_length=10,
+        choices=STATUT_CHOICES,
+        default='BROUILLON',
+    )
     date_publication = models.DateTimeField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -237,6 +338,10 @@ class Annonce(models.Model):
 
     def __str__(self) -> str:
         return f"{self.bien} - {self.get_statut_display()}"
+
+
+# ===================== MODEL INTERVENTION =====================
+
 class Intervention(models.Model):
     STATUT_CHOICES = [
         ('NOUVEAU', 'Nouveau'),
@@ -244,7 +349,11 @@ class Intervention(models.Model):
         ('RESOLU', 'Résolu'),
     ]
 
-    bien = models.ForeignKey(Bien, on_delete=models.PROTECT, related_name='interventions')
+    bien = models.ForeignKey(
+        Bien,
+        on_delete=models.PROTECT,
+        related_name='interventions',
+    )
     locataire = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -259,9 +368,21 @@ class Intervention(models.Model):
     )
     objet = models.CharField(max_length=200)
     description = models.TextField()
-    statut = models.CharField(max_length=10, choices=STATUT_CHOICES, default='NOUVEAU')
-    photo_avant = models.ImageField(upload_to='interventions/avant/', null=True, blank=True)
-    photo_apres = models.ImageField(upload_to='interventions/apres/', null=True, blank=True)
+    statut = models.CharField(
+        max_length=10,
+        choices=STATUT_CHOICES,
+        default='NOUVEAU',
+    )
+    photo_avant = models.ImageField(
+        upload_to='interventions/avant/',
+        null=True,
+        blank=True,
+    )
+    photo_apres = models.ImageField(
+        upload_to='interventions/apres/',
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -272,6 +393,10 @@ class Intervention(models.Model):
 
     def __str__(self) -> str:
         return f"{self.objet} - {self.get_statut_display()}"
+
+
+# ===================== MODEL ÉTAT DES LIEUX =====================
+
 class EtatDesLieux(models.Model):
     TYPE_CHOICES = [
         ('ENTREE', 'Entrée'),
@@ -281,32 +406,23 @@ class EtatDesLieux(models.Model):
     bail = models.ForeignKey(
         Bail,
         on_delete=models.CASCADE,
-        related_name='etats_des_lieux'
+        related_name='etats_des_lieux',
     )
-    type_edl = models.CharField(
-        max_length=10,
-        choices=TYPE_CHOICES
-    )
+    type_edl = models.CharField(max_length=10, choices=TYPE_CHOICES)
     date_realisation = models.DateField(default=timezone.now)
-
-    # Pour rester simple au début : une grosse zone de texte
     checklist = models.TextField(
         blank=True,
-        help_text="Checklist ou notes détaillées de l'état des lieux."
+        help_text="Checklist ou notes détaillées de l'état des lieux.",
     )
-
     commentaire_general = models.TextField(blank=True)
-
     signature_bailleur = models.BooleanField(default=False)
     signature_locataire = models.BooleanField(default=False)
-
     pdf = models.FileField(
         upload_to='edl/',
         blank=True,
         null=True,
-        help_text="PDF de l'état des lieux signé."
+        help_text="PDF de l'état des lieux signé.",
     )
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -316,6 +432,10 @@ class EtatDesLieux(models.Model):
 
     def __str__(self):
         return f"EDL {self.get_type_edl_display()} - {self.bail_id}"
+
+
+# ===================== MODEL CONTACT =====================
+
 class ContactMessage(models.Model):
     nom = models.CharField(max_length=150)
     email = models.EmailField()
@@ -329,4 +449,3 @@ class ContactMessage(models.Model):
         blank=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
-

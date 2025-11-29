@@ -132,5 +132,25 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
-
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 TAILWIND_APP_NAME = "theme"
+
+# ===================== EMAIL =====================
+if DEBUG:
+    # Dev : tout va dans la console
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    # Prod : envoi réel d'emails (exemple avec Gmail)
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = "smtp.gmail.com"
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+
+DEFAULT_FROM_EMAIL = "MADA IMMO <no-reply@mada-immo.com>"
+# ===================== FIN EMAIL =====================
+
+
+DEFAULT_FROM_EMAIL = "MADA IMMO <no-reply@mada-immo.com>"
+

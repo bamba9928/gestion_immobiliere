@@ -1,5 +1,4 @@
 from django.urls import path
-from .views import MobileBienListView, BienDetailView
 from .views import MobileBienListView, BienDetailView, InterventionListCreateView
 
 urlpatterns = [

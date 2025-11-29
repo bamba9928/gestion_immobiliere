@@ -9,15 +9,23 @@ class MobileBienListView(generics.ListAPIView):
     Endpoint mobile pour lister les biens disponibles.
     Accessible sans authentification pour la vitrine.
     """
-    # On filtre sur 'est_actif' (champ réel) et 'disponible'
-    queryset = Bien.objects.filter(est_actif=True, disponible=True).order_by('-created_at')
     serializer_class = BienSerializer
-    # AllowAny permet à l'app mobile d'afficher les biens sans que l'utilisateur soit connecté
     permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        # Version simple : tous les biens disponibles
+        return (
+            Bien.objects.disponibles()
+            .order_by('-created_at')
+        )
 class BienDetailView(generics.RetrieveAPIView):
-    queryset = Bien.objects.filter(est_actif=True)
     serializer_class = BienSerializer
     permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):
+        # On limite aux biens actifs
+        return Bien.objects.filter(est_actif=True)
+
 class InterventionCreateView(generics.CreateAPIView):
     queryset = Intervention.objects.all()
     serializer_class = InterventionSerializer

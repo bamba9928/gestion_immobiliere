@@ -21,7 +21,6 @@ class BienForm(forms.ModelForm):
             'description',
             'loyer_ref',
             'charges_ref',
-            'disponible',
             'photo_principale',
         ]
         widgets = {
@@ -59,9 +58,6 @@ class BienForm(forms.ModelForm):
             'charges_ref': forms.NumberInput(attrs={
                 'class': 'w-full px-3 py-2 rounded-md bg-neutral-900 border border-neutral-700 text-white',
                 'min': 0,
-            }),
-            'disponible': forms.CheckboxInput(attrs={
-                'class': 'rounded border-neutral-700',
             }),
             'photo_principale': forms.ClearableFileInput(attrs={
                 'class': 'w-full text-sm text-neutral-300',

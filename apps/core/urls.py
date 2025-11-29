@@ -37,7 +37,16 @@ urlpatterns = [
 
     # Gestion des interventions
     path('interventions/', views.interventions_list, name='interventions_list'),
+    # Gestion des baux
+    path("gestion/baux/add/", views.add_bail, name="add_bail"),
+    path("gestion/baux/<int:pk>/", views.bail_detail, name="bail_detail"),
 
+    # États des lieux
+    path(
+        "gestion/baux/<int:bail_id>/etat-des-lieux/<str:type_edl>/",
+        views.add_etat_des_lieux,
+        name="add_etat_des_lieux",
+    ),
     # Actions admin
     path('gestion/actions/generate-rents/', views.trigger_rent_generation, name='trigger_rent_generation'),
 

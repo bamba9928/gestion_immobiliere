@@ -1,5 +1,6 @@
 from datetime import date
 from decimal import Decimal
+import logging
 from django.contrib import messages
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
@@ -11,32 +12,29 @@ from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.utils import timezone
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, FormView
+from django.urls import reverse_lazy, reverse
+from django.views.generic.edit import FormMixin
 import weasyprint
-
 from django.conf import settings
 from django.core.mail import send_mail
-from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, FormView
 
-from .forms import BienForm, InterventionForm, ContactSiteForm
-
-
-from django.urls import reverse
-from django.views.generic import DetailView
-from django.views.generic.edit import FormMixin
-from django.contrib import messages
-from .models import Annonce
-from .forms import ContactAnnonceForm
-
-
-# Models
-from .models import Bien, Bail, Loyer, Intervention, Annonce
-
-# Forms
-from .forms import BienForm, InterventionForm
-
-# Permissions
+from .forms import (
+    BienForm,
+    InterventionForm,
+    ContactSiteForm,
+    ContactAnnonceForm,
+    BailForm,
+    EtatDesLieuxForm,
+)
+from .models import (
+    Bien,
+    Bail,
+    Loyer,
+    Intervention,
+    Annonce,
+    EtatDesLieux,
+)
 from .permissions import (
     is_admin,
     is_bailleur,
@@ -45,11 +43,12 @@ from .permissions import (
     get_active_bail,
 )
 
+logger = logging.getLogger(__name__)
+
 
 # ============================================================================
 # PAGES PUBLIQUES (Accès libre)
 # ============================================================================
-
 class HomeView(ListView):
     """Page d'accueil publique avec annonces immobilières"""
     model = Annonce
@@ -57,16 +56,21 @@ class HomeView(ListView):
     context_object_name = 'annonces'
     paginate_by = 9
 
-    def get_queryset(self):
-        queryset = Annonce.objects.filter(
+    def get_base_queryset(self):
+        """
+        Base : annonces publiées dont le bien est disponible
+        (est_actif=True + pas de bail actif signé).
+        """
+        return Annonce.objects.filter(
             statut='PUBLIE',
-            bien__est_actif=True,
-            bien__disponible=True
+            bien__in=Bien.objects.disponibles()
         ).select_related('bien', 'bien__proprietaire')
 
+    def get_queryset(self):
+        queryset = self.get_base_queryset()
+
         # Filtre de recherche
-        q = self.request.GET.get('q')
-        if q:
+        if q := self.request.GET.get('q'):
             queryset = queryset.filter(
                 Q(bien__ville__icontains=q) |
                 Q(bien__adresse__icontains=q) |
@@ -90,16 +94,24 @@ class HomeView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # Évite un appel supplémentaire à get_queryset()
+        queryset = context['annonces']
+
         context.update({
             'types_bien': Bien.TYPE_CHOICES,
-            'villes': Bien.objects.filter(
-                annonces__statut='PUBLIE',
-                est_actif=True,
-                disponible=True
-            ).values_list('ville', flat=True).distinct().order_by('ville'),
-            'annonces_count': self.get_queryset().count(),
+            'villes': (
+                Bien.objects.disponibles()
+                .filter(annonces__statut='PUBLIE')
+                .values_list('ville', flat=True)
+                .distinct()
+                .order_by('ville')
+            ),
+            'annonces_count': queryset.count(),
         })
         return context
+
+
 class AnnonceDetailView(FormMixin, DetailView):
     """Page de détail d'une annonce publique + formulaire de contact."""
     model = Annonce
@@ -114,49 +126,48 @@ class AnnonceDetailView(FormMixin, DetailView):
         ).select_related('bien', 'bien__proprietaire')
 
     def get_success_url(self):
-        # Redirection sur la même page après envoi du formulaire
         return reverse('annonce_detail', kwargs={'pk': self.object.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # Annonces similaires
         context['annonces_similaires'] = Annonce.objects.filter(
             statut='PUBLIE',
             bien__type_bien=self.object.bien.type_bien,
             bien__ville=self.object.bien.ville
         ).exclude(id=self.object.id)[:3]
 
-        # Formulaire dans le contexte
         if 'form' not in context:
             context['form'] = self.get_form()
-
         return context
 
     def post(self, request, *args, **kwargs):
-        """Traitement du formulaire de contact."""
-        self.object = self.get_object()  # important pour avoir self.object (l'annonce)
+        self.object = self.get_object()
         form = self.get_form()
-
         if form.is_valid():
-            contact = form.save(commit=False)
-            contact.annonce = self.object
-            contact.save()
-            messages.success(request, "Votre message a bien été envoyé. Nous vous recontacterons rapidement.")
-            return redirect(self.get_success_url())
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
 
-        # Si formulaire invalide, on réaffiche la page avec les erreurs
-        context = self.get_context_data(form=form)
-        return self.render_to_response(context)
+    def form_valid(self, form):
+        contact = form.save(commit=False)
+        contact.annonce = self.object
+        contact.save()
+        messages.success(self.request, "Votre message a bien été envoyé. Nous vous recontacterons rapidement.")
+        return redirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Veuillez corriger les erreurs dans le formulaire.")
+        return self.render_to_response(self.get_context_data(form=form))
+
+
 class ContactView(FormView):
     """Page de contact générale du site"""
-    template_name = "pages/contact.html"   # à adapter si ton template a un autre chemin
+    template_name = "pages/contact.html"
     form_class = ContactSiteForm
     success_url = reverse_lazy("contact")
 
     def form_valid(self, form):
         data = form.cleaned_data
-
         sujet = f"[Contact MADA IMMO] {data.get('sujet')}"
         message = (
             f"Nom : {data.get('nom')}\n"
@@ -164,25 +175,26 @@ class ContactView(FormView):
             f"Téléphone : {data.get('telephone')}\n\n"
             f"Message :\n{data.get('message')}"
         )
+        destinataire = getattr(settings, "CONTACT_EMAIL", "admin@votre-site.com")
 
-        destinataire = getattr(settings, "CONTACT_EMAIL", settings.DEFAULT_FROM_EMAIL)
+        try:
+            send_mail(
+                sujet,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [destinataire],
+                fail_silently=False,
+            )
+            messages.success(self.request, "Votre message a bien été envoyé, nous vous répondrons rapidement.")
+        except Exception as e:
+            logger.error(f"Erreur envoi email contact: {e}")
+            messages.error(self.request, "Une erreur est survenue. Veuillez réessayer plus tard.")
 
-        send_mail(
-            sujet,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [destinataire],
-            fail_silently=False,
-        )
-
-        messages.success(self.request, "Votre message a bien été envoyé, nous vous répondrons rapidement.")
         return super().form_valid(form)
+
+
 def about(request):
     return render(request, "about.html")
-# ============================================================================
-# AUTHENTIFICATION (Utilise les vues Django par défaut)
-# ============================================================================
-# Les vues login/logout sont directement dans urls.py via auth_views
 
 
 # ============================================================================
@@ -194,11 +206,11 @@ def dashboard(request):
     """Tableau de bord multi-rôles centralisé"""
     context = {'user': request.user}
 
-    # ADMINISTRATEUR
     if is_admin(request.user):
         total_biens = Bien.objects.count()
         biens_occupes = Bien.objects.filter(
             baux__est_signe=True,
+            baux__date_debut__lte=date.today(),
             baux__date_fin__gte=date.today(),
         ).distinct().count()
 
@@ -206,18 +218,18 @@ def dashboard(request):
             'user_role': 'ADMIN',
             'total_biens': total_biens,
             'biens_occupes': biens_occupes,
-            'taux_occupation': int((biens_occupes / total_biens) * 100) if total_biens else 0,
+            'taux_occupation': int((biens_occupes / total_biens) * 100) if total_biens > 0 else 0,
             'montant_impayes': Loyer.objects.filter(statut='RETARD').aggregate(
                 total=Sum('montant_du')
             )['total'] or 0,
         })
 
-    # BAILLEUR
     elif is_bailleur(request.user):
         biens_proprio = Bien.objects.filter(proprietaire=request.user)
         total_biens = biens_proprio.count()
         biens_occupes = biens_proprio.filter(
             baux__est_signe=True,
+            baux__date_debut__lte=date.today(),
             baux__date_fin__gte=date.today(),
         ).distinct().count()
 
@@ -225,14 +237,13 @@ def dashboard(request):
             'user_role': 'BAILLEUR',
             'total_biens': total_biens,
             'biens_occupes': biens_occupes,
-            'taux_occupation': int((biens_occupes / total_biens) * 100) if total_biens else 0,
+            'taux_occupation': int((biens_occupes / total_biens) * 100) if total_biens > 0 else 0,
             'montant_impayes': Loyer.objects.filter(
                 bail__bien__proprietaire=request.user,
                 statut='RETARD',
             ).aggregate(total=Sum('montant_du'))['total'] or 0,
         })
 
-    # LOCATAIRE
     elif is_locataire(request.user):
         bail = get_active_bail(request.user)
         context.update({
@@ -244,9 +255,8 @@ def dashboard(request):
                 '-date_echeance'
             ).first()
 
-    # AGENT ou AUTRE
     else:
-        context['user_role'] = 'AGENT' if is_agent(request.user) else 'VISITEUR'
+        context['user_role'] = 'AGENT'
 
     return render(request, 'dashboard.html', context)
 
@@ -276,8 +286,79 @@ def add_bien(request):
         'form': form,
         'user_role': 'ADMIN' if is_admin(request.user) else 'PROPRIÉTAIRE'
     })
+@login_required
+def add_bail(request):
+    """
+    Création d'un bail depuis le dashboard.
+    - Admin : voit tous les biens.
+    - Bailleur : ne voit que ses propres biens.
+    """
+    if not (is_admin(request.user) or is_bailleur(request.user)):
+        raise PermissionDenied("Seuls les administrateurs et bailleurs peuvent créer un bail.")
 
+    if request.method == "POST":
+        form = BailForm(request.POST, request.FILES)
+        # Restreindre le choix des biens pour un bailleur
+        if is_bailleur(request.user):
+            form.fields["bien"].queryset = Bien.objects.filter(proprietaire=request.user)
 
+        if form.is_valid():
+            bail = form.save()
+            messages.success(request, "Le bail a été créé avec succès.")
+            return redirect("bail_detail", pk=bail.pk)
+    else:
+        form = BailForm()
+        if is_bailleur(request.user):
+            form.fields["bien"].queryset = Bien.objects.filter(proprietaire=request.user)
+
+    return render(
+        request,
+        "baux/add_bail.html",
+        {
+            "form": form,
+            "user_role": "ADMIN" if is_admin(request.user) else "BAILLEUR",
+        },
+    )
+@login_required
+def bail_detail(request, pk):
+    """
+    Fiche détaillée d'un bail :
+    - infos bail
+    - loyers associés
+    - états des lieux (entrée/sortie)
+    """
+    bail = get_object_or_404(Bail, pk=pk)
+
+    # Permissions : admin, propriétaire du bien ou locataire
+    if not (
+        is_admin(request.user)
+        or bail.bien.proprietaire == request.user
+        or bail.locataire == request.user
+    ):
+        raise PermissionDenied("Vous n'avez pas l'autorisation de consulter ce bail.")
+
+    loyers = bail.loyers.order_by("-date_echeance")  # related_name='loyers' sur Loyer :contentReference[oaicite:7]{index=7}
+    etats = bail.etats_des_lieux.order_by("-date_realisation")  # related_name='etats_des_lieux' :contentReference[oaicite:8]{index=8}
+
+    # Pour le template : séparer entrée / sortie si besoin
+    edl_entree = etats.filter(type_edl="ENTREE").first()
+    edl_sortie = etats.filter(type_edl="SORTIE").first()
+
+    context = {
+        "bail": bail,
+        "loyers": loyers,
+        "etats": etats,
+        "edl_entree": edl_entree,
+        "edl_sortie": edl_sortie,
+        "user_role": (
+            "ADMIN"
+            if is_admin(request.user)
+            else "BAILLEUR"
+            if bail.bien.proprietaire == request.user
+            else "LOCATAIRE"
+        ),
+    }
+    return render(request, "baux/bail_detail.html", context)
 # ============================================================================
 # GESTION DES LOYERS
 # ============================================================================
@@ -313,6 +394,7 @@ def mark_loyer_paid(request, loyer_id):
         raise PermissionDenied("Accès réservé aux administrateurs.")
 
     if request.method != 'POST':
+        messages.warning(request, "Méthode non autorisée.")
         return redirect('loyers_list')
 
     loyer = get_object_or_404(Loyer, id=loyer_id)
@@ -327,10 +409,9 @@ def mark_loyer_paid(request, loyer_id):
 @login_required
 def download_quittance(request, loyer_id):
     """Téléchargement de quittance PDF (Admin ou Locataire concerné)"""
-    loyer = get_object_or_404(Loyer, id=loyer_id)
+    loyer = get_object_or_404(Loyer.objects.select_related('bail__locataire'), id=loyer_id)
 
-    # Sécurité : admin ou locataire concerné
-    if not is_admin(request.user) and loyer.bail.locataire != request.user:
+    if not is_admin(request.user) and (not loyer.bail or loyer.bail.locataire != request.user):
         raise PermissionDenied("Accès non autorisé à cette quittance.")
 
     if loyer.statut != 'PAYE':
@@ -357,23 +438,23 @@ def download_quittance(request, loyer_id):
 @login_required
 def interventions_list(request):
     """Gestion des interventions (Admin ou Locataire avec bail actif)"""
-    bail = get_active_bail(request.user) if not is_admin(request.user) else None
+    user_is_admin = is_admin(request.user)
+    bail = get_active_bail(request.user) if not user_is_admin else None
 
-    # Admin voit tout
-    if is_admin(request.user):
-        interventions = Intervention.objects.all().order_by('-created_at')
-    # Locataire avec bail voit ses interventions
+    if user_is_admin:
+        interventions = Intervention.objects.select_related(
+            'bien', 'locataire', 'bien__proprietaire'
+        ).all().order_by('-created_at')
     elif bail:
         interventions = Intervention.objects.filter(
             bien=bail.bien,
             locataire=request.user
-        ).order_by('-created_at')
+        ).select_related('bien').order_by('-created_at')
     else:
         return render(request, 'interventions/pas_de_bail.html', {
             'message': "Vous n'avez aucun bail actif."
         })
 
-    # Gestion du formulaire pour locataires
     form = InterventionForm()
     if request.method == 'POST':
         if not bail:
@@ -389,14 +470,65 @@ def interventions_list(request):
             messages.success(request, "Demande d'intervention enregistrée avec succès.")
             return redirect('interventions_list')
 
-    return render(request, 'interventions/loyers_list.html', {
+    return render(request, 'interventions/interventions_list.html', {
         'interventions': interventions,
         'form': form,
-        'user_role': 'ADMIN' if is_admin(request.user) else 'LOCATAIRE',
+        'user_role': 'ADMIN' if user_is_admin else 'LOCATAIRE',
         'bail': bail,
     })
+@login_required
+def add_etat_des_lieux(request, bail_id, type_edl):
+    """
+    Création d'un EDL d'entrée ou de sortie pour un bail donné.
+    type_edl: 'ENTREE' ou 'SORTIE'
+    """
+    bail = get_object_or_404(Bail, pk=bail_id)
 
+    # Permissions
+    if not (
+        is_admin(request.user)
+        or bail.bien.proprietaire == request.user
+        or bail.locataire == request.user
+    ):
+        raise PermissionDenied("Vous n'avez pas l'autorisation de créer cet état des lieux.")
 
+    if type_edl not in ["ENTREE", "SORTIE"]:
+        messages.error(request, "Type d'état des lieux invalide.")
+        return redirect("bail_detail", pk=bail.pk)
+
+    if request.method == "POST":
+        form = EtatDesLieuxForm(request.POST, request.FILES)
+        # On ne laisse pas le user changer le bail/type_edl
+        form.fields["bail"].disabled = True
+        form.fields["type_edl"].disabled = True
+
+        if form.is_valid():
+            edl = form.save(commit=False)
+            edl.bail = bail
+            edl.type_edl = type_edl
+            edl.save()
+            messages.success(request, "L'état des lieux a été enregistré avec succès.")
+            return redirect("bail_detail", pk=bail.pk)
+    else:
+        form = EtatDesLieuxForm(
+            initial={
+                "bail": bail,
+                "type_edl": type_edl,
+                "date_realisation": timezone.now().date(),
+            }
+        )
+        form.fields["bail"].disabled = True
+        form.fields["type_edl"].disabled = True
+
+    return render(
+        request,
+        "etats_des_lieux/form.html",
+        {
+            "form": form,
+            "bail": bail,
+            "type_edl": type_edl,
+        },
+    )
 # ============================================================================
 # ACTIONS ADMINISTRATIVES
 # ============================================================================
@@ -415,6 +547,7 @@ def trigger_rent_generation(request):
         call_command('generer_loyers')
         messages.success(request, "✅ Génération des loyers effectuée avec succès.")
     except Exception as e:
-        messages.error(request, f"❌ Erreur lors de la génération : {str(e)}")
+        logger.error(f"Erreur génération loyers: {e}")
+        messages.error(request, "Une erreur est survenue. Contactez l'administrateur.")
 
     return redirect('dashboard')

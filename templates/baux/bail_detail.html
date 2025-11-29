@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-5xl mx-auto py-10 space-y-8">
+
+  <!-- En-tête bail -->
+  <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-semibold text-white">
+          Bail {{ bail.locataire.get_full_name|default:bail.locataire.username }}
+        </h1>
+        <p class="text-sm text-neutral-400">
+          {{ bail.bien.get_type_bien_display }} – {{ bail.bien.titre }}
+        </p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm text-neutral-400">
+          Du {{ bail.date_debut }} au {{ bail.date_fin }}
+        </p>
+        <p class="text-lg font-semibold text-emerald-400">
+          {{ bail.montant_loyer }} FCFA + {{ bail.montant_charges }} FCFA charges
+        </p>
+        <p class="text-xs text-neutral-400">
+          Jour de paiement : {{ bail.jour_paiement }}
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+        {% if bail.est_signe %}bg-emerald-500/20 text-emerald-300{% else %}bg-amber-500/20 text-amber-300{% endif %}">
+        {% if bail.est_signe %}Bail signé{% else %}En attente de signature{% endif %}
+      </span>
+
+      {% if bail.fichier_contrat %}
+        <a href="{{ bail.fichier_contrat.url }}" target="_blank"
+           class="text-xs text-emerald-400 hover:underline">
+          Voir le contrat PDF
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- États des lieux -->
+  <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-white">États des lieux</h2>
+      <div class="flex gap-2">
+        <a href="{% url 'add_etat_des_lieux' bail.id 'ENTREE' %}"
+           class="px-3 py-1.5 rounded-md text-xs bg-neutral-800 text-neutral-200 border border-neutral-700">
+          EDL d'entrée
+        </a>
+        <a href="{% url 'add_etat_des_lieux' bail.id 'SORTIE' %}"
+           class="px-3 py-1.5 rounded-md text-xs bg-neutral-800 text-neutral-200 border border-neutral-700">
+          EDL de sortie
+        </a>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="border border-neutral-800 rounded-lg p-4">
+        <h3 class="text-sm font-medium text-neutral-300 mb-2">Entrée</h3>
+        {% if edl_entree %}
+          <p class="text-xs text-neutral-400 mb-1">
+            Réalisé le {{ edl_entree.date_realisation }}
+          </p>
+          <p class="text-xs text-neutral-400 mb-1">
+            Bailleur : {% if edl_entree.signature_bailleur %}✔{% else %}✖{% endif %} –
+            Locataire : {% if edl_entree.signature_locataire %}✔{% else %}✖{% endif %}
+          </p>
+          {% if edl_entree.pdf %}
+            <a href="{{ edl_entree.pdf.url }}" target="_blank"
+               class="text-xs text-emerald-400 hover:underline">
+              Télécharger le PDF
+            </a>
+          {% endif %}
+        {% else %}
+          <p class="text-xs text-neutral-500">Aucun état des lieux d'entrée enregistré.</p>
+        {% endif %}
+      </div>
+
+      <div class="border border-neutral-800 rounded-lg p-4">
+        <h3 class="text-sm font-medium text-neutral-300 mb-2">Sortie</h3>
+        {% if edl_sortie %}
+          <p class="text-xs text-neutral-400 mb-1">
+            Réalisé le {{ edl_sortie.date_realisation }}
+          </p>
+          <p class="text-xs text-neutral-400 mb-1">
+            Bailleur : {% if edl_sortie.signature_bailleur %}✔{% else %}✖{% endif %} –
+            Locataire : {% if edl_sortie.signature_locataire %}✔{% else %}✖{% endif %}
+          </p>
+          {% if edl_sortie.pdf %}
+            <a href="{{ edl_sortie.pdf.url }}" target="_blank"
+               class="text-xs text-emerald-400 hover:underline">
+              Télécharger le PDF
+            </a>
+          {% endif %}
+        {% else %}
+          <p class="text-xs text-neutral-500">Aucun état des lieux de sortie enregistré.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Loyers -->
+  <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-white">Loyers</h2>
+    </div>
+
+    {% if loyers %}
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm text-neutral-200">
+          <thead class="bg-neutral-800 text-xs uppercase">
+            <tr>
+              <th class="px-3 py-2 text-left">Période</th>
+              <th class="px-3 py-2 text-right">Montant dû</th>
+              <th class="px-3 py-2 text-right">Payé</th>
+              <th class="px-3 py-2 text-center">Statut</th>
+              <th class="px-3 py-2 text-center">Quittance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for loyer in loyers %}
+              <tr class="border-t border-neutral-800">
+                <td class="px-3 py-2">
+                  {{ loyer.periode_debut }} – {{ loyer.periode_fin }}
+                </td>
+                <td class="px-3 py-2 text-right">
+                  {{ loyer.montant_du }} FCFA
+                </td>
+                <td class="px-3 py-2 text-right">
+                  {{ loyer.montant_verse }} FCFA
+                </td>
+                <td class="px-3 py-2 text-center">
+                  <span class="inline-flex px-2 py-0.5 rounded-full text-xs
+                    {% if loyer.statut == 'PAYE' %}
+                      bg-emerald-500/20 text-emerald-300
+                    {% elif loyer.statut == 'RETARD' %}
+                      bg-red-500/20 text-red-300
+                    {% elif loyer.statut == 'PARTIEL' %}
+                      bg-blue-500/20 text-blue-300
+                    {% else %}
+                      bg-amber-500/20 text-amber-300
+                    {% endif %}">
+                    {{ loyer.get_statut_display }}
+                  </span>
+                </td>
+                <td class="px-3 py-2 text-center">
+                  {% if loyer.statut == 'PAYE' %}
+                    <a href="{% url 'download_quittance' loyer.id %}"
+                       class="text-xs text-emerald-400 hover:underline">
+                      Voir la quittance
+                    </a>
+                  {% else %}
+                    <span class="text-xs text-neutral-500">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-sm text-neutral-500">Aucun loyer généré pour ce bail.</p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

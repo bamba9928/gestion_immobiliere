@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto py-10">
+  <h1 class="text-2xl font-semibold text-white mb-2">
+    État des lieux {% if type_etat == "ENTREE" %}d'entrée{% else %}de sortie{% endif %}
+  </h1>
+  <p class="text-sm text-neutral-400 mb-6">
+    {{ bail.bien.get_type_bien_display }} – {{ bail.bien.titre }} /
+    Locataire : {{ bail.locataire.get_full_name|default:bail.locataire.username }}
+  </p>
+
+  <form method="post" enctype="multipart/form-data" class="space-y-6 bg-neutral-900 border border-neutral-800 rounded-xl p-6">
+    {% csrf_token %}
+
+    {% for field in form %}
+      <div>
+        <label class="block text-sm font-medium text-neutral-300 mb-1">
+          {{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}
+        </label>
+        {{ field }}
+        {% if field.help_text %}
+          <p class="mt-1 text-xs text-neutral-400">{{ field.help_text }}</p>
+        {% endif %}
+        {% for error in field.errors %}
+          <p class="mt-1 text-xs text-red-400">{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+    {% if form.non_field_errors %}
+      <div class="text-sm text-red-400">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <div class="flex items-center justify-end gap-3">
+      <a href="{% url 'bail_detail' bail.id %}"
+         class="px-4 py-2 rounded-md border border-neutral-700 text-neutral-300 text-sm">
+        Annuler
+      </a>
+      <button type="submit" class="px-4 py-2 rounded-md bg-emerald-500 text-sm font-medium text-black hover:bg-emerald-400">
+        Enregistrer l'état des lieux
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
