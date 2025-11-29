@@ -19,10 +19,8 @@ if os.name == 'nt':  # Windows uniquement
 # ===================== CORE SETTINGS =====================
 SECRET_KEY = 'django-insecure-y)wq&$_qu-m-6-^fc@j)ge+xq=^5ri53uokr2ynu^&zi8lgjq+'
 
-# TODO: Mettre à False en production !
 DEBUG = True
 
-# TODO: Configurer pour la production
 ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = "accounts.CustomUser"
