@@ -1,6 +1,8 @@
 from pathlib import Path
 import os
 from celery.schedules import crontab
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent

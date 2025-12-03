@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Contrat de Bail - {{ bail.bien.titre }}</title>
+    <style>
+        @page { size: A4; margin: 2.5cm; }
+        body { font-family: 'Helvetica', sans-serif; font-size: 11pt; line-height: 1.5; color: #000; text-align: justify; }
+        h1 { text-align: center; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 30px; font-size: 18pt; }
+        h2 { font-size: 13pt; margin-top: 25px; background-color: #f0f0f0; padding: 8px; border-left: 5px solid #333; }
+        .party { margin-bottom: 15px; }
+        .label { font-weight: bold; }
+        .info-grid { display: table; width: 100%; margin-top: 10px; }
+        .info-row { display: table-row; }
+        .info-cell { display: table-cell; padding: 5px; width: 50%; }
+        .signature-box { margin-top: 60px; page-break-inside: avoid; }
+        .sign-col { float: left; width: 45%; border: 1px solid #aaa; height: 120px; padding: 10px; font-size: 10pt; }
+        .right { float: right; }
+        .footer { position: fixed; bottom: 0; left: 0; right: 0; font-size: 8pt; text-align: center; color: #666; border-top: 1px solid #ddd; padding-top: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Contrat de Location à Usage d'Habitation</h1>
+
+    <div class="party">
+        <h2>1. Les Parties</h2>
+        <p><strong>LE BAILLEUR :</strong><br>
+        {{ bail.bien.proprietaire.get_full_name|default:bail.bien.proprietaire.username|upper }}<br>
+        Représenté par l'agence <strong>MADA IMMO</strong>.</p>
+
+        <p><strong>LE PRENEUR (LOCATAIRE) :</strong><br>
+        {{ bail.locataire.get_full_name|default:bail.locataire.username|upper }}<br>
+        Téléphone : {{ bail.locataire.phone_number|default:"Non renseigné" }}</p>
+    </div>
+
+    <div class="party">
+        <h2>2. Désignation du Bien Loué</h2>
+        <p>Le Bailleur donne en location au Preneur les locaux désignés ci-après :</p>
+        <ul style="list-style-type: square;">
+            <li><strong>Type de bien :</strong> {{ bail.bien.get_type_bien_display }}</li>
+            <li><strong>Adresse :</strong> {{ bail.bien.adresse }}, {{ bail.bien.ville }}</li>
+            <li><strong>Consistance :</strong> {{ bail.bien.nb_pieces }} pièce(s), surface d'environ {{ bail.bien.surface }} m².</li>
+            <li><strong>Description :</strong> {{ bail.bien.description|default:"Sans particularités"|truncatewords:50 }}</li>
+        </ul>
+    </div>
+
+    <div class="party">
+        <h2>3. Durée du Contrat</h2>
+        <p>Le présent bail est consenti et accepté pour une durée déterminée :</p>
+        <p>
+            Date de prise d'effet : <strong>{{ bail.date_debut|date:"d F Y" }}</strong><br>
+            Date d'expiration : <strong>{{ bail.date_fin|date:"d F Y" }}</strong>
+        </p>
+    </div>
+
+    <div class="party">
+        <h2>4. Conditions Financières</h2>
+        <div class="info-grid">
+            <div class="info-row">
+                <div class="info-cell"><span class="label">Loyer mensuel hors charges :</span></div>
+                <div class="info-cell">{{ bail.montant_loyer }} FCFA</div>
+            </div>
+            <div class="info-row">
+                <div class="info-cell"><span class="label">Provisions sur charges :</span></div>
+                <div class="info-cell">{{ bail.montant_charges }} FCFA</div>
+            </div>
+            <div class="info-row">
+                <div class="info-cell" style="border-top: 1px solid #000; padding-top:10px;"><strong>TOTAL MENSUEL :</strong></div>
+                <div class="info-cell" style="border-top: 1px solid #000; padding-top:10px;"><strong>{{ bail.loyer_total }} FCFA</strong></div>
+            </div>
+        </div>
+        <p style="margin-top: 15px;">
+            <span class="label">Dépôt de garantie :</span> Le locataire verse ce jour la somme de <strong>{{ bail.depot_garantie }} FCFA</strong>.
+        </p>
+        <p>Le loyer est payable d'avance, au plus tard le <strong>{{ bail.jour_paiement }}</strong> de chaque mois.</p>
+    </div>
+
+    <div class="signature-box">
+        <div class="sign-col">
+            <strong>LE BAILLEUR</strong><br>
+            <span style="font-size: 8pt;">(Signature et cachet)</span>
+        </div>
+        <div class="sign-col right">
+            <strong>LE LOCATAIRE</strong><br>
+            <span style="font-size: 8pt;">(Lu et approuvé, signature)</span>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div class="footer">
+        Document généré automatiquement par la plateforme MADA IMMO le {% now "d/m/Y à H:i" %} - Réf: BAIL-{{ bail.id }}
+    </div>
+</body>
+</html>

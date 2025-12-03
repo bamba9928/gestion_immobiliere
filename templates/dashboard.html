@@ -39,8 +39,11 @@
         </div>
     {% endif %}
 
-    {% if user.is_staff %}
-        {# --- DASHBOARD ADMIN --- #}
+    {# ===================================================================== #}
+    {# DASHBOARD ADMIN / BAILLEUR                                            #}
+    {# ===================================================================== #}
+    {% if user_role == "ADMIN" or user_role == "BAILLEUR" %}
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 
             <!-- Carte Taux Occupation -->
@@ -98,18 +101,26 @@
                         Ajouter un bien
                     </a>
 
-                    <a href="{% url 'trigger_rent_generation' %}"
-                       onclick="return confirm('🚀 Voulez-vous lancer la génération des loyers pour le mois en cours ?')"
-                       class="group flex items-center gap-3 w-full p-3 rounded-xl
-                              bg-gradient-to-r from-amber-500/20 to-amber-600/20
-                              border border-amber-500/30 hover:border-amber-500/50
-                              text-amber-400 font-semibold transition-all duration-300 hover:translate-x-1">
-                        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
-                        </svg>
-                        Générer les loyers
-                    </a>
+                    {# Génération des loyers : ADMIN uniquement + POST #}
+                    {% if user_role == "ADMIN" %}
+                    <form action="{% url 'trigger_rent_generation' %}" method="post"
+                          onsubmit="return confirm('🚀 Voulez-vous lancer la génération des loyers pour le mois en cours ?')"
+                          class="w-full">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="group flex items-center gap-3 w-full p-3 rounded-xl
+                                       bg-gradient-to-r from-amber-500/20 to-amber-600/20
+                                       border border-amber-500/30 hover:border-amber-500/50
+                                       text-amber-400 font-semibold transition-all duration-300 hover:translate-x-1">
+                            <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
+                            </svg>
+                            Générer les loyers
+                        </button>
+                    </form>
+                    {% endif %}
 
+                    {% if user_role == "ADMIN" %}
                     <a href="{% url 'loyers_list' %}"
                        class="group flex items-center gap-3 w-full p-3 rounded-xl
                               bg-slate-700/50 border border-slate-600 hover:border-slate-500
@@ -129,11 +140,12 @@
                         </svg>
                         Gestion des incidents
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Dernières Activités -->
+        <!-- Dernières Activités (principalement pour ADMIN ; BAILLEUR verra vide si non fourni) -->
         <div class="card-hover rounded-2xl p-6 bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-xl font-bold text-white flex items-center gap-2">
@@ -172,8 +184,11 @@
             </div>
         </div>
 
-    {% else %}
-        {# --- DASHBOARD LOCATAIRE --- #}
+    {# ===================================================================== #}
+    {# DASHBOARD LOCATAIRE                                                  #}
+    {# ===================================================================== #}
+    {% elif user_role == "LOCATAIRE" %}
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             <!-- Situation Loyers -->
@@ -212,17 +227,22 @@
                     </div>
 
                     {% if dernier_loyer.statut != 'PAYE' %}
-                        <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700
-                                       text-white font-bold py-3 rounded-xl transition-all duration-300
-                                       hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/25">
-                            <span class="flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
-                                    <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
-                                </svg>
-                                Payer maintenant (Wave/OM)
-                            </span>
-                        </button>
+                        <form action="{% url 'initier_paiement' dernier_loyer.id %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="provider" value="WAVE">
+                            <button type="submit"
+                                    class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700
+                                           text-white font-bold py-3 rounded-xl transition-all duration-300
+                                           hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/25">
+                                <span class="flex items-center justify-center gap-2">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+                                        <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+                                    </svg>
+                                    Payer maintenant (Wave)
+                                </span>
+                            </button>
+                        </form>
                     {% else %}
                         <a href="{% url 'download_quittance' dernier_loyer.id %}" target="_blank"
                            class="block w-full text-center bg-slate-700/50 hover:bg-slate-700
@@ -311,6 +331,15 @@
                 {% endif %}
             </div>
         </div>
+
+    {# ===================================================================== #}
+    {# AUTRES RÔLES (AGENT, etc.)                                          #}
+    {# ===================================================================== #}
+    {% else %}
+        <div class="text-neutral-400">
+            Aucun tableau de bord spécifique n'est défini pour ce rôle.
+        </div>
     {% endif %}
+
 </div>
 {% endblock %}

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.conf import settings
@@ -18,6 +18,7 @@ class BienQuerySet(models.QuerySet):
             self.filter(est_actif=True)
             .exclude(
                 baux__est_signe=True,
+                baux__date_debut__lte=aujourd_hui,
                 baux__date_fin__gte=aujourd_hui,
             )
             .distinct()
@@ -30,6 +31,7 @@ class BienQuerySet(models.QuerySet):
             self.filter(
                 est_actif=True,
                 baux__est_signe=True,
+                baux__date_debut__lte=aujourd_hui,
                 baux__date_fin__gte=aujourd_hui,
             )
             .distinct()
@@ -116,9 +118,11 @@ class Bien(models.Model):
     @property
     def est_occupe(self) -> bool:
         """Vérifie si un bail actif et signé existe."""
+        aujourd_hui = date.today()
         return self.baux.filter(
-            date_fin__gte=date.today(),
             est_signe=True,
+            date_debut__lte=aujourd_hui,
+            date_fin__gte=aujourd_hui,
         ).exists()
 
     @property
@@ -133,9 +137,11 @@ class Bien(models.Model):
     @property
     def bail_actif(self):
         """Retourne le bail en cours s'il existe."""
+        aujourd_hui = date.today()
         return self.baux.filter(
-            date_fin__gte=date.today(),
             est_signe=True,
+            date_debut__lte=aujourd_hui,
+            date_fin__gte=aujourd_hui,
         ).first()
 
 
@@ -299,6 +305,7 @@ class Loyer(models.Model):
             from apps.core.services.quittance import attacher_quittance
 
             attacher_quittance(self)
+
     def actualiser_statut_retard(self) -> None:
         if self.statut == 'PAYE':
             return
@@ -308,7 +315,6 @@ class Loyer(models.Model):
 
 
 # ===================== MODEL ANNONCE =====================
-
 class Annonce(models.Model):
     STATUT_CHOICES = [
         ('BROUILLON', 'Brouillon'),
@@ -342,7 +348,21 @@ class Annonce(models.Model):
     def __str__(self) -> str:
         return f"{self.bien} - {self.get_statut_display()}"
 
+    @property
+    def est_recente(self) -> bool:
+        """
+        Indique si l'annonce a été publiée il y a moins de 7 jours.
+        Utilisé pour afficher le badge "Nouveau" sur la page d'accueil.
 
+        Returns:
+            bool: True si l'annonce a moins de 7 jours, False sinon
+        """
+        if not self.date_publication:
+            return False
+
+        # Comparer avec timezone-aware datetime
+        limite = timezone.now() - timedelta(days=7)
+        return self.date_publication >= limite
 # ===================== MODEL INTERVENTION =====================
 
 class Intervention(models.Model):
@@ -452,3 +472,58 @@ class ContactMessage(models.Model):
         blank=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.nom} - {self.created_at:%Y-%m-%d}"
+
+
+# ===================== MODEL TRANSACTION =====================
+
+class Transaction(models.Model):
+    PROVIDERS = [('WAVE', 'Wave'), ('OM', 'Orange Money'), ('CASH', 'Espèces')]
+
+    loyer = models.ForeignKey(Loyer, on_delete=models.CASCADE, related_name='transactions')
+    montant = models.DecimalField(max_digits=10, decimal_places=0)
+    provider = models.CharField(max_length=10, choices=PROVIDERS)
+    reference_externe = models.CharField(max_length=100, blank=True)  # ID de transaction Wave/OM
+    est_validee = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Transaction"
+        verbose_name_plural = "Transactions"
+
+    def __str__(self):
+        return f"{self.provider} - {self.montant} ({self.loyer})"
+class Transaction(models.Model):
+    PROVIDERS = [
+        ('WAVE', 'Wave'),
+        ('OM', 'Orange Money'),
+        ('CASH', 'Espèces'),
+    ]
+
+    loyer = models.ForeignKey(
+        Loyer,
+        on_delete=models.CASCADE,
+        related_name='transactions'
+    )
+    montant = models.DecimalField(max_digits=10, decimal_places=0)
+    provider = models.CharField(max_length=10, choices=PROVIDERS)
+    reference_externe = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="ID de transaction fourni par l'opérateur (ex: Wave ID)"
+    )
+    est_validee = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.provider} - {self.montant} FCFA ({self.get_statut_display()})"
+
+    def get_statut_display(self):
+        return "Validée" if self.est_validee else "En attente"

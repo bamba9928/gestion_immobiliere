@@ -1,4 +1,3 @@
-from datetime import date
 import logging
 
 from django.conf import settings
@@ -7,10 +6,10 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.core.management import call_command
-from django.db.models import Q, Sum
+from django.db.models import Q
 from django.http import FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, FormView
 from django.views.generic.edit import FormMixin
@@ -28,7 +27,8 @@ from .models import (
     Bail,
     Loyer,
     Intervention,
-    Annonce, EtatDesLieux,
+    Annonce,
+    EtatDesLieux, Transaction,
 )
 from .permissions import (
     is_admin,
@@ -36,11 +36,16 @@ from .permissions import (
     is_locataire,
     get_active_bail,
 )
+from .services.paiement import PaymentService
+from .services.stats import DashboardService
 
 logger = logging.getLogger(__name__)
+
+
 # ============================================================================
 # PAGES PUBLIQUES (Accès libre)
 # ============================================================================
+
 class HomeView(ListView):
     """Page d'accueil publique avec annonces immobilières"""
     model = Annonce
@@ -87,20 +92,24 @@ class HomeView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # queryset complet (sans pagination)
+        # queryset de base (sans filtres) pour remplir les villes
         base_qs = self.get_base_queryset()
 
+        paginator = context.get("paginator")
+
         context.update({
-            'types_bien': Bien.TYPE_CHOICES,
-            'villes': (
+            "types_bien": Bien.TYPE_CHOICES,
+            "villes": (
                 base_qs
-                .values_list('bien__ville', flat=True)
+                .values_list("bien__ville", flat=True)
                 .distinct()
-                .order_by('bien__ville')
+                .order_by("bien__ville")
             ),
-            'annonces_count': base_qs.count(),
+            # nombre d'annonces APRÈS filtres (via le paginator)
+            "annonces_count": paginator.count if paginator else 0,
         })
         return context
+
 
 class AnnonceDetailView(FormMixin, DetailView):
     """Page de détail d'une annonce publique + formulaire de contact."""
@@ -194,62 +203,34 @@ def about(request):
 
 @login_required
 def dashboard(request):
-    """Tableau de bord multi-rôles centralisé"""
-    context = {'user': request.user}
+    """Tableau de bord multi-rôles centralisé (délégué au service de stats)"""
+    context = {"user": request.user}
+    service = DashboardService()
 
     if is_admin(request.user):
-        total_biens = Bien.objects.count()
-        biens_occupes = Bien.objects.filter(
-            baux__est_signe=True,
-            baux__date_debut__lte=date.today(),
-            baux__date_fin__gte=date.today(),
-        ).distinct().count()
-
-        context.update({
-            'user_role': 'ADMIN',
-            'total_biens': total_biens,
-            'biens_occupes': biens_occupes,
-            'taux_occupation': int((biens_occupes / total_biens) * 100) if total_biens > 0 else 0,
-            'montant_impayes': Loyer.objects.filter(statut='RETARD').aggregate(
-                total=Sum('montant_du')
-            )['total'] or 0,
-        })
+        context["user_role"] = "ADMIN"
+        context.update(service.get_admin_stats())
 
     elif is_bailleur(request.user):
-        biens_proprio = Bien.objects.filter(proprietaire=request.user)
-        total_biens = biens_proprio.count()
-        biens_occupes = biens_proprio.filter(
-            baux__est_signe=True,
-            baux__date_debut__lte=date.today(),
-            baux__date_fin__gte=date.today(),
-        ).distinct().count()
-
-        context.update({
-            'user_role': 'BAILLEUR',
-            'total_biens': total_biens,
-            'biens_occupes': biens_occupes,
-            'taux_occupation': int((biens_occupes / total_biens) * 100) if total_biens > 0 else 0,
-            'montant_impayes': Loyer.objects.filter(
-                bail__bien__proprietaire=request.user,
-                statut='RETARD',
-            ).aggregate(total=Sum('montant_du'))['total'] or 0,
-        })
+        context["user_role"] = "BAILLEUR"
+        context.update(service.get_bailleur_stats(request.user))
 
     elif is_locataire(request.user):
         bail = get_active_bail(request.user)
         context.update({
-            'user_role': 'LOCATAIRE',
-            'bail': bail,
+            "user_role": "LOCATAIRE",
+            "bail": bail,
         })
         if bail:
-            context['dernier_loyer'] = Loyer.objects.filter(bail=bail).order_by(
-                '-date_echeance'
-            ).first()
-
+            context["dernier_loyer"] = (
+                Loyer.objects.filter(bail=bail)
+                .order_by("-date_echeance")
+                .first()
+            )
     else:
-        context['user_role'] = 'AGENT'
+        context["user_role"] = "AGENT"
 
-    return render(request, 'dashboard.html', context)
+    return render(request, "dashboard.html", context)
 
 
 # ============================================================================
@@ -277,6 +258,8 @@ def add_bien(request):
         'form': form,
         'user_role': 'ADMIN' if is_admin(request.user) else 'BAILLEUR',
     })
+
+
 @login_required
 def add_bail(request):
     """
@@ -287,20 +270,32 @@ def add_bail(request):
     if not (is_admin(request.user) or is_bailleur(request.user)):
         raise PermissionDenied("Seuls les administrateurs et bailleurs peuvent créer un bail.")
 
+    # Définir le queryset de base selon le rôle
+    if is_bailleur(request.user):
+        biens_queryset = Bien.objects.filter(proprietaire=request.user)
+    else:
+        biens_queryset = Bien.objects.all()
+
     if request.method == "POST":
         form = BailForm(request.POST, request.FILES)
-        # Restreindre le choix des biens pour un bailleur
-        if is_bailleur(request.user):
-            form.fields["bien"].queryset = Bien.objects.filter(proprietaire=request.user)
+        form.fields["bien"].queryset = biens_queryset
 
         if form.is_valid():
             bail = form.save()
-            messages.success(request, "Le bail a été créé avec succès.")
+
+            # Génération automatique du contrat PDF
+            try:
+                from apps.core.services.contrat import sauvegarder_contrat
+                sauvegarder_contrat(bail)
+                messages.success(request, "Le bail a été créé avec succès et le contrat PDF généré.")
+            except Exception as e:
+                logger.error(f"Erreur lors de la génération du contrat PDF pour le bail {bail.id}: {e}")
+                messages.warning(request, "Le bail a été créé, mais la génération du PDF a échoué.")
+
             return redirect("bail_detail", pk=bail.pk)
     else:
         form = BailForm()
-        if is_bailleur(request.user):
-            form.fields["bien"].queryset = Bien.objects.filter(proprietaire=request.user)
+        form.fields["bien"].queryset = biens_queryset
 
     return render(
         request,
@@ -322,18 +317,26 @@ def bail_detail(request, pk):
 
     # Permissions : admin, propriétaire du bien ou locataire
     if not (
-        is_admin(request.user)
-        or bail.bien.proprietaire == request.user
-        or bail.locataire == request.user
+            is_admin(request.user)
+            or bail.bien.proprietaire == request.user
+            or bail.locataire == request.user
     ):
         raise PermissionDenied("Vous n'avez pas l'autorisation de consulter ce bail.")
 
-    loyers = bail.loyers.order_by("-date_echeance")  # related_name='loyers' sur Loyer :contentReference[oaicite:7]{index=7}
-    etats = bail.etats_des_lieux.order_by("-date_realisation")  # related_name='etats_des_lieux' :contentReference[oaicite:8]{index=8}
+    loyers = bail.loyers.order_by("-date_echeance")
+    etats = bail.etats_des_lieux.order_by("-date_realisation")
 
     # Pour le template : séparer entrée / sortie si besoin
     edl_entree = etats.filter(type_edl="ENTREE").first()
     edl_sortie = etats.filter(type_edl="SORTIE").first()
+
+    # Déterminer le rôle de l'utilisateur
+    if is_admin(request.user):
+        user_role = "ADMIN"
+    elif bail.bien.proprietaire == request.user:
+        user_role = "BAILLEUR"
+    else:
+        user_role = "LOCATAIRE"
 
     context = {
         "bail": bail,
@@ -341,15 +344,11 @@ def bail_detail(request, pk):
         "etats": etats,
         "edl_entree": edl_entree,
         "edl_sortie": edl_sortie,
-        "user_role": (
-            "ADMIN"
-            if is_admin(request.user)
-            else "BAILLEUR"
-            if bail.bien.proprietaire == request.user
-            else "LOCATAIRE"
-        ),
+        "user_role": user_role,
     }
     return render(request, "baux/bail_detail.html", context)
+
+
 # ============================================================================
 # GESTION DES LOYERS
 # ============================================================================
@@ -389,12 +388,18 @@ def mark_loyer_paid(request, loyer_id):
         return redirect('loyers_list')
 
     loyer = get_object_or_404(Loyer, id=loyer_id)
-    loyer.enregistrer_paiement(loyer.reste_a_payer)
-    messages.success(
-        request,
-        f"Loyer de {loyer.bail.locataire} marqué comme payé et quittance attachée.",
-    )
+    try:
+        loyer.enregistrer_paiement(loyer.reste_a_payer)
+        messages.success(
+            request,
+            f"Loyer de {loyer.bail.locataire} marqué comme payé et quittance attachée.",
+        )
+    except Exception as e:
+        logger.error(f"Erreur lors du marquage du loyer {loyer_id}: {e}")
+        messages.error(request, "Erreur lors du traitement du paiement.")
+
     return redirect('loyers_list')
+
 
 @login_required
 def download_quittance(request, loyer_id):
@@ -405,9 +410,7 @@ def download_quittance(request, loyer_id):
     )
 
     # Permissions : admin ou locataire concerné
-    if not is_admin(request.user) and (
-        not loyer.bail or loyer.bail.locataire != request.user
-    ):
+    if not is_admin(request.user) and loyer.bail.locataire != request.user:
         raise PermissionDenied("Accès non autorisé à cette quittance.")
 
     if loyer.statut != 'PAYE':
@@ -418,16 +421,16 @@ def download_quittance(request, loyer_id):
     if not loyer.quittance:
         try:
             from apps.core.services.quittance import attacher_quittance
-
-            attacher_quittance(loyer)  # suppose une signature attacher_quittance(loyer)
+            attacher_quittance(loyer)
         except Exception as e:
             logger.error(f"Erreur lors de la génération de la quittance pour le loyer {loyer.id}: {e}")
             messages.error(request, "Impossible de générer la quittance. Contactez l'administrateur.")
             return redirect('dashboard')
 
-        if not loyer.quittance:
-            messages.error(request, "La quittance n'est pas disponible pour le moment.")
-            return redirect('dashboard')
+    # Vérifier que la quittance a bien été attachée
+    if not loyer.quittance:
+        messages.error(request, "La quittance n'est pas disponible pour le moment.")
+        return redirect('dashboard')
 
     return FileResponse(
         loyer.quittance.open("rb"),
@@ -435,6 +438,8 @@ def download_quittance(request, loyer_id):
         filename=loyer.quittance.name.split('/')[-1],
         as_attachment=False,
     )
+
+
 # ============================================================================
 # GESTION DES INTERVENTIONS
 # ============================================================================
@@ -470,8 +475,6 @@ def interventions_list(request):
             return redirect('interventions_list')
 
         form = InterventionForm(request.POST, request.FILES)
-
-        form = InterventionForm(request.POST, request.FILES)
         if form.is_valid():
             intervention = form.save(commit=False)
             intervention.locataire = request.user
@@ -486,6 +489,12 @@ def interventions_list(request):
         'user_role': 'ADMIN' if user_is_admin else 'LOCATAIRE',
         'bail': bail,
     })
+
+
+# ============================================================================
+# GESTION DES ÉTATS DES LIEUX
+# ============================================================================
+
 @login_required
 def add_etat_des_lieux(request, bail_id, type_edl):
     """
@@ -496,9 +505,9 @@ def add_etat_des_lieux(request, bail_id, type_edl):
 
     # Permissions
     if not (
-        is_admin(request.user)
-        or bail.bien.proprietaire == request.user
-        or bail.locataire == request.user
+            is_admin(request.user)
+            or bail.bien.proprietaire == request.user
+            or bail.locataire == request.user
     ):
         raise PermissionDenied("Vous n'avez pas l'autorisation de créer cet état des lieux.")
 
@@ -512,13 +521,14 @@ def add_etat_des_lieux(request, bail_id, type_edl):
         date_realisation=timezone.now().date(),
     )
 
+    # Désactiver les champs sensibles
+    disabled_fields = ['bail', 'type_edl']
+
     if request.method == "POST":
         form = EtatDesLieuxForm(request.POST, request.FILES, instance=instance)
-        # Empêcher la modification via le formulaire
-        if "bail" in form.fields:
-            form.fields["bail"].disabled = True
-        if "type_edl" in form.fields:
-            form.fields["type_edl"].disabled = True
+        for field_name in disabled_fields:
+            if field_name in form.fields:
+                form.fields[field_name].disabled = True
 
         if form.is_valid():
             form.save()
@@ -526,10 +536,9 @@ def add_etat_des_lieux(request, bail_id, type_edl):
             return redirect("bail_detail", pk=bail.pk)
     else:
         form = EtatDesLieuxForm(instance=instance)
-        if "bail" in form.fields:
-            form.fields["bail"].disabled = True
-        if "type_edl" in form.fields:
-            form.fields["type_edl"].disabled = True
+        for field_name in disabled_fields:
+            if field_name in form.fields:
+                form.fields[field_name].disabled = True
 
     return render(
         request,
@@ -540,6 +549,8 @@ def add_etat_des_lieux(request, bail_id, type_edl):
             "type_edl": type_edl,
         },
     )
+
+
 # ============================================================================
 # ACTIONS ADMINISTRATIVES
 # ============================================================================
@@ -562,3 +573,42 @@ def trigger_rent_generation(request):
         messages.error(request, "Une erreur est survenue. Contactez l'administrateur.")
 
     return redirect('dashboard')
+
+
+@login_required
+def initier_paiement(request, loyer_id):
+    """Crée la transaction et redirige vers la page de simulation."""
+    loyer = get_object_or_404(Loyer, id=loyer_id, bail__locataire=request.user)
+
+    if loyer.statut == 'PAYE':
+        messages.info(request, "Ce loyer est déjà payé.")
+        return redirect('dashboard')
+
+    # On utilise Wave par défaut pour la démo, ou on récupère via POST
+    provider = request.POST.get('provider', 'WAVE')
+
+    service = PaymentService()
+    transaction = service.creer_transaction(loyer, provider)
+
+    # Redirection vers notre "fausse" page de paiement
+    return redirect('simulation_paiement_gateway', transaction_id=transaction.id)
+
+
+@login_required
+def simulation_paiement_gateway(request, transaction_id):
+    """Page factice qui simule l'interface de Wave ou Orange Money."""
+    transaction = get_object_or_404(Transaction, id=transaction_id, loyer__bail__locataire=request.user)
+
+    if request.method == 'POST':
+        # L'utilisateur clique sur "Confirmer le paiement" sur la fausse page
+        service = PaymentService()
+        succes = service.valider_transaction(transaction.id)
+
+        if succes:
+            messages.success(request, f"Paiement de {transaction.montant} FCFA validé avec succès !")
+            return redirect('dashboard')
+        else:
+            messages.error(request, "Erreur lors de la validation du paiement.")
+            return redirect('dashboard')
+
+    return render(request, 'paiements/simulation_gateway.html', {'transaction': transaction})

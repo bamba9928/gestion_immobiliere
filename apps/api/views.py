@@ -1,9 +1,19 @@
-from django.utils import timezone
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
 from apps.api.permissions import IsTenant
 from apps.core.models import Bien, Intervention
-from .serializers import BienSerializer, InterventionSerializer
+from apps.core.permissions import get_active_bail
+
+from .serializers import (
+    BienSerializer,
+    InterventionSerializer,
+    BailSerializer,
+)
+
+
 class BienListView(generics.ListAPIView):
     """
     Liste publique des biens disponibles.
@@ -13,7 +23,7 @@ class BienListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        return Bien.objects.disponibles().order_by('-created_at')
+        return Bien.objects.disponibles().order_by("-created_at")
 
 
 class BienDetailView(generics.RetrieveAPIView):
@@ -27,6 +37,8 @@ class BienDetailView(generics.RetrieveAPIView):
     def get_queryset(self):
         # Utilise disponibles() pour rester cohérent avec la liste
         return Bien.objects.disponibles()
+
+
 class InterventionListCreateView(generics.ListCreateAPIView):
     """
     Endpoint pour lister et créer des interventions.
@@ -41,28 +53,27 @@ class InterventionListCreateView(generics.ListCreateAPIView):
         return (
             Intervention.objects
             .filter(locataire=user)
-            .select_related('bien')   # optionnel mais utile pour réduire les requêtes
-            .order_by('-created_at')
+            .select_related("bien")   # utile pour réduire les requêtes
+            .order_by("-created_at")
         )
 
     def perform_create(self, serializer):
         user = self.request.user
-        today = timezone.now().date()
 
-        # Récupération sécurisée du bail actif avec select_related sur le bien
-        bail = (
-            user.baux
-            .filter(
-                est_signe=True,
-                date_debut__lte=today,
-                date_fin__gte=today,
-            )
-            .select_related('bien')
-            .first()
-        )
-
+        # Utilise la fonction centrale get_active_bail pour éviter de dupliquer la logique
+        bail = get_active_bail(user)
         if not bail:
             raise PermissionDenied("Aucun bail actif trouvé pour ce locataire.")
 
-        # Une seule sauvegarde, sans doublon
         serializer.save(locataire=user, bien=bail.bien)
+class MyBailView(APIView):
+    permission_classes = [IsTenant]
+
+    def get(self, request):
+        bail = get_active_bail(request.user)
+        if not bail:
+            return Response({"error": "Aucun bail actif"}, status=404)
+
+        serializer = BailSerializer(bail)
+        return Response(serializer.data)
+

@@ -93,9 +93,17 @@
 
 <!-- FILTERS SECTION -->
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
-    <div class="flex flex-wrap items-center justify-center gap-3 bg-slate-800/50 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/30">
+    <form method="get"
+          action="{% url 'home' %}"
+          id="filters-form"
+          class="flex flex-wrap items-center justify-center gap-3 bg-slate-800/50 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/30">
+
+        {# On garde la recherche texte si elle était remplie #}
+        <input type="hidden" name="q" value="{{ request.GET.q }}">
+
         <!-- Type filter -->
-        <select name="type" onchange="this.form.submit()" class="px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-xl text-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select name="type"
+                class="px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-xl text-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Tous les types</option>
             {% for type_value, type_label in types_bien %}
                 <option value="{{ type_value }}" {% if request.GET.type == type_value %}selected{% endif %}>
@@ -105,7 +113,8 @@
         </select>
 
         <!-- City filter -->
-        <select name="ville" onchange="this.form.submit()" class="px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-xl text-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select name="ville"
+                class="px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-xl text-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Toutes les villes</option>
             {% for ville in villes %}
                 <option value="{{ ville }}" {% if request.GET.ville == ville %}selected{% endif %}>
@@ -115,7 +124,8 @@
         </select>
 
         <!-- Price range -->
-        <select name="prix_max" onchange="this.form.submit()" class="px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-xl text-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select name="prix_max"
+                class="px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-xl text-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Budget max</option>
             <option value="500000" {% if request.GET.prix_max == '500000' %}selected{% endif %}>Jusqu'à 500k FCFA</option>
             <option value="1000000" {% if request.GET.prix_max == '1000000' %}selected{% endif %}>Jusqu'à 1M FCFA</option>
@@ -123,12 +133,13 @@
         </select>
 
         <!-- Sort -->
-        <select name="sort" onchange="this.form.submit()" class="px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-xl text-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="-date_publication" {% if request.GET.sort == '-date_publication' %}selected{% endif %}>Plus récent</option>
+        <select name="sort"
+                class="px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-xl text-neutral-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="-date_publication" {% if request.GET.sort == '-date_publication' or not request.GET.sort %}selected{% endif %}>Plus récent</option>
             <option value="prix" {% if request.GET.sort == 'prix' %}selected{% endif %}>Prix croissant</option>
             <option value="-prix" {% if request.GET.sort == '-prix' %}selected{% endif %}>Prix décroissant</option>
         </select>
-    </div>
+    </form>
 </section>
 
 <!-- PROPERTIES LIST -->
@@ -183,7 +194,7 @@
 
                     <!-- Badges -->
                     <div class="absolute top-4 left-4 space-y-2">
-                        {% if annonce.date_publication|timesince:"days" <= "7 days" %}
+                        {% if annonce.est_recente %}
                             <span class="badge-new inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg">
                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
@@ -353,16 +364,21 @@
 
 {% block extra_js %}
 <script>
-    // Smooth scroll for filters
-    document.querySelectorAll('select').forEach(select => {
-        select.addEventListener('change', function() {
-            document.querySelector('form').submit();
+    // Soumission automatique du formulaire de filtres
+    const filtersForm = document.getElementById('filters-form');
+    if (filtersForm) {
+        filtersForm.querySelectorAll('select').forEach(select => {
+            select.addEventListener('change', function () {
+                filtersForm.submit();
+            });
         });
-    });
+    }
 
-    // Add loading state on filter change
-    document.querySelector('form').addEventListener('submit', function() {
-        document.body.style.cursor = 'wait';
+    // Ajout d'un état "wait" sur tous les formulaires du template
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function () {
+            document.body.style.cursor = 'wait';
+        });
     });
 </script>
 {% endblock %}

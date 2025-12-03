@@ -55,4 +55,6 @@ urlpatterns = [
     # ============================================
     path('annonce/<int:pk>/', views.AnnonceDetailView.as_view(), name='annonce_detail'),
     path('contact/', ContactView.as_view(), name='contact'),
+    path('paiement/initier/<int:loyer_id>/', views.initier_paiement, name='initier_paiement'),
+    path('paiement/simulation/<int:transaction_id>/', views.simulation_paiement_gateway, name='simulation_paiement_gateway'),
 ]
