@@ -1,267 +1,213 @@
 <!DOCTYPE html>
 {% load static %}
 {% load tailwind_tags %}
-{% tailwind_css %}
 <html lang="fr" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% tailwind_css %}
-    <!-- Alpine JS -->
-    <script src="{% static 'js/alpine.min.js' %}" defer></script>
     <title>{% block title %}MADA IMMO | Gestion{% endblock %}</title>
-
-    <!-- SEO et métadonnées -->
+    <script src="{% static 'js/alpine.min.js' %}" defer></script>
     <meta name="description" content="Plateforme de gestion immobilière professionnelle">
-    <meta name="theme-color" content="#000000" />
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0a" />
 
-    <!-- CSS et PWA -->
+    {% tailwind_css %}
 
-    <link rel="manifest" href="{% static 'manifest.json' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
     <style>
-        * {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
+        [x-cloak] { display: none !important; }
 
         body {
-            background: linear-gradient(135deg, #0a0a0a 0%, #050505 50%, #0a0a0a 100%);
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(79, 70, 229, 0.08), transparent 25%);
+            background-attachment: fixed;
         }
 
-        /* Animation du logo */
-        .logo-icon {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Glassmorphism Navbar */
+        .navbar-glass {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .logo-icon:hover {
-            transform: rotate(-5deg) scale(1.05);
-            box-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
-        }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #10b981; }
 
-        /* Animation du bouton de déconnexion */
-        .logout-btn {
-            position: relative;
-            overflow: hidden;
+        /* Animation Pulse Status */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            100% { transform: scale(2); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
         }
-
-        .logout-btn::before {
+        .status-dot::before {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(239, 68, 68, 0.1);
+            width: 100%; height: 100%;
+            background-color: inherit;
             border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.4s, height 0.4s;
-        }
-
-        .logout-btn:hover::before {
-            width: 200%;
-            height: 200%;
-        }
-
-        /* Amélioration du navbar glassmorphism */
-        .navbar-glass {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        /* Animation de pulse pour l'indicateur en ligne */
-        @keyframes pulse-ring {
-            0% {
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-            }
-            100% {
-                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
-            }
-        }
-
-        .status-dot {
-            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        /* Scrollbar personnalisée */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #0a0a0a;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #10b981, #059669);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #059669, #047857);
-        }
-
-        /* Animation du footer status */
-        .system-indicator {
-            animation: pulse 3s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            z-index: -1;
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
         }
     </style>
-
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-neutral-950 text-neutral-200 antialiased min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white">
 
-    <!-- Navbar Sticky avec effet Glassmorphism amélioré -->
-    <nav class="navbar-glass sticky top-0 z-50 shadow-2xl shadow-black/50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div class="flex items-center justify-between">
+<body class="bg-neutral-950 text-neutral-200 antialiased min-h-screen flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200"
+      x-data="{ mobileMenuOpen: false }">
 
-                <!-- Logo & Marque -->
-                <a href="{% url 'dashboard' %}" class="flex items-center gap-3 group">
-                    <div class="logo-icon h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-indigo-600
-                                flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                        <span class="text-black font-extrabold text-xl">M</span>
+    <nav class="navbar-glass sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+
+                <a href="{% url 'home' %}" class="flex items-center gap-3 group shrink-0">
+                    <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform duration-300">
+                        <span class="text-neutral-950 font-black text-lg">M</span>
                     </div>
-                    <div class="flex flex-col leading-tight">
-                        <span class="text-sm font-bold tracking-tight text-white group-hover:text-emerald-400 transition-colors duration-300">
-                            MADA IMMO
-                        </span>
-                        <span class="text-[10px] uppercase tracking-[0.15em] text-neutral-500 font-semibold">
-                            Administration
-                        </span>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-white tracking-wide">MADA IMMO</span>
                     </div>
                 </a>
 
-                <!-- Menu Utilisateur -->
-                <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-1 bg-neutral-900/40 p-1.5 rounded-full border border-neutral-800/50 backdrop-blur-md">
+                    {% with request.resolver_match.url_name as url_name %}
+                    <a href="{% url 'home' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 {% if url_name == 'home' %}bg-neutral-800 text-white shadow-sm{% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">Annonces</a>
+                    <a href="{% url 'dashboard' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 {% if url_name == 'dashboard' %}bg-neutral-800 text-white shadow-sm{% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">Dashboard</a>
+                    <a href="{% url 'about' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 {% if url_name == 'about' %}bg-neutral-800 text-white shadow-sm{% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">À propos</a>
+                    {% endwith %}
+                </div>
+
+                <div class="hidden md:flex items-center gap-4">
                     {% if user.is_authenticated %}
-                        <!-- Info utilisateur -->
-                        <div class="hidden sm:flex items-center gap-3 px-4 py-2 rounded-lg bg-neutral-900/50 border border-neutral-800/50">
-                            <div class="flex flex-col items-start leading-tight">
-                                <span class="text-sm text-neutral-200 font-semibold">
-                                    {{ user.get_full_name|default:user.username }}
-                                </span>
-                                <div class="flex items-center gap-1.5">
-                                    <div class="status-dot h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
-                                    <span class="text-[10px] text-emerald-400 font-medium uppercase tracking-wider">
-                                        En ligne
-                                    </span>
+                        <div class="flex items-center gap-3 pl-4 border-l border-neutral-800">
+                            <div class="text-right hidden lg:block">
+                                <div class="text-xs font-medium text-white">{{ user.get_full_name|default:user.username }}</div>
+                                <div class="text-[10px] text-emerald-500 font-semibold uppercase tracking-wider flex items-center justify-end gap-1">
+                                    En ligne <span class="relative flex h-1.5 w-1.5 status-dot bg-emerald-500 rounded-full"></span>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Bouton déconnexion -->
-                        <form action="{% url 'logout' %}" method="post" class="inline">
+                            <form action="{% url 'logout' %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Se déconnecter">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                </button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-500 transition-colors shadow-lg shadow-emerald-900/20">
+                            Connexion
+                        </a>
+                    {% endif %}
+                </div>
+
+                <div class="flex md:hidden">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" class="text-neutral-400 hover:text-white p-2">
+                        <span class="sr-only">Ouvrir le menu</span>
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" x-show="!mobileMenuOpen"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" x-show="mobileMenuOpen" x-cloak/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="mobileMenuOpen" x-collapse x-cloak class="md:hidden border-b border-neutral-800 bg-black/95 backdrop-blur-xl">
+            <div class="px-4 pt-2 pb-6 space-y-1">
+                <a href="{% url 'home' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Annonces</a>
+                <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Dashboard</a>
+                <a href="{% url 'about' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">À propos</a>
+                <a href="{% url 'contact' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Contact</a>
+
+                <div class="mt-4 pt-4 border-t border-neutral-800">
+                    {% if user.is_authenticated %}
+                        <div class="flex items-center px-3 mb-3">
+                            <div class="ml-0">
+                                <div class="text-base font-medium leading-none text-white">{{ user.username }}</div>
+                                <div class="text-xs text-emerald-500 mt-1">Connecté</div>
+                            </div>
+                        </div>
+                        <form action="{% url 'logout' %}" method="post">
                             {% csrf_token %}
-                            <button
-                                type="submit"
-                                class="logout-btn inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                                       border border-neutral-800 bg-neutral-900/80 text-neutral-400 text-xs font-semibold
-                                       hover:border-red-800 hover:text-red-400 hover:bg-red-950/30
-                                       transition-all duration-300 relative z-10"
-                            >
-                                <span>Déconnexion</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <polyline points="16 17 21 12 16 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <line x1="21" y1="12" x2="9" y2="12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
+                            <button class="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-400 hover:text-red-300 hover:bg-red-900/20">
+                                Déconnexion
                             </button>
                         </form>
                     {% else %}
-                        <!-- Bouton connexion -->
-                        <a
-                            href="{% url 'login' %}"
-                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg
-                                   bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-bold
-                                   hover:from-emerald-600 hover:to-emerald-700
-                                   shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50
-                                   transition-all duration-300 hover:scale-105"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <polyline points="10 17 15 12 10 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                <line x1="15" y1="12" x2="3" y2="12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <span>Connexion</span>
-                        </a>
+                        <a href="{% url 'login' %}" class="block px-3 py-2 text-center rounded-md font-bold bg-emerald-600 text-white">Connexion</a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Contenu principal -->
-    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {% if messages %}
+    <div class="fixed top-20 right-5 z-50 flex flex-col gap-2 pointer-events-none">
+        {% for message in messages %}
+            <div x-data="{ show: true }"
+                 x-show="show"
+                 x-init="setTimeout(() => show = false, 5000)"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-x-8"
+                 x-transition:enter-end="opacity-100 translate-x-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-x-0"
+                 x-transition:leave-end="opacity-0 translate-x-8"
+                 class="pointer-events-auto flex items-center w-full max-w-xs p-4 rounded-lg shadow-2xl border
+                 {% if message.tags == 'error' %}bg-red-950/90 border-red-800 text-red-200{% elif message.tags == 'success' %}bg-emerald-950/90 border-emerald-800 text-emerald-200{% else %}bg-neutral-900/90 border-neutral-700 text-neutral-200{% endif %} backdrop-blur-md">
+
+                <div class="flex-shrink-0">
+                    {% if message.tags == 'success' %}
+                        <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                    {% elif message.tags == 'error' %}
+                        <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                    {% endif %}
+                </div>
+                <div class="ml-3 text-sm font-normal">{{ message }}</div>
+                <button @click="show = false" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-black/20 focus:ring-2 focus:ring-neutral-500">
+                    <span class="sr-only">Fermer</span>
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-0">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-64 bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none -z-10"></div>
+
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer amélioré -->
-    <footer class="border-t border-neutral-900/80 bg-black/50 backdrop-blur-sm py-8 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-
-                <!-- Status système -->
-                <div class="flex items-center gap-3">
-                    <div class="system-indicator h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></div>
-                    <div class="flex flex-col">
-                        <p class="text-[11px] text-neutral-400 font-mono uppercase tracking-wider">
-                            System Status
-                        </p>
-                        <p class="text-[10px] text-emerald-500 font-bold">
-                            OPERATIONAL
-                        </p>
+    <footer class="border-t border-neutral-900 bg-black/40 backdrop-blur-sm mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
                     </div>
-                </div>
-
-                <!-- Copyright -->
-                <div class="text-center">
-                    <p class="text-[11px] text-neutral-600 font-medium">
-                        &copy; {% now "Y" %} MADA IMMO • Version 1.0.2-beta
-                    </p>
-                    <p class="text-[10px] text-neutral-700 mt-1">
-                        Plateforme de gestion immobilière professionnelle
+                    <p class="text-xs text-neutral-500 max-w-xs">
+                       Mada Immo &copy; {% now "Y" %} Tous droits réservés.
                     </p>
                 </div>
 
-                <!-- Liens légaux -->
-                <div class="flex items-center gap-4 text-[10px] text-neutral-600">
+                <div class="flex gap-4 text-xs font-medium text-neutral-500">
+                    <a href="#" class="hover:text-emerald-400 transition-colors">Mentions légales</a>
                     <a href="#" class="hover:text-emerald-400 transition-colors">Confidentialité</a>
-                    <span class="text-neutral-800">•</span>
-                    <a href="#" class="hover:text-emerald-400 transition-colors">CGU</a>
-                    <span class="text-neutral-800">•</span>
                     <a href="#" class="hover:text-emerald-400 transition-colors">Support</a>
                 </div>
             </div>
         </div>
     </footer>
-
-    <!-- Script PWA -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('{% static "service-worker.js" %}')
-                    .then(reg => console.log('✅ Service Worker enregistré'))
-                    .catch(err => console.warn('⚠️ Service Worker non disponible:', err));
-            });
-        }
-    </script>
-
-    {% block extra_js %}{% endblock %}
 
 </body>
 </html>

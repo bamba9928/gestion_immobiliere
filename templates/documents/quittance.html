@@ -1,163 +1,204 @@
 <!DOCTYPE html>
+{% load static %}
+{% load humanize %}
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Quittance de Loyer</title>
+    <title>Contrat de Bail - {{ bail.bien.titre }}</title>
     <style>
         @page {
             size: A4;
             margin: 2cm;
+            @bottom-right {
+                content: "Page " counter(page) " sur " counter(pages);
+                font-size: 9pt;
+            }
         }
+
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 12pt;
-            color: #000; /* Noir pur pour l'impression */
-            background: #fff;
-            line-height: 1.5;
-        }
-        .header {
-            border-bottom: 2px solid #000;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .titre {
-            font-size: 24pt;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .ref {
             font-size: 10pt;
-            color: #666;
+            color: #111;
+            line-height: 1.4;
         }
-        .parties {
-            width: 100%;
-            margin-bottom: 40px;
+
+        /* En-tête */
+        .header-table { width: 100%; margin-bottom: 30px; border-bottom: 2px solid #10b981; padding-bottom: 10px; }
+        .logo-text { font-size: 16pt; font-weight: bold; color: #10b981; text-transform: uppercase; }
+        .doc-title { font-size: 14pt; font-weight: bold; text-align: right; text-transform: uppercase; }
+        .ref-number { font-size: 9pt; color: #666; text-align: right; }
+
+        /* Titres de section */
+        h2 {
+            font-size: 11pt;
+            text-transform: uppercase;
+            background-color: #f3f4f6;
+            padding: 5px 10px;
+            border-left: 4px solid #10b981; /* Touche Emerald */
+            margin-top: 20px;
+            margin-bottom: 10px;
         }
-        .col {
-            width: 45%;
-            float: left;
-        }
-        .col.right {
-            float: right;
-            text-align: right;
-        }
-        .box {
-            background-color: #f0f0f0;
-            padding: 20px;
-            margin: 20px 0;
-            border: 1px solid #ddd;
-        }
-        .details-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-        }
-        .details-table th, .details-table td {
-            border-bottom: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        .details-table th {
-            background-color: #eee;
-        }
-        .total-row td {
-            font-weight: bold;
-            font-size: 14pt;
-            border-top: 2px solid #000;
-        }
+
+        /* Tables de contenu */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        td { vertical-align: top; padding: 4px 0; }
+
+        .label { font-weight: bold; color: #444; width: 40%; }
+        .value { color: #000; }
+
+        /* Tableau Financier */
+        .financial-table { width: 100%; border: 1px solid #ddd; margin-top: 10px; }
+        .financial-table td { padding: 8px; border-bottom: 1px solid #eee; }
+        .financial-table tr:last-child td { border-bottom: none; background-color: #f9fafb; font-weight: bold; }
+        .amount { text-align: right; }
+
+        /* Clauses */
+        .clause-text { font-size: 9pt; text-align: justify; color: #333; margin-bottom: 5px; }
+
+        /* Signatures */
+        .signatures-box { margin-top: 50px; page-break-inside: avoid; }
+        .sign-table { width: 100%; border: 1px solid #ccc; }
+        .sign-cell { width: 50%; padding: 15px; height: 120px; vertical-align: top; }
+        .sign-label { font-weight: bold; margin-bottom: 40px; display: block; text-transform: uppercase; font-size: 9pt; }
+        .sign-mentions { font-size: 8pt; color: #666; font-style: italic; }
+
+        /* Footer fixe */
         .footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            font-size: 8pt;
-            text-align: center;
-            color: #888;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-        }
-        /* Utile pour nettoyer les floats */
-        .clearfix::after {
-            content: "";
-            clear: both;
-            display: table;
+            position: fixed; bottom: -1.5cm; left: 0; right: 0;
+            font-size: 8pt; text-align: center; color: #888;
+            border-top: 1px solid #eee; padding-top: 5px;
         }
     </style>
 </head>
 <body>
 
-    <div class="header clearfix">
-        <div class="col">
-            <div class="titre">Quittance</div>
-            <div class="ref">N° {{ loyer.id }}-{{ loyer.date_echeance|date:"Ymd" }}</div>
-        </div>
-        <div class="col right">
-            <strong>MADA IMMO GESTION</strong><br>
-            Point E, Dakar<br>
-            contact@mada-immo.sn
-        </div>
-    </div>
-
-    <div class="parties clearfix">
-        <div class="col">
-            <strong>BAILLEUR :</strong><br>
-            {{ loyer.bail.bien.proprietaire.get_full_name|default:loyer.bail.bien.proprietaire.username }}<br>
-            Représenté par MADA IMMO
-        </div>
-        <div class="col right">
-            <strong>LOCATAIRE :</strong><br>
-            {{ loyer.bail.locataire.get_full_name|default:loyer.bail.locataire.username }}<br>
-            {{ loyer.bail.bien.adresse }}
-        </div>
-    </div>
-
-    <p>
-        <strong>Période du :</strong> {{ loyer.periode_debut }}
-        <strong>au :</strong> {{ loyer.periode_fin }}
-    </p>
-
-    <div class="box">
-        Je soussigné, MADA IMMO, gérant du bien sus-désigné, déclare avoir reçu de la part du locataire la somme mentionnée ci-dessous au titre du loyer et des charges.
-    </div>
-
-    <table class="details-table">
-        <thead>
-            <tr>
-                <th>Désignation</th>
-                <th style="text-align: right;">Montant</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Loyer mensuel</td>
-                <td style="text-align: right;">{{ loyer.bail.montant_loyer }} FCFA</td>
-            </tr>
-            <tr>
-                <td>Provisions sur charges</td>
-                <td style="text-align: right;">{{ loyer.bail.montant_charges }} FCFA</td>
-            </tr>
-            <tr class="total-row">
-                <td>TOTAL PAYÉ</td>
-                <td style="text-align: right;">{{ loyer.montant_verse }} FCFA</td>
-            </tr>
-        </tbody>
+    <table class="header-table">
+        <tr>
+            <td style="vertical-align: middle;">
+                <div class="logo-text">MADA IMMO</div>
+                <div style="font-size: 8pt; color: #666;">Gestion Immobilière Professionnelle</div>
+            </td>
+            <td style="vertical-align: middle;">
+                <div class="doc-title">Contrat de Bail</div>
+                <div class="ref-number">Réf : {{ bail.reference|default:bail.id }}</div>
+                <div class="ref-number">Date : {% now "d/m/Y" %}</div>
+            </td>
+        </tr>
     </table>
 
-    <p>
-        <strong>Date de paiement :</strong> {{ loyer.date_paiement|default:"-" }}<br>
-        <strong>Mode de règlement :</strong> Mobile Money / Virement
-    </p>
+    <h2>1. Désignation des Parties</h2>
+    <table style="margin-bottom: 15px;">
+        <tr>
+            <td width="50%" style="padding-right: 10px;">
+                <div style="background: #f9fafb; padding: 10px; border-radius: 4px; height: 80px;">
+                    <strong>LE BAILLEUR (Propriétaire)</strong><br><br>
+                    {{ bail.bien.proprietaire.get_full_name|default:bail.bien.proprietaire.username|upper }}<br>
+                    <span style="font-size: 9pt; color: #555;">Représenté par l'agence MADA IMMO</span>
+                </div>
+            </td>
+            <td width="50%" style="padding-left: 10px;">
+                <div style="background: #f9fafb; padding: 10px; border-radius: 4px; height: 80px;">
+                    <strong>LE PRENEUR (Locataire)</strong><br><br>
+                    {{ bail.locataire.get_full_name|default:bail.locataire.username|upper }}<br>
+                    <span style="font-size: 9pt; color: #555;">Email : {{ bail.locataire.email }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
 
-    <div style="margin-top: 50px;">
-        <p><em>Cette quittance annule tous les reçus qui auraient pu être donnés pour acompte versé sur la présente somme.</em></p>
-        <br>
-        <p style="text-align: right;"><strong>Pour MADA IMMO, le Gérant</strong></p>
-        </div>
+    <h2>2. Objet du Contrat</h2>
+    <p class="clause-text">Le Bailleur donne en location au Preneur les locaux désignés ci-après :</p>
+    <table>
+        <tr>
+            <td class="label">Adresse du bien :</td>
+            <td class="value">{{ bail.bien.adresse }}, {{ bail.bien.ville }}</td>
+        </tr>
+        <tr>
+            <td class="label">Type de bien :</td>
+            <td class="value">{{ bail.bien.get_type_bien_display }}</td>
+        </tr>
+        <tr>
+            <td class="label">Surface habitable :</td>
+            <td class="value">{{ bail.bien.surface }} m²</td>
+        </tr>
+        <tr>
+            <td class="label">Nombre de pièces :</td>
+            <td class="value">{{ bail.bien.nb_pieces }}</td>
+        </tr>
+        <tr>
+            <td class="label">Détails / Équipements :</td>
+            <td class="value">{{ bail.bien.description|default:"Non spécifié"|truncatechars:150 }}</td>
+        </tr>
+    </table>
+
+    <h2>3. Durée et Prise d'Effet</h2>
+    <table>
+        <tr>
+            <td class="label">Date de prise d'effet :</td>
+            <td class="value"><strong>{{ bail.date_debut|date:"d F Y" }}</strong></td>
+        </tr>
+        <tr>
+            <td class="label">Date de fin de bail :</td>
+            <td class="value"><strong>{{ bail.date_fin|date:"d F Y" }}</strong></td>
+        </tr>
+    </table>
+
+    <h2>4. Conditions Financières</h2>
+    <p class="clause-text">Le présent bail est consenti et accepté moyennant un loyer mensuel payable d'avance le <strong>{{ bail.jour_paiement }}</strong> de chaque mois.</p>
+
+    <table class="financial-table">
+        <tr>
+            <td>Loyer mensuel hors charges</td>
+            <td class="amount">{{ bail.montant_loyer|intcomma }} FCFA</td>
+        </tr>
+        <tr>
+            <td>Provisions sur charges</td>
+            <td class="amount">{{ bail.montant_charges|intcomma }} FCFA</td>
+        </tr>
+        <tr>
+            <td><strong>TOTAL À PAYER MENSUELLEMENT</strong></td>
+            <td class="amount"><strong>{{ bail.montant_loyer|add:bail.montant_charges|intcomma }} FCFA</strong></td>
+        </tr>
+    </table>
+
+    <div style="margin-top: 10px; font-size: 9pt;">
+        <strong>Dépôt de garantie :</strong> Le Locataire verse ce jour la somme de <strong>{{ bail.depot_garantie|intcomma }} FCFA</strong> correspondant au dépôt de garantie.
+    </div>
+
+    <h2>5. Clauses Générales</h2>
+    <div class="clause-text">
+        <strong>Usage :</strong> Les locaux sont loués à usage exclusif d'habitation principale. Le Locataire s'interdit d'y exercer toute activité commerciale, artisanale ou professionnelle sans l'accord écrit du Bailleur.
+    </div>
+    <div class="clause-text">
+        <strong>Paiement :</strong> Le loyer est payable par virement bancaire ou via les moyens de paiement numériques agréés par la plateforme MADA IMMO (Wave, Orange Money).
+    </div>
+    <div class="clause-text">
+        <strong>Entretien :</strong> Le Locataire est tenu d'entretenir les lieux loués en bon état et de prendre à sa charge les réparations locatives courantes.
+    </div>
+    <div class="clause-text">
+        <strong>Résiliation :</strong> Le contrat peut être résilié par le Locataire à tout moment moyennant un préavis (selon législation en vigueur). Le Bailleur peut résilier pour motif légitime et sérieux.
+    </div>
+
+    <div class="signatures-box">
+        <p style="margin-bottom: 10px;">Fait à <strong>{{ bail.bien.ville }}</strong>, le <strong>{% now "d F Y" %}</strong>, en deux exemplaires originaux.</p>
+
+        <table class="sign-table">
+            <tr>
+                <td class="sign-cell" style="border-right: 1px solid #ccc;">
+                    <span class="sign-label">Le Bailleur (ou son représentant)</span>
+                    <span class="sign-mentions">"Lu et approuvé"</span>
+                </td>
+                <td class="sign-cell">
+                    <span class="sign-label">Le Locataire</span>
+                    <span class="sign-mentions">"Lu et approuvé"</span>
+                </td>
+            </tr>
+        </table>
+    </div>
 
     <div class="footer">
-        Document généré automatiquement par MADA IMMO - {{ now }}
+        MADA IMMO - Plateforme de Gestion Immobilière<br>
+        Document certifié numériquement - ID: {{ bail.id }}-{{ now|date:"U" }}
     </div>
 
 </body>

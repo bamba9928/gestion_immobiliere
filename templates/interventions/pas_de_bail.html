@@ -1,25 +1,58 @@
 {% extends 'base.html' %}
 
+{% block title %}Accès restreint | MADA IMMO{% endblock %}
+
 {% block content %}
-<div class="min-h-[60vh] flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8">
-    <div class="max-w-xl w-full card-dark border border-neutral-800/70 p-10 text-center space-y-6">
-        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-2xl bg-amber-500/10 border border-amber-700/40 text-amber-300">
-            <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+<div class="min-h-[70vh] flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <div class="relative w-full max-w-lg">
+        <div class="bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 rounded-3xl p-8 md:p-12 text-center shadow-2xl relative overflow-hidden">
+
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neutral-800 via-amber-500/50 to-neutral-800"></div>
+
+            <div class="relative mx-auto flex items-center justify-center h-20 w-20 mb-8">
+                <div class="absolute inset-0 bg-amber-500/20 rounded-full animate-pulse"></div>
+                <div class="relative flex items-center justify-center h-20 w-20 rounded-full bg-neutral-900 border border-amber-500/30 text-amber-500 shadow-lg shadow-amber-900/20">
+                    <svg class="h-10 w-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+            </div>
+
+            <div class="space-y-4 mb-10">
+                <p class="text-xs font-bold uppercase tracking-widest text-amber-500">Accès restreint</p>
+                <h1 class="text-3xl font-black text-white tracking-tight">Aucun bail actif</h1>
+
+                <p class="text-neutral-400 text-base leading-relaxed">
+                    Cette fonctionnalité nécessite d'être rattaché à un logement.
+                    Actuellement, aucun contrat de location actif n'est associé à votre compte.
+                </p>
+
+                <div class="bg-neutral-800/50 rounded-lg p-4 text-xs text-neutral-500 border border-neutral-800/50">
+                    Si vous venez d'emménager, votre dossier est peut-être en cours de validation par l'administration.
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <a href="{% url 'dashboard' %}"
+                   class="w-full inline-flex justify-center items-center gap-2 px-6 py-3.5 rounded-xl bg-white text-black font-bold hover:bg-neutral-200 transition-colors shadow-lg shadow-white/5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    Retour au tableau de bord
+                </a>
+
+                <a href="{% url 'contact' %}"
+                   class="w-full inline-flex justify-center items-center gap-2 px-6 py-3.5 rounded-xl border border-neutral-700 text-neutral-400 hover:text-white hover:bg-neutral-800 transition-all font-medium">
+                    Contacter le support
+                </a>
+            </div>
+
         </div>
 
-        <div class="space-y-3">
-            <p class="text-xs uppercase tracking-[0.2em] text-neutral-500 font-semibold">Aucune location active</p>
-            <h2 class="text-3xl font-bold text-white">Impossible de créer une intervention</h2>
-            <p class="text-neutral-400 text-base">Vous devez disposer d'un bail actif pour signaler un incident ou demander une intervention technique.</p>
-            <p class="text-neutral-500 text-sm">Si vous pensez qu'il s'agit d'une erreur, contactez votre gestionnaire ou l'administrateur de la plateforme.</p>
-        </div>
-
-        <div class="flex flex-col gap-3 sm:flex-row sm:justify-center sm:items-center">
-            <a href="{% url 'dashboard' %}" class="btn-primary inline-flex justify-center w-full sm:w-auto">Retour au tableau de bord</a>
-            <div class="text-xs text-neutral-500">Assurez-vous que votre dossier locataire est complet.</div>
-        </div>
+        <p class="text-center text-xs text-neutral-600 mt-8">
+            Code erreur : NO_ACTIVE_LEASE
+        </p>
     </div>
 </div>
 {% endblock %}

@@ -1,241 +1,224 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Contact | MADA IMMO</title>
-    <meta name="description" content="Contactez MADA IMMO pour toute demande d'information, visite ou gestion locative.">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "base.html" %}
+{% load static %}
+{% load tailwind_tags %}
 
-    <!-- Tailwind CSS CDN (à remplacer par ta build locale si besoin) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+{% block title %}Contact | MADA IMMO{% endblock %}
 
-    <style>
-        .hero-gradient {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-        }
+{% block extra_css %}
+<style>
+    /* Fond animé subtil */
+    .hero-bg {
+        background-color: #050505;
+        background-image: radial-gradient(circle at 50% 0%, #10b98115 0%, transparent 50%);
+    }
 
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+    /* Style des inputs "Premium" */
+    .custom-input {
+        background-color: #0a0a0a; /* neutral-950 */
+        border: 1px solid #262626; /* neutral-800 */
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-        .glass-card {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(18px);
-            border: 1px solid rgba(148, 163, 184, 0.25);
-            box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.65);
-        }
+    .custom-input:focus {
+        background-color: #171717; /* neutral-900 */
+        border-color: #10b981; /* emerald-500 */
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        transform: translateY(-1px);
+    }
 
-        .input-base {
-            @apply w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
-        }
-    </style>
-</head>
-<body class="bg-slate-950 text-slate-50">
+    /* Animation des icônes dans les inputs */
+    .input-group:focus-within svg {
+        color: #10b981;
+        filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.3));
+    }
+    .input-group:focus-within label {
+        color: #34d399; /* emerald-400 */
+    }
+</style>
+{% endblock %}
 
-<!-- HERO -->
-<section class="hero-gradient relative overflow-hidden">
-    <div class="absolute top-0 right-0 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl opacity-60"></div>
-    <div class="absolute bottom-0 left-0 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl opacity-60"></div>
+{% block content %}
+<div class="hero-bg min-h-screen relative overflow-hidden">
 
-    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-24">
-        <p class="text-xs tracking-[0.25em] text-blue-200/70 uppercase mb-4">
-            MADA IMMO / Contact
-        </p>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-purple-100 mb-4">
-            Parlons de votre projet immobilier.
-        </h1>
-        <p class="text-base md:text-lg text-slate-200/80 max-w-2xl">
-            Une question sur un bien, une mise en location ou la gestion complète de votre patrimoine ?
-            Laissez-nous un message, nous reviendrons vers vous rapidement.
-        </p>
+    <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-teal-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 md:pt-20 md:pb-24">
+        <div class="mb-8">
+            <a href="{% url 'home' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900/80 border border-neutral-800 hover:border-neutral-700 text-neutral-400 hover:text-white transition-all text-sm font-medium group">
+                <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                Retour à l'accueil
+            </a>
+        </div>
+
+        <div class="max-w-3xl">
+            <h1 class="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">
+                Parlons de votre <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">
+                    futur projet.
+                </span>
+            </h1>
+            <p class="text-lg text-neutral-400 leading-relaxed max-w-2xl">
+                Une question sur un bien ? Un projet de gestion locative ?
+                Notre équipe est à votre écoute pour concrétiser vos ambitions immobilières.
+            </p>
+        </div>
     </div>
-</section>
 
-<!-- CONTACT SECTION -->
-<section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 md:-mt-16 pb-16 relative z-20">
-    <div class="glass-card rounded-3xl p-6 md:p-8">
-        <div class="grid grid-cols-1 lg:grid-cols-[1.2fr,1fr] gap-8 md:gap-10">
+    <div class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 -mt-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
 
-            <!-- FORMULAIRE -->
-            <div>
-                <h2 class="text-xl md:text-2xl font-bold mb-2">
-                    Envoyer un message
-                </h2>
-                <p class="text-sm text-slate-400 mb-6">
-                    Renseignez le formulaire ci-dessous. Les champs marqués d’un <span class="text-red-400">*</span> sont obligatoires.
-                </p>
+            <div class="lg:col-span-8">
+                <div class="bg-neutral-900/60 backdrop-blur-xl border border-neutral-800 rounded-2xl p-6 md:p-10 shadow-2xl">
 
-                <!-- Remplacer action="#" par l'URL de traitement côté serveur -->
-                <form method="post" action="#" class="space-y-5">
-                    <!-- Nom -->
-                    <div>
-                        <label for="id_nom" class="block text-sm font-medium text-slate-200 mb-1.5">
-                            Nom complet <span class="text-red-400">*</span>
-                        </label>
-                        <input
-                            id="id_nom"
-                            name="nom"
-                            type="text"
-                            autocomplete="name"
-                            placeholder="Ex : Mouhamadou Bamba Dieng"
-                            class="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            required
-                        >
+                    {% if messages %}
+                        <div class="mb-8 space-y-4">
+                            {% for message in messages %}
+                                <div class="flex items-center gap-4 p-4 rounded-xl border-l-4 {% if message.tags == 'error' %}bg-red-500/10 border-red-500 text-red-200{% else %}bg-emerald-500/10 border-emerald-500 text-emerald-200{% endif %}">
+                                    {% if message.tags == 'error' %}
+                                        <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    {% else %}
+                                        <svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    {% endif %}
+                                    <span class="font-medium text-sm">{{ message }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-8">
+                        <h2 class="text-xl font-bold text-white mb-2">Envoyer un message</h2>
+                        <p class="text-sm text-neutral-500">Les champs marqués d'un <span class="text-emerald-500">*</span> sont obligatoires.</p>
                     </div>
 
-                    <!-- Email -->
-                    <div>
-                        <label for="id_email" class="block text-sm font-medium text-slate-200 mb-1.5">
-                            Adresse e-mail <span class="text-red-400">*</span>
-                        </label>
-                        <input
-                            id="id_email"
-                            name="email"
-                            type="email"
-                            autocomplete="email"
-                            placeholder="vous@example.com"
-                            class="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            required
-                        >
-                    </div>
+                    <form method="post" class="space-y-6">
+                        {% csrf_token %}
 
-                    <!-- Téléphone -->
-                    <div>
-                        <label for="id_telephone" class="block text-sm font-medium text-slate-200 mb-1.5">
-                            Téléphone (optionnel)
-                        </label>
-                        <input
-                            id="id_telephone"
-                            name="telephone"
-                            type="text"
-                            autocomplete="tel"
-                            placeholder="Ex : +221 77 000 00 00"
-                            class="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                    </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="input-group group">
+                                <label for="id_nom" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2 transition-colors">Nom complet <span class="text-emerald-500">*</span></label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <svg class="h-5 w-5 text-neutral-600 transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                    </div>
+                                    <input id="id_nom" name="nom" type="text" value="{{ form.nom.value|default_if_none:'' }}" placeholder="Votre nom" class="custom-input w-full pl-11 pr-4 py-3.5 rounded-xl text-white placeholder-neutral-600 outline-none" required>
+                                </div>
+                                {% if form.nom.errors %}<p class="text-xs text-red-400 mt-2 font-medium">{{ form.nom.errors|striptags }}</p>{% endif %}
+                            </div>
 
-                    <!-- Sujet -->
-                    <div>
-                        <label for="id_sujet" class="block text-sm font-medium text-slate-200 mb-1.5">
-                            Sujet <span class="text-red-400">*</span>
-                        </label>
-                        <input
-                            id="id_sujet"
-                            name="sujet"
-                            type="text"
-                            placeholder="Visite d'un appartement, mise en location, gestion complète..."
-                            class="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            required
-                        >
-                    </div>
+                            <div class="input-group group">
+                                <label for="id_telephone" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2 transition-colors">Téléphone</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <svg class="h-5 w-5 text-neutral-600 transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                    </div>
+                                    <input id="id_telephone" name="telephone" type="tel" value="{{ form.telephone.value|default_if_none:'' }}" placeholder="+221..." class="custom-input w-full pl-11 pr-4 py-3.5 rounded-xl text-white placeholder-neutral-600 outline-none">
+                                </div>
+                            </div>
+                        </div>
 
-                    <!-- Message -->
-                    <div>
-                        <label for="id_message" class="block text-sm font-medium text-slate-200 mb-1.5">
-                            Message <span class="text-red-400">*</span>
-                        </label>
-                        <textarea
-                            id="id_message"
-                            name="message"
-                            rows="5"
-                            placeholder="Décrivez votre demande, vos critères ou le bien qui vous intéresse..."
-                            class="w-full px-4 py-3 rounded-xl bg-slate-900/70 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                            required
-                        ></textarea>
-                    </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="input-group group">
+                                <label for="id_email" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2 transition-colors">Email <span class="text-emerald-500">*</span></label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <svg class="h-5 w-5 text-neutral-600 transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>
+                                    </div>
+                                    <input id="id_email" name="email" type="email" value="{{ form.email.value|default_if_none:'' }}" placeholder="exemple@mail.com" class="custom-input w-full pl-11 pr-4 py-3.5 rounded-xl text-white placeholder-neutral-600 outline-none" required>
+                                </div>
+                                {% if form.email.errors %}<p class="text-xs text-red-400 mt-2 font-medium">{{ form.email.errors|striptags }}</p>{% endif %}
+                            </div>
 
-                    <!-- Bouton -->
-                    <div class="pt-2">
-                        <button
-                            type="submit"
-                            class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-sm font-semibold text-white shadow-lg shadow-blue-900/40 transition-transform duration-200 hover:scale-[1.02]"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M3 8l7.89 3.26a2 2 0 001.5 0L21 8m-9 4v7"/>
-                            </svg>
-                            Envoyer mon message
-                        </button>
-                        <p class="mt-2 text-xs text-slate-500">
-                            En envoyant ce formulaire, vous acceptez d’être recontacté(e) par MADA IMMO.
-                        </p>
-                    </div>
-                </form>
+                            <div class="input-group group">
+                                <label for="id_sujet" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2 transition-colors">Sujet <span class="text-emerald-500">*</span></label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <svg class="h-5 w-5 text-neutral-600 transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+                                    </div>
+                                    <input id="id_sujet" name="sujet" type="text" value="{{ form.sujet.value|default_if_none:'' }}" placeholder="Ex: Renseignements..." class="custom-input w-full pl-11 pr-4 py-3.5 rounded-xl text-white placeholder-neutral-600 outline-none" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-group group">
+                            <label for="id_message" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2 transition-colors">Message <span class="text-emerald-500">*</span></label>
+                            <textarea id="id_message" name="message" rows="5" class="custom-input w-full px-4 py-3.5 rounded-xl text-white placeholder-neutral-600 outline-none resize-none leading-relaxed" placeholder="Bonjour, je vous contacte concernant..." required>{{ form.message.value|default_if_none:'' }}</textarea>
+                            {% if form.message.errors %}<p class="text-xs text-red-400 mt-2 font-medium">{{ form.message.errors|striptags }}</p>{% endif %}
+                        </div>
+
+                        <div class="pt-4">
+                            <button type="submit" class="w-full md:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold shadow-lg shadow-emerald-900/20 hover:shadow-emerald-900/40 transform hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-3">
+                                <span>Envoyer le message</span>
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
-            <!-- INFOS CONTACT / BLOC DROITE -->
-            <div class="space-y-6">
-                <div class="rounded-2xl bg-slate-900/60 border border-slate-700/70 p-4 md:p-5">
-                    <h3 class="text-sm font-semibold text-slate-200 mb-3">
-                        Coordonnées MADA IMMO
+            <div class="lg:col-span-4 space-y-8">
+
+                <div class="bg-neutral-900/60 backdrop-blur-xl border border-neutral-800 rounded-2xl p-8">
+                    <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                        Coordonnées
+                        <span class="h-px flex-1 bg-neutral-800"></span>
                     </h3>
-                    <ul class="space-y-3 text-sm text-slate-300">
-                        <li class="flex items-start gap-3">
-                            <span class="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-xl bg-blue-600/10 text-blue-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0L6.343 16.657A8 8 0 1117.657 16.657z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                </svg>
-                            </span>
-                            <span>
-                                Dakar, Sénégal<br>
-                                <span class="text-slate-400">Quartier / adresse à préciser</span>
-                            </span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.69l1.5 4.49a1 1 0 01-.51 1.21l-2.26 1.13a11.05 11.05 0 005.52 5.52l1.13-2.26a1 1 0 011.21-.51l4.49 1.5a1 1 0 01.69.95V19a2 2 0 01-2 2h-1C9.72 21 3 14.28 3 6V5z"/>
-                                </svg>
-                            </span>
-                            <span>
-                                Service client&nbsp;: <span class="font-semibold text-slate-100">+221 78 010 36 36</span><br>
-                                <span class="text-slate-400">WhatsApp &amp; appels</span>
-                            </span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-xl bg-fuchsia-600/10 text-fuchsia-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M16 12a4 4 0 10-8 0 4 4 0 008 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M12 2a10 10 0 00-9.14 5.69A1 1 0 003 9h18a1 1 0 00.88-1.45A10 10 0 0012 2z"/>
-                                </svg>
-                            </span>
-                            <span>
-                                contact@mada-immo.com<br>
-                                <span class="text-slate-400">Réponse sous 24 à 48h ouvrées</span>
-                            </span>
-                        </li>
-                    </ul>
+
+                    <div class="space-y-6">
+                        <a href="mailto:contact@mada-immo.sn" class="flex items-start gap-4 group">
+                            <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 3.26a2 2 0 001.5 0L21 8m-9 4v7"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-neutral-500 uppercase tracking-wide mb-1">Email</p>
+                                <p class="text-white font-medium">contact@mada-immo.sn</p>
+                            </div>
+                        </a>
+
+                        <a href="tel:+221770000000" class="flex items-start gap-4 group">
+                            <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-neutral-500 uppercase tracking-wide mb-1">Téléphone</p>
+                                <p class="text-white font-medium">+221 77 000 00 00</p>
+                                <p class="text-xs text-neutral-500 mt-1">Lun-Ven, 9h-18h</p>
+                            </div>
+                        </a>
+
+                        <div class="flex items-start gap-4 group">
+                            <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-neutral-500 uppercase tracking-wide mb-1">Agence</p>
+                                <p class="text-white font-medium">Dakar, Sénégal</p>
+                                <p class="text-xs text-neutral-500 mt-1">Plateau, Immeuble XYZ</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4 md:p-5">
-                    <h3 class="text-sm font-semibold text-slate-200 mb-3">
-                        Vous suivez déjà une annonce ?
-                    </h3>
-                    <p class="text-xs text-slate-400 mb-3">
-                        Si votre message concerne une annonce en particulier, merci de préciser le
-                        <span class="font-semibold text-slate-200">titre du bien</span> ou sa
-                        <span class="font-semibold text-slate-200">référence</span> dans le champ “Sujet”
-                        ou dans votre message.
-                    </p>
-                    <div class="text-xs text-slate-500">
-                        Exemple&nbsp;: <span class="italic text-slate-300">“Visite T3 Centre Ville - Résidence MADA”</span>
+                <div class="bg-neutral-900/60 backdrop-blur-xl border border-neutral-800 rounded-2xl p-8 text-center">
+                    <h4 class="text-white font-bold mb-4">Suivez-nous</h4>
+                    <div class="flex justify-center gap-4">
+                        <a href="#" class="w-12 h-12 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-400 hover:text-white hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all">
+                            <span class="sr-only">Facebook</span>
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        </a>
+                        <a href="#" class="w-12 h-12 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-400 hover:text-white hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all">
+                            <span class="sr-only">Instagram</span>
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0 3.675a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zm0 2.163a4 4 0 110 8 4 4 0 010-8zm6.406-2.846a1.44 1.44 0 11-2.881 0 1.44 1.44 0 012.881 0z"/></svg>
+                        </a>
+                        <a href="#" class="w-12 h-12 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-400 hover:text-white hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all">
+                            <span class="sr-only">LinkedIn</span>
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                        </a>
                     </div>
                 </div>
 
             </div>
         </div>
     </div>
-</section>
-
-</body>
-</html>
+</div>
+{% endblock %}

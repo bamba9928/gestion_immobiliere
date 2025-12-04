@@ -3,6 +3,9 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 
 # ================== QUERYSET PERSONNALISÉ ==================
@@ -480,24 +483,6 @@ class ContactMessage(models.Model):
 
 
 # ===================== MODEL TRANSACTION =====================
-
-class Transaction(models.Model):
-    PROVIDERS = [('WAVE', 'Wave'), ('OM', 'Orange Money'), ('CASH', 'Espèces')]
-
-    loyer = models.ForeignKey(Loyer, on_delete=models.CASCADE, related_name='transactions')
-    montant = models.DecimalField(max_digits=10, decimal_places=0)
-    provider = models.CharField(max_length=10, choices=PROVIDERS)
-    reference_externe = models.CharField(max_length=100, blank=True)  # ID de transaction Wave/OM
-    est_validee = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-created_at']
-        verbose_name = "Transaction"
-        verbose_name_plural = "Transactions"
-
-    def __str__(self):
-        return f"{self.provider} - {self.montant} ({self.loyer})"
 class Transaction(models.Model):
     PROVIDERS = [
         ('WAVE', 'Wave'),
@@ -521,8 +506,47 @@ class Transaction(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Transaction"
+        verbose_name_plural = "Transactions"
+
     def __str__(self):
         return f"{self.provider} - {self.montant} FCFA ({self.get_statut_display()})"
 
     def get_statut_display(self):
         return "Validée" if self.est_validee else "En attente"
+# ===================== EXTENSION UTILISATEUR (PROFIL) =====================
+
+class UserProfile(models.Model):
+    """
+    Extension du modèle User standard pour stocker des infos supplémentaires
+    comme le téléphone ou la CNI, essentiels pour un bail.
+    """
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='profile'
+    )
+    telephone = models.CharField(max_length=20, blank=True, null=True)
+    adresse_postale = models.TextField(blank=True, help_text="Adresse permanente (avant emménagement)")
+    cni_numero = models.CharField(max_length=50, blank=True, verbose_name="Numéro CNI/Passeport")
+    cni_scan = models.FileField(
+        upload_to='users/cni/',
+        blank=True,
+        null=True,
+        verbose_name="Scan CNI/Passeport"
+    )
+    is_agent = models.BooleanField(default=False, help_text="Cochez si cet utilisateur est un agent immobilier")
+
+    def __str__(self):
+        return f"Profil de {self.user.username}"
+
+# Signal pour créer automatiquement le profil quand un User est créé
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+    # Assure que le profil est sauvegardé si l'user est modifié
+    if hasattr(instance, 'profile'):
+        instance.profile.save()

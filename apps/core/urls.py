@@ -2,7 +2,8 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from .views import HomeView, ContactView, AnnonceDetailView,dashboard, add_bien, loyers_list, mark_loyer_paid, download_quittance, interventions_list, trigger_rent_generation
+from .views import HomeView, ContactView, AnnonceDetailView, dashboard, add_bien, loyers_list, mark_loyer_paid, \
+    download_quittance, interventions_list, trigger_rent_generation, add_locataire
 
 from . import views
 
@@ -25,7 +26,8 @@ urlpatterns = [
     # ============================================
     # TABLEAU DE BORD & GESTION (Protégé)
     # ============================================
-    path('dashboard/', views.dashboard, name='dashboard'),  # Déplacé ici pour sécurité
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard/locataires/add/', add_locataire, name='add_locataire'),
 
     # Gestion des biens
     path('gestion/biens/add/', views.add_bien, name='add_bien'),

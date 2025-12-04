@@ -1,143 +1,121 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 {% load static %}
-<html lang="fr" class="h-full">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta name="description" content="Connexion à la plateforme MADA IMMO - Gestion immobilière">
-    <title>Connexion - MADA IMMO</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏢</text></svg>">
 
-    <!-- Fonts optimisés -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+{% block title %}Connexion | MADA IMMO{% endblock %}
 
-    <!-- Tailwind CSS compilé -->
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+{% block extra_css %}
+<style>
+    :root {
+        --particle-1: rgba(255, 255, 255, 0.02);
+        --particle-2: rgba(255, 255, 255, 0.015);
+    }
 
-    <style>
-        /* Variables CSS custom pour cette page */
-        :root {
-            --particle-1: rgba(255, 255, 255, 0.02);
-            --particle-2: rgba(255, 255, 255, 0.015);
+    @keyframes float {
+        0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+        33% { transform: translateY(-30px) scale(1.05); opacity: 0.9; }
+        66% { transform: translateY(30px) scale(0.95); opacity: 0.5; }
+    }
+
+    .particle {
+        position: absolute;
+        background: var(--particle-1);
+        border-radius: 50%;
+        animation: float 20s infinite ease-in-out;
+        pointer-events: none;
+    }
+
+    .particle:nth-child(1) {
+        width: 200px; height: 200px;
+        top: 10%; left: 5%;
+        animation-delay: 0s;
+    }
+
+    .particle:nth-child(2) {
+        width: 150px; height: 150px;
+        top: 70%; right: 10%;
+        animation-delay: 5s;
+        background: var(--particle-2);
+    }
+
+    .particle:nth-child(3) {
+        width: 100px; height: 100px;
+        bottom: 10%; left: 20%;
+        animation-delay: 10s;
+    }
+
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.92) translateY(20px);
         }
-
-        /* Animation des particules de fond */
-        @keyframes float {
-            0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
-            33% { transform: translateY(-30px) scale(1.05); opacity: 0.9; }
-            66% { transform: translateY(30px) scale(0.95); opacity: 0.5; }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
         }
+    }
 
-        .particle {
-            position: absolute;
-            background: var(--particle-1);
-            border-radius: 50%;
-            animation: float 20s infinite ease-in-out;
-            pointer-events: none;
-        }
+    .fade-in-scale {
+        animation: fadeInScale 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-        .particle:nth-child(1) {
-            width: 200px; height: 200px;
-            top: 10%; left: 5%;
-            animation-delay: 0s;
-        }
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+        20%, 40%, 60%, 80% { transform: translateX(6px); }
+    }
 
-        .particle:nth-child(2) {
-            width: 150px; height: 150px;
-            top: 70%; right: 10%;
-            animation-delay: 5s;
-            background: var(--particle-2);
-        }
+    .shake {
+        animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
 
-        .particle:nth-child(3) {
-            width: 100px; height: 100px;
-            bottom: 10%; left: 20%;
-            animation-delay: 10s;
-        }
+    @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
 
-        /* Animation d'entrée */
-        @keyframes fadeInScale {
-            from {
-                opacity: 0;
-                transform: scale(0.92) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
+    .btn-shimmer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        animation: shimmer 2s infinite;
+    }
 
-        .fade-in-scale {
-            animation: fadeInScale 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+    .input-floating-label {
+        position: absolute;
+        left: 3rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgb(115 115 115);
+        font-size: 0.95rem;
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-        /* Animation shake pour erreurs */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
-            20%, 40%, 60%, 80% { transform: translateX(6px); }
-        }
+    .input-field:focus ~ .input-floating-label,
+    .input-field:not(:placeholder-shown) ~ .input-floating-label {
+        top: -0.5rem;
+        left: 0.75rem;
+        font-size: 0.75rem;
+        color: rgb(255 255 255);
+        background: rgb(10 10 10);
+        padding: 0 0.5rem;
+    }
+</style>
+{% endblock %}
 
-        .shake {
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-        }
-
-        /* Effet de brillance sur le bouton */
-        @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-
-        .btn-shimmer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        /* Labels flottants */
-        .input-floating-label {
-            position: absolute;
-            left: 3rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: rgb(115 115 115);
-            font-size: 0.95rem;
-            pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .input-field:focus ~ .input-floating-label,
-        .input-field:not(:placeholder-shown) ~ .input-floating-label {
-            top: -0.5rem;
-            left: 0.75rem;
-            font-size: 0.75rem;
-            color: rgb(255 255 255);
-            background: rgb(10 10 10);
-            padding: 0 0.5rem;
-        }
-    </style>
-</head>
-<body class="h-full flex items-center justify-center p-4 overflow-hidden">
+{% block content %}
+<div class="min-h-screen h-full flex items-center justify-center p-4 overflow-hidden">
 
     <!-- Background avec gradient et particules -->
     <div class="fixed inset-0 -z-10">
-        <!-- Gradient de fond -->
         <div class="absolute inset-0 bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950"></div>
-
-        <!-- Radial gradients subtils -->
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(30,30,30,0.3)_0%,transparent_20%)]"></div>
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_90%_80%,rgba(40,40,40,0.2)_0%,transparent_25%)]"></div>
 
-        <!-- Particules animées -->
         <div class="absolute inset-0 overflow-hidden">
             <div class="particle"></div>
             <div class="particle"></div>
@@ -151,21 +129,18 @@
 
             <!-- Logo et titre -->
             <div class="text-center mb-8">
-                <!-- Icône logo -->
                 <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-white to-neutral-400 rounded-2xl flex items-center justify-center">
                     <svg class="w-8 h-8 text-neutral-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                     </svg>
                 </div>
 
-                <!-- Titre avec gradient -->
                 <h1 class="text-4xl font-bold mb-2">
                     <span class="text-gradient">MADA IMMO</span>
                 </h1>
                 <p class="text-neutral-400 text-sm">Plateforme de gestion immobilière</p>
             </div>
 
-            <!-- Message d'erreur -->
             {% if form.errors %}
             <div class="alert alert-error mb-6 animate-slide-up">
                 <div class="flex items-start gap-3">
@@ -180,11 +155,10 @@
             </div>
             {% endif %}
 
-            <!-- Formulaire de connexion -->
             <form method="post" action="{% url 'login' %}" id="loginForm" novalidate class="space-y-5">
                 {% csrf_token %}
 
-                <!-- Champ Username -->
+                <!-- Username -->
                 <div class="relative">
                     <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,7 +178,7 @@
                     <label for="username" class="input-floating-label">Nom d'utilisateur</label>
                 </div>
 
-                <!-- Champ Password -->
+                <!-- Password -->
                 <div class="relative">
                     <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -234,7 +208,6 @@
                     <label for="password" class="input-floating-label">Mot de passe</label>
                 </div>
 
-                <!-- Options : Remember me + Forgot password -->
                 <div class="flex items-center justify-between text-sm">
                     <label class="flex items-center gap-2 cursor-pointer text-neutral-400 hover:text-white transition-colors">
                         <input
@@ -251,7 +224,6 @@
                     </a>
                 </div>
 
-                <!-- Bouton de soumission -->
                 <button
                     type="submit"
                     id="submitBtn"
@@ -262,10 +234,8 @@
                 </button>
             </form>
 
-            <!-- Séparateur -->
             <div class="divider my-6"></div>
 
-            <!-- Footer -->
             <footer class="text-center text-neutral-500 text-xs space-y-1">
                 <p>&copy; 2025 MADA IMMO. Tous droits réservés.</p>
                 <p class="flex items-center justify-center gap-1">
@@ -277,88 +247,77 @@
             </footer>
         </div>
     </main>
+</div>
+{% endblock %}
 
-    <!-- Scripts -->
-    <script>
-        // Toggle password visibility
-        const togglePassword = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('password');
-        const eyeIcon = document.getElementById('eyeIcon');
+{% block extra_js %}
+<script>
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
 
-        togglePassword.addEventListener('click', () => {
-            const isPassword = passwordInput.type === 'password';
-            passwordInput.type = isPassword ? 'text' : 'password';
+    togglePassword.addEventListener('click', () => {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
 
-            // Change l'icône
-            eyeIcon.innerHTML = isPassword
-                ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>'
-                : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
-        });
+        eyeIcon.innerHTML = isPassword
+            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>'
+            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+    });
 
-        // Form validation and loading state
-        const loginForm = document.getElementById('loginForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const btnText = document.getElementById('btnText');
+    const loginForm = document.getElementById('loginForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const usernameInput = document.getElementById('username');
+    const errorAlert = document.querySelector('.alert-error');
 
-        loginForm.addEventListener('submit', (e) => {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
+    loginForm.addEventListener('submit', (e) => {
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
 
-            if (!username || !password) {
-                e.preventDefault();
+        if (!username || !password) {
+            e.preventDefault();
 
-                if (!username) {
-                    document.getElementById('username').classList.add('shake');
-                    setTimeout(() => document.getElementById('username').classList.remove('shake'), 400);
-                }
-                if (!password) {
-                    document.getElementById('password').classList.add('shake');
-                    setTimeout(() => document.getElementById('password').classList.remove('shake'), 400);
-                }
-                return;
+            if (!username) {
+                usernameInput.classList.add('shake');
+                setTimeout(() => usernameInput.classList.remove('shake'), 400);
             }
+            if (!password) {
+                passwordInput.classList.add('shake');
+                setTimeout(() => passwordInput.classList.remove('shake'), 400);
+            }
+            return;
+        }
 
-            // Loading state
-            submitBtn.disabled = true;
-            submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
-            btnText.textContent = 'Connexion en cours...';
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
+        btnText.innerHTML = `
+            <span class="flex items-center justify-center gap-2">
+                <span class="spinner"></span>
+                Connexion en cours...
+            </span>
+        `;
+    });
 
-            // Ajouter un spinner
-            btnText.innerHTML = `
-                <span class="flex items-center justify-center gap-2">
-                    <span class="spinner"></span>
-                    Connexion en cours...
-                </span>
-            `;
-        });
-
-        // Remove error message on input
-        const usernameInput = document.getElementById('username');
-        const errorAlert = document.querySelector('.alert-error');
-
-        [usernameInput, passwordInput].forEach(input => {
-            input.addEventListener('input', () => {
-                if (errorAlert) {
-                    errorAlert.style.opacity = '0';
-                    errorAlert.style.transform = 'translateY(-10px)';
-                    setTimeout(() => errorAlert.remove(), 300);
-                }
-            });
-        });
-
-        // Auto-focus username on load
-        window.addEventListener('load', () => {
-            usernameInput.focus();
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            // Alt + V pour toggle password
-            if (e.altKey && e.key === 'v') {
-                e.preventDefault();
-                togglePassword.click();
+    [usernameInput, passwordInput].forEach(input => {
+        input.addEventListener('input', () => {
+            if (errorAlert) {
+                errorAlert.style.opacity = '0';
+                errorAlert.style.transform = 'translateY(-10px)';
+                setTimeout(() => errorAlert.remove(), 300);
             }
         });
-    </script>
-</body>
-</html>
+    });
+
+    window.addEventListener('load', () => {
+        usernameInput.focus();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.altKey && e.key === 'v') {
+            e.preventDefault();
+            togglePassword.click();
+        }
+    });
+</script>
+{% endblock %}

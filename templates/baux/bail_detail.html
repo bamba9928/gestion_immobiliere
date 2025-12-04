@@ -1,170 +1,283 @@
 {% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% load tailwind_tags %}
+
+{% block title %}Détail du Bail | MADA IMMO{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Tableaux modernes */
+    .custom-table th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        color: #737373; /* neutral-500 */
+        padding: 1rem;
+        background-color: rgba(23, 23, 23, 0.5);
+    }
+    .custom-table td {
+        padding: 1rem;
+        color: #d4d4d4; /* neutral-300 */
+        border-bottom: 1px solid rgba(64, 64, 64, 0.3);
+    }
+    .custom-table tr:last-child td {
+        border-bottom: none;
+    }
+    .custom-table tr:hover td {
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Status Badges */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="max-w-5xl mx-auto py-10 space-y-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-  <!-- En-tête bail -->
-  <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-semibold text-white">
-          Bail {{ bail.locataire.get_full_name|default:bail.locataire.username }}
-        </h1>
-        <p class="text-sm text-neutral-400">
-          {{ bail.bien.get_type_bien_display }} – {{ bail.bien.titre }}
-        </p>
-      </div>
-      <div class="text-right">
-        <p class="text-sm text-neutral-400">
-          Du {{ bail.date_debut }} au {{ bail.date_fin }}
-        </p>
-        <p class="text-lg font-semibold text-emerald-400">
-          {{ bail.montant_loyer }} FCFA + {{ bail.montant_charges }} FCFA charges
-        </p>
-        <p class="text-xs text-neutral-400">
-          Jour de paiement : {{ bail.jour_paiement }}
-        </p>
-      </div>
-    </div>
-
-    <div class="mt-4 flex flex-wrap items-center gap-3">
-      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-        {% if bail.est_signe %}bg-emerald-500/20 text-emerald-300{% else %}bg-amber-500/20 text-amber-300{% endif %}">
-        {% if bail.est_signe %}Bail signé{% else %}En attente de signature{% endif %}
-      </span>
-
-      {% if bail.fichier_contrat %}
-        <a href="{{ bail.fichier_contrat.url }}" target="_blank"
-           class="text-xs text-emerald-400 hover:underline">
-          Voir le contrat PDF
+    <div>
+        <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors group">
+            <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Retour au tableau de bord
         </a>
-      {% endif %}
-    </div>
-  </div>
-
-  <!-- États des lieux -->
-  <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6 space-y-4">
-    <div class="flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-white">États des lieux</h2>
-      <div class="flex gap-2">
-        <a href="{% url 'add_etat_des_lieux' bail.id 'ENTREE' %}"
-           class="px-3 py-1.5 rounded-md text-xs bg-neutral-800 text-neutral-200 border border-neutral-700">
-          EDL d'entrée
-        </a>
-        <a href="{% url 'add_etat_des_lieux' bail.id 'SORTIE' %}"
-           class="px-3 py-1.5 rounded-md text-xs bg-neutral-800 text-neutral-200 border border-neutral-700">
-          EDL de sortie
-        </a>
-      </div>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-4">
-      <div class="border border-neutral-800 rounded-lg p-4">
-        <h3 class="text-sm font-medium text-neutral-300 mb-2">Entrée</h3>
-        {% if edl_entree %}
-          <p class="text-xs text-neutral-400 mb-1">
-            Réalisé le {{ edl_entree.date_realisation }}
-          </p>
-          <p class="text-xs text-neutral-400 mb-1">
-            Bailleur : {% if edl_entree.signature_bailleur %}✔{% else %}✖{% endif %} –
-            Locataire : {% if edl_entree.signature_locataire %}✔{% else %}✖{% endif %}
-          </p>
-          {% if edl_entree.pdf %}
-            <a href="{{ edl_entree.pdf.url }}" target="_blank"
-               class="text-xs text-emerald-400 hover:underline">
-              Télécharger le PDF
-            </a>
-          {% endif %}
-        {% else %}
-          <p class="text-xs text-neutral-500">Aucun état des lieux d'entrée enregistré.</p>
-        {% endif %}
-      </div>
+    <div class="relative overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800 p-8 shadow-2xl">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
 
-      <div class="border border-neutral-800 rounded-lg p-4">
-        <h3 class="text-sm font-medium text-neutral-300 mb-2">Sortie</h3>
-        {% if edl_sortie %}
-          <p class="text-xs text-neutral-400 mb-1">
-            Réalisé le {{ edl_sortie.date_realisation }}
-          </p>
-          <p class="text-xs text-neutral-400 mb-1">
-            Bailleur : {% if edl_sortie.signature_bailleur %}✔{% else %}✖{% endif %} –
-            Locataire : {% if edl_sortie.signature_locataire %}✔{% else %}✖{% endif %}
-          </p>
-          {% if edl_sortie.pdf %}
-            <a href="{{ edl_sortie.pdf.url }}" target="_blank"
-               class="text-xs text-emerald-400 hover:underline">
-              Télécharger le PDF
-            </a>
-          {% endif %}
-        {% else %}
-          <p class="text-xs text-neutral-500">Aucun état des lieux de sortie enregistré.</p>
-        {% endif %}
-      </div>
-    </div>
-  </div>
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-start justify-between gap-8">
+            <div class="space-y-4">
+                <div class="flex items-center gap-3">
+                    <span class="badge {% if bail.est_signe %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20{% else %}bg-amber-500/10 text-amber-400 border border-amber-500/20{% endif %}">
+                        <span class="w-1.5 h-1.5 rounded-full {% if bail.est_signe %}bg-emerald-500{% else %}bg-amber-500 animate-pulse{% endif %}"></span>
+                        {% if bail.est_signe %}Bail Actif{% else %}Signature en attente{% endif %}
+                    </span>
+                    <span class="text-neutral-500 text-sm font-mono">#REF-{{ bail.id }}</span>
+                </div>
 
-  <!-- Loyers -->
-  <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-white">Loyers</h2>
-    </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-1">
+                        {{ bail.locataire.get_full_name|default:bail.locataire.username }}
+                    </h1>
+                    <div class="flex items-center gap-2 text-neutral-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        <span>{{ bail.bien.titre }}</span>
+                    </div>
+                </div>
 
-    {% if loyers %}
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-sm text-neutral-200">
-          <thead class="bg-neutral-800 text-xs uppercase">
-            <tr>
-              <th class="px-3 py-2 text-left">Période</th>
-              <th class="px-3 py-2 text-right">Montant dû</th>
-              <th class="px-3 py-2 text-right">Payé</th>
-              <th class="px-3 py-2 text-center">Statut</th>
-              <th class="px-3 py-2 text-center">Quittance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for loyer in loyers %}
-              <tr class="border-t border-neutral-800">
-                <td class="px-3 py-2">
-                  {{ loyer.periode_debut }} – {{ loyer.periode_fin }}
-                </td>
-                <td class="px-3 py-2 text-right">
-                  {{ loyer.montant_du }} FCFA
-                </td>
-                <td class="px-3 py-2 text-right">
-                  {{ loyer.montant_verse }} FCFA
-                </td>
-                <td class="px-3 py-2 text-center">
-                  <span class="inline-flex px-2 py-0.5 rounded-full text-xs
-                    {% if loyer.statut == 'PAYE' %}
-                      bg-emerald-500/20 text-emerald-300
-                    {% elif loyer.statut == 'RETARD' %}
-                      bg-red-500/20 text-red-300
-                    {% elif loyer.statut == 'PARTIEL' %}
-                      bg-blue-500/20 text-blue-300
+                <div class="flex flex-wrap gap-4 pt-2">
+                    {% if bail.fichier_contrat %}
+                        <a href="{{ bail.fichier_contrat.url }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-semibold transition-colors border border-neutral-700">
+                            <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                            Voir le contrat PDF
+                        </a>
                     {% else %}
-                      bg-amber-500/20 text-amber-300
-                    {% endif %}">
-                    {{ loyer.get_statut_display }}
-                  </span>
-                </td>
-                <td class="px-3 py-2 text-center">
-                  {% if loyer.statut == 'PAYE' %}
-                    <a href="{% url 'download_quittance' loyer.id %}"
-                       class="text-xs text-emerald-400 hover:underline">
-                      Voir la quittance
-                    </a>
-                  {% else %}
-                    <span class="text-xs text-neutral-500">—</span>
-                  {% endif %}
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <p class="text-sm text-neutral-500">Aucun loyer généré pour ce bail.</p>
-    {% endif %}
-  </div>
+                         <a href="{% url 'generate_lease_pdf' bail.id %}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-emerald-900/20">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Générer le contrat
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="lg:text-right bg-neutral-950/50 rounded-xl p-5 border border-neutral-800 min-w-[280px]">
+                <p class="text-xs text-neutral-500 uppercase font-bold tracking-wider mb-2">Loyer Mensuel Total</p>
+                <div class="flex items-baseline gap-1 lg:justify-end">
+                    <span class="text-3xl font-bold text-white">{{ bail.loyer_total|intcomma }}</span>
+                    <span class="text-emerald-500 font-bold">FCFA</span>
+                </div>
+                <div class="mt-3 text-sm text-neutral-400 space-y-1">
+                    <div class="flex justify-between gap-4">
+                        <span>Loyer nu :</span>
+                        <span class="text-white">{{ bail.montant_loyer|intcomma }}</span>
+                    </div>
+                    <div class="flex justify-between gap-4">
+                        <span>Charges :</span>
+                        <span class="text-white">+ {{ bail.montant_charges|intcomma }}</span>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-neutral-800 text-xs text-neutral-500">
+                    Paiement le {{ bail.jour_paiement }} du mois
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-neutral-800 pt-6">
+            <div>
+                <p class="text-xs text-neutral-500 uppercase font-bold">Début du bail</p>
+                <p class="text-white font-medium mt-1">{{ bail.date_debut|date:"d M Y" }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-neutral-500 uppercase font-bold">Fin du bail</p>
+                <p class="text-white font-medium mt-1">{{ bail.date_fin|date:"d M Y" }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-neutral-500 uppercase font-bold">Dépôt de garantie</p>
+                <p class="text-white font-medium mt-1">{{ bail.depot_garantie|intcomma }} FCFA</p>
+            </div>
+            <div>
+                <p class="text-xs text-neutral-500 uppercase font-bold">Type de bail</p>
+                <p class="text-white font-medium mt-1">Habitation ({{ bail.bien.nb_pieces }} pièces)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+
+        <div class="relative group rounded-2xl border {% if edl_entree %}border-neutral-800 bg-neutral-900{% else %}border-dashed border-neutral-800 bg-neutral-900/30{% endif %} p-6 transition-all hover:border-neutral-700">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-lg {% if edl_entree %}bg-emerald-500/10 text-emerald-500{% else %}bg-neutral-800 text-neutral-600{% endif %} flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">État des lieux d'entrée</h3>
+                </div>
+                {% if not edl_entree %}
+                    <a href="{% url 'add_etat_des_lieux' bail.id 'ENTREE' %}" class="text-xs font-bold text-emerald-500 hover:text-emerald-400 uppercase tracking-wide">Créer +</a>
+                {% endif %}
+            </div>
+
+            {% if edl_entree %}
+                <div class="space-y-3">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-500">Date :</span>
+                        <span class="text-white">{{ edl_entree.date_realisation|date:"d M Y" }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-500">Signatures :</span>
+                        <div class="flex gap-2">
+                            <span class="text-xs px-2 py-0.5 rounded bg-neutral-800 {% if edl_entree.signature_bailleur %}text-emerald-400{% else %}text-neutral-500{% endif %}">Bailleur</span>
+                            <span class="text-xs px-2 py-0.5 rounded bg-neutral-800 {% if edl_entree.signature_locataire %}text-emerald-400{% else %}text-neutral-500{% endif %}">Locataire</span>
+                        </div>
+                    </div>
+                    {% if edl_entree.pdf %}
+                        <a href="{{ edl_entree.pdf.url }}" target="_blank" class="mt-4 flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm font-medium text-white transition-colors border border-neutral-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Télécharger PDF
+                        </a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p class="text-sm text-neutral-500 mb-4">Document non réalisé.</p>
+                <a href="{% url 'add_etat_des_lieux' bail.id 'ENTREE' %}" class="flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-neutral-700 hover:border-emerald-500 hover:text-emerald-500 text-sm font-medium text-neutral-400 transition-colors">
+                    Commencer l'état des lieux
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="relative group rounded-2xl border {% if edl_sortie %}border-neutral-800 bg-neutral-900{% else %}border-dashed border-neutral-800 bg-neutral-900/30{% endif %} p-6 transition-all hover:border-neutral-700">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-lg {% if edl_sortie %}bg-amber-500/10 text-amber-500{% else %}bg-neutral-800 text-neutral-600{% endif %} flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">État des lieux de sortie</h3>
+                </div>
+                {% if not edl_sortie %}
+                    <a href="{% url 'add_etat_des_lieux' bail.id 'SORTIE' %}" class="text-xs font-bold text-amber-500 hover:text-amber-400 uppercase tracking-wide">Créer +</a>
+                {% endif %}
+            </div>
+
+            {% if edl_sortie %}
+                <div class="space-y-3">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-500">Date :</span>
+                        <span class="text-white">{{ edl_sortie.date_realisation|date:"d M Y" }}</span>
+                    </div>
+                    {% if edl_sortie.pdf %}
+                        <a href="{{ edl_sortie.pdf.url }}" target="_blank" class="mt-4 flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm font-medium text-white transition-colors border border-neutral-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Télécharger PDF
+                        </a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p class="text-sm text-neutral-500 mb-4">En attente de fin de bail.</p>
+                <a href="{% url 'add_etat_des_lieux' bail.id 'SORTIE' %}" class="flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-neutral-700 hover:border-amber-500 hover:text-amber-500 text-sm font-medium text-neutral-400 transition-colors">
+                    Commencer l'état des lieux
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-lg">
+        <div class="p-6 border-b border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h2 class="text-xl font-bold text-white">Historique des Paiements</h2>
+            <div class="flex items-center gap-3 text-xs">
+                <span class="flex items-center gap-1.5 text-neutral-400"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Payé</span>
+                <span class="flex items-center gap-1.5 text-neutral-400"><span class="w-2 h-2 rounded-full bg-red-500"></span>Retard</span>
+                <span class="flex items-center gap-1.5 text-neutral-400"><span class="w-2 h-2 rounded-full bg-amber-500"></span>Attente</span>
+            </div>
+        </div>
+
+        {% if loyers %}
+            <div class="overflow-x-auto">
+                <table class="w-full custom-table">
+                    <thead>
+                        <tr>
+                            <th class="text-left pl-6">Période</th>
+                            <th class="text-right">Montant Dû</th>
+                            <th class="text-right">Versé</th>
+                            <th class="text-center">Statut</th>
+                            <th class="text-right pr-6">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for loyer in loyers %}
+                        <tr>
+                            <td class="pl-6 font-medium text-white">
+                                {{ loyer.periode_debut|date:"M Y"|title }}
+                                <span class="block text-xs text-neutral-500 font-normal">Du {{ loyer.periode_debut|date:"d" }} au {{ loyer.periode_fin|date:"d/m" }}</span>
+                            </td>
+                            <td class="text-right font-mono">{{ loyer.montant_du|intcomma }}</td>
+                            <td class="text-right font-mono text-neutral-400">{{ loyer.montant_verse|intcomma }}</td>
+                            <td class="text-center">
+                                <span class="badge
+                                    {% if loyer.statut == 'PAYE' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+                                    {% elif loyer.statut == 'RETARD' %}bg-red-500/10 text-red-400 border border-red-500/20
+                                    {% elif loyer.statut == 'PARTIEL' %}bg-blue-500/10 text-blue-400 border border-blue-500/20
+                                    {% else %}bg-amber-500/10 text-amber-400 border border-amber-500/20{% endif %}">
+                                    {{ loyer.get_statut_display }}
+                                </span>
+                            </td>
+                            <td class="text-right pr-6">
+                                {% if loyer.statut == 'PAYE' %}
+                                    <a href="{% url 'download_quittance' loyer.id %}" class="text-xs font-bold text-emerald-500 hover:text-emerald-400 hover:underline">
+                                        Quittance &darr;
+                                    </a>
+                                {% elif loyer.statut == 'RETARD' or loyer.statut == 'EMIS' %}
+                                    <span class="text-xs text-neutral-600 italic">En attente</span>
+                                {% else %}
+                                    <span class="text-xs text-neutral-600">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-12 text-center">
+                <div class="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                </div>
+                <h3 class="text-lg font-bold text-white">Aucun loyer généré</h3>
+                <p class="text-neutral-500 text-sm mt-1">Les échéances apparaîtront ici une fois le bail activé.</p>
+            </div>
+        {% endif %}
+    </div>
 
 </div>
 {% endblock %}

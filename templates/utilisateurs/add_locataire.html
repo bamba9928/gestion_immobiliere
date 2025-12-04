@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load tailwind_tags %}
+
+{% block title %}Nouveau Locataire | MADA IMMO{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Force le style Dark Mode sur les inputs */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+        width: 100%;
+        background-color: #0a0a0a;
+        border: 1px solid #262626;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        color: white;
+        transition: all 0.2s;
+        outline: none;
+    }
+
+    input:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
+    }
+
+    .help-text {
+        font-size: 0.75rem;
+        color: #737373;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="mb-8 border-b border-neutral-800 pb-6">
+        <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors mb-4">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Retour au tableau de bord
+        </a>
+        <h1 class="text-3xl font-black text-white tracking-tight">Créer un Locataire</h1>
+        <p class="text-neutral-400 mt-2">Créez un compte utilisateur pour un nouveau locataire. Il pourra ensuite se connecter pour accéder à ses documents.</p>
+    </div>
+
+    <div class="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-8 shadow-2xl backdrop-blur-sm">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="p-4 rounded-xl bg-red-950/30 border border-red-900/50 text-red-200 text-sm">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="space-y-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span class="w-1 h-6 bg-emerald-500 rounded-full"></span>
+                    Identifiants de connexion
+                </h3>
+
+                <div>
+                    <label class="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1">Nom d'utilisateur (Login) *</label>
+                    {{ form.username }}
+                    <p class="help-text">{{ form.username.help_text }}</p>
+                    {{ form.username.errors }}
+                </div>
+            </div>
+
+            <div class="space-y-4 pt-4 border-t border-neutral-800">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span class="w-1 h-6 bg-blue-500 rounded-full"></span>
+                    Informations Personnelles
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1">Prénom *</label>
+                        {{ form.first_name }}
+                        {{ form.first_name.errors }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1">Nom *</label>
+                        {{ form.last_name }}
+                        {{ form.last_name.errors }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1">Email *</label>
+                        {{ form.email }}
+                        {{ form.email.errors }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1">Téléphone *</label>
+                        {{ form.telephone }}
+                        {{ form.telephone.errors }}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1">Numéro CNI / Passeport *</label>
+                    {{ form.cni_numero }}
+                    {{ form.cni_numero.errors }}
+                </div>
+            </div>
+
+            <div class="space-y-4 pt-4 border-t border-neutral-800">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span class="w-1 h-6 bg-purple-500 rounded-full"></span>
+                    Sécurité
+                </h3>
+
+                <div>
+                    <label class="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1">Mot de passe *</label>
+                    {{ form.password1 }}
+                    <p class="help-text">{{ form.password1.help_text }}</p>
+                    {{ form.password1.errors }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1">Confirmation du mot de passe *</label>
+                    {{ form.password2 }}
+                    {{ form.password2.errors }}
+                </div>
+            </div>
+
+            <div class="pt-6 mt-6 border-t border-neutral-800 flex items-center justify-end gap-4">
+                <a href="{% url 'dashboard' %}" class="px-6 py-2.5 rounded-xl border border-neutral-700 text-neutral-300 hover:text-white hover:bg-neutral-800 transition-all font-medium">
+                    Annuler
+                </a>
+                <button type="submit" class="px-8 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold shadow-lg shadow-emerald-900/20 transform hover:-translate-y-0.5 transition-all">
+                    Créer le locataire
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

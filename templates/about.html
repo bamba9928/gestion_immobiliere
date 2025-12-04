@@ -1,172 +1,208 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}À propos – MADA IMMO{% endblock %}
+{% block title %}À propos | MADA IMMO{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Effet de fond subtil */
+    .about-bg {
+        background-color: #050505;
+        background-image: radial-gradient(circle at 100% 0%, #10b98110 0%, transparent 40%),
+                          radial-gradient(circle at 0% 100%, #3b82f610 0%, transparent 40%);
+    }
+
+    /* Carte Vitrée */
+    .glass-panel {
+        background: rgba(23, 23, 23, 0.4);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+    }
+    .glass-panel:hover {
+        border-color: rgba(255, 255, 255, 0.1);
+        background: rgba(23, 23, 23, 0.6);
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="min-h-[80vh] px-4 py-10 bg-neutral-950 text-neutral-100">
-    <div class="max-w-5xl mx-auto space-y-10">
+<div class="about-bg min-h-screen text-neutral-200">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-20">
 
-        <!-- Hero -->
-        <header class="space-y-4">
-            <p class="text-xs uppercase tracking-[0.25em] text-neutral-500">
-                Mada Immo
-            </p>
-            <h1 class="text-3xl md:text-4xl font-semibold">
-                À propos de la plateforme de gestion immobilière MADA IMMO
+        <header class="text-center space-y-6 max-w-3xl mx-auto">
+            <div class="inline-flex items-center justify-center p-3 rounded-2xl bg-neutral-900 border border-neutral-800 shadow-xl mb-4">
+                <div class="h-8 w-8 rounded bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <span class="text-black font-black text-lg">M</span>
+                </div>
+            </div>
+
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white">
+                L'immobilier, <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">
+                    maîtrisé et centralisé.
+                </span>
             </h1>
-            <p class="text-neutral-400 max-w-2xl text-sm md:text-base">
-                MADA IMMO est une plateforme de gestion immobilière en mode sombre,
-                pensée pour centraliser les biens, les baux, les loyers et les échanges
-                entre administrateurs, bailleurs, locataires et agents, dans une seule
-                interface claire et maîtrisée.
+
+            <p class="text-lg text-neutral-400 leading-relaxed">
+                MADA IMMO réinvente la gestion locative avec une interface sombre, épurée et pensée pour l'efficacité.
+                Fini les fichiers dispersés : tout votre parc immobilier tient dans votre poche.
             </p>
         </header>
 
-        <!-- Vision + Pour qui -->
-        <section class="grid gap-8 md:grid-cols-2">
-            <div class="space-y-4">
-                <h2 class="text-lg font-semibold">
-                    Notre vision
-                </h2>
-                <p class="text-sm text-neutral-400">
-                    Offrir un tableau de bord unique où l’administrateur contrôle toute
-                    l’activité, tandis que chaque acteur voit uniquement ce dont il a
-                    besoin pour travailler efficacement, sans distraction inutile.
+        <section class="grid lg:grid-cols-2 gap-12 items-center">
+            <div class="space-y-6">
+                <div class="flex items-center gap-3">
+                    <span class="h-px w-8 bg-emerald-500"></span>
+                    <h2 class="text-xl font-bold text-white uppercase tracking-widest">Notre Vision</h2>
+                </div>
+
+                <h3 class="text-3xl font-bold text-white">Un tableau de bord unique pour une clarté totale.</h3>
+
+
+
+                <p class="text-neutral-400 leading-relaxed">
+                    Notre objectif est simple : offrir à l'administrateur un contrôle absolu tout en simplifiant la vie des bailleurs et des locataires.
+                    Chaque acteur accède à une vue filtrée et pertinente, éliminant le bruit pour se concentrer sur l'essentiel.
                 </p>
-                <ul class="mt-4 space-y-2 text-sm text-neutral-300">
-                    <li class="flex gap-2">
-                        <span class="mt-1 h-1.5 w-1.5 rounded-full bg-neutral-200"></span>
-                        Centraliser les biens, baux et locataires dans une seule base.
+
+                <ul class="space-y-4 mt-4">
+                    <li class="flex items-start gap-3">
+                        <div class="mt-1 h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="text-neutral-300">Centralisation complète (Biens, Baux, Locataires)</span>
                     </li>
-                    <li class="flex gap-2">
-                        <span class="mt-1 h-1.5 w-1.5 rounded-full bg-neutral-200"></span>
-                        Suivre les loyers (payés / en attente / en retard) en temps réel.
+                    <li class="flex items-start gap-3">
+                        <div class="mt-1 h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="text-neutral-300">Suivi financier en temps réel (Loyers, Impayés)</span>
                     </li>
-                    <li class="flex gap-2">
-                        <span class="mt-1 h-1.5 w-1.5 rounded-full bg-neutral-200"></span>
-                        Gérer les incidents et demandes des locataires.
-                    </li>
-                    <li class="flex gap-2">
-                        <span class="mt-1 h-1.5 w-1.5 rounded-full bg-neutral-200"></span>
-                        Préparer une API REST pour une future application mobile.
+                    <li class="flex items-start gap-3">
+                        <div class="mt-1 h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="text-neutral-300">Gestion fluide des incidents techniques</span>
                     </li>
                 </ul>
             </div>
 
-            <div class="space-y-4">
-                <h2 class="text-lg font-semibold">
-                    Pour qui ?
-                </h2>
-                <div class="space-y-3 text-sm text-neutral-300">
-                    <div>
-                        <p class="font-medium text-neutral-100">Administrateur</p>
-                        <p class="text-neutral-400 text-xs mt-1">
-                            Accès complet à toutes les données, configuration des
-                            référentiels, validation des annonces, exports et suivi global
-                            du parc immobilier.
-                        </p>
-                    </div>
-                    <div>
-                        <p class="font-medium text-neutral-100">Bailleur</p>
-                        <p class="text-neutral-400 text-xs mt-1">
-                            Visualise ses biens, ses contrats de location, propose des
-                            annonces (soumis à validation) et suit les loyers associés.
-                        </p>
-                    </div>
-                    <div>
-                        <p class="font-medium text-neutral-100">Locataire</p>
-                        <p class="text-neutral-400 text-xs mt-1">
-                            Accède à son bail, consulte son historique de paiements,
-                            télécharge ses quittances et peut signaler un problème.
-                        </p>
-                    </div>
-                    <div>
-                        <p class="font-medium text-neutral-100">Agent</p>
-                        <p class="text-neutral-400 text-xs mt-1">
-                            Gère les tâches opérationnelles en lecture/écriture (visites,
-                            suivis, mises à jour d’état), sans accès aux paramètres sensibles.
-                        </p>
+            <div class="relative">
+                <div class="absolute inset-0 bg-gradient-to-tr from-emerald-500/20 to-blue-500/20 rounded-3xl blur-2xl"></div>
+                <div class="relative glass-panel rounded-3xl p-8 border border-white/10">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-neutral-900/50 p-6 rounded-2xl border border-neutral-800">
+                            <div class="text-3xl font-black text-white mb-1">100%</div>
+                            <div class="text-xs text-neutral-500 uppercase font-bold">Digital</div>
+                        </div>
+                        <div class="bg-neutral-900/50 p-6 rounded-2xl border border-neutral-800">
+                            <div class="text-3xl font-black text-white mb-1">24/7</div>
+                            <div class="text-xs text-neutral-500 uppercase font-bold">Disponibilité</div>
+                        </div>
+                        <div class="col-span-2 bg-neutral-900/50 p-6 rounded-2xl border border-neutral-800 flex items-center gap-4">
+                            <div class="h-10 w-10 rounded-full bg-white text-black flex items-center justify-center font-bold">API</div>
+                            <div>
+                                <div class="text-white font-bold">Architecture REST</div>
+                                <div class="text-xs text-neutral-500">Prêt pour le mobile</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Comment ça fonctionne -->
-        <section class="space-y-4">
-            <h2 class="text-lg font-semibold">
-                Comment fonctionne MADA IMMO ?
-            </h2>
-            <div class="grid gap-4 md:grid-cols-3 text-sm">
-                <div class="border border-neutral-800 rounded-xl p-4 bg-neutral-900/40">
-                    <p class="text-xs uppercase tracking-[0.2em] text-neutral-500">
-                        Étape 1
-                    </p>
-                    <p class="mt-2 font-medium">
-                        L’administrateur paramètre
-                    </p>
-                    <p class="mt-2 text-neutral-400 text-xs">
-                        Création des profils utilisateurs, enregistrement des biens,
-                        définition des loyers, charges et référentiels (types de biens,
-                        statuts, modes de paiement, etc.).
-                    </p>
+        <section>
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-white mb-4">Un écosystème, quatre rôles</h2>
+                <p class="text-neutral-400">Chaque utilisateur dispose d'une interface adaptée à ses besoins.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-panel p-6 rounded-2xl group">
+                    <div class="h-12 w-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <h3 class="text-white font-bold mb-2">Administrateur</h3>
+                    <p class="text-sm text-neutral-400">Le chef d'orchestre. Configuration, validation, exports et vision globale à 360°.</p>
                 </div>
-                <div class="border border-neutral-800 rounded-xl p-4 bg-neutral-900/40">
-                    <p class="text-xs uppercase tracking-[0.2em] text-neutral-500">
-                        Étape 2
-                    </p>
-                    <p class="mt-2 font-medium">
-                        Les bailleurs et agents opèrent
-                    </p>
-                    <p class="mt-2 text-neutral-400 text-xs">
-                        Propositions d’annonces, suivi des baux, mise à jour des entrées
-                        et sorties des locataires, remontée des incidents.
-                    </p>
+
+                <div class="glass-panel p-6 rounded-2xl group">
+                    <div class="h-12 w-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    </div>
+                    <h3 class="text-white font-bold mb-2">Bailleur</h3>
+                    <p class="text-sm text-neutral-400">Suit la rentabilité de ses biens, propose des annonces et visualise ses baux actifs.</p>
                 </div>
-                <div class="border border-neutral-800 rounded-xl p-4 bg-neutral-900/40">
-                    <p class="text-xs uppercase tracking-[0.2em] text-neutral-500">
-                        Étape 3
-                    </p>
-                    <p class="mt-2 font-medium">
-                        Les locataires interagissent
-                    </p>
-                    <p class="mt-2 text-neutral-400 text-xs">
-                        Consultation de leur bail, paiements en ligne (à terme),
-                        téléchargement des quittances et suivi de leurs demandes.
-                    </p>
+
+                <div class="glass-panel p-6 rounded-2xl group">
+                    <div class="h-12 w-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    </div>
+                    <h3 class="text-white font-bold mb-2">Locataire</h3>
+                    <p class="text-sm text-neutral-400">Accès transparent à son bail, ses quittances et un canal direct pour les incidents.</p>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl group">
+                    <div class="h-12 w-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </div>
+                    <h3 class="text-white font-bold mb-2">Agent</h3>
+                    <p class="text-sm text-neutral-400">Opérationnel terrain. Gère les visites et les états des lieux sans accès sensible.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Dark mode & philosophie -->
-        <section class="space-y-4">
-            <h2 class="text-lg font-semibold">
-                Pourquoi uniquement en mode sombre ?
-            </h2>
-            <p class="text-sm text-neutral-400 max-w-3xl">
-                Le choix du mode sombre n’est pas seulement esthétique. Il permet une
-                interface plus reposante, une meilleure lisibilité dans des environnements
-                à faible luminosité et une identité graphique forte : noir, blanc et
-                contrastes nets, sans couleurs superflues.
-            </p>
+        <section class="space-y-8">
+            <h2 class="text-2xl font-bold text-white mb-8">Le flux de travail MADA</h2>
+            <div class="grid md:grid-cols-3 gap-6 relative">
+                <div class="hidden md:block absolute top-6 left-1/6 right-1/6 h-0.5 bg-gradient-to-r from-emerald-900 to-emerald-500/20 -z-10"></div>
+
+                <div class="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl relative">
+                    <div class="absolute -top-4 left-6 px-3 py-1 bg-neutral-800 border border-neutral-700 text-xs font-bold text-white rounded-full">ÉTAPE 01</div>
+                    <h3 class="text-lg font-bold text-white mt-2 mb-2">Configuration</h3>
+                    <p class="text-sm text-neutral-400">L'administrateur prépare le terrain : création des utilisateurs, paramètres financiers et intégration des biens.</p>
+                </div>
+
+                <div class="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl relative">
+                    <div class="absolute -top-4 left-6 px-3 py-1 bg-neutral-800 border border-neutral-700 text-xs font-bold text-white rounded-full">ÉTAPE 02</div>
+                    <h3 class="text-lg font-bold text-white mt-2 mb-2">Exploitation</h3>
+                    <p class="text-sm text-neutral-400">Bailleurs et agents font vivre la plateforme : annonces, visites, signatures de baux et états des lieux.</p>
+                </div>
+
+                <div class="bg-neutral-900 border border-neutral-800 p-6 rounded-2xl relative">
+                    <div class="absolute -top-4 left-6 px-3 py-1 bg-neutral-800 border border-neutral-700 text-xs font-bold text-white rounded-full">ÉTAPE 03</div>
+                    <h3 class="text-lg font-bold text-white mt-2 mb-2">Vie Locative</h3>
+                    <p class="text-sm text-neutral-400">Le quotidien automatisé : paiements, quittances générées et gestion réactive des tickets incidents.</p>
+                </div>
+            </div>
         </section>
 
-        <!-- Contact / évolution -->
-        <section class="border-t border-neutral-900 pt-6 mt-4">
-            <h2 class="text-lg font-semibold">
-                Évolution de la plateforme
-            </h2>
-            <p class="text-sm text-neutral-400 mt-2 max-w-3xl">
-                MADA IMMO est pensée comme une plateforme en évolution continue :
-                intégration progressive de l’API REST, version mobile dédiée, automatisation
-                des rappels de paiement, export des données et reporting avancé pour
-                l’administrateur.
-            </p>
-            <p class="text-xs text-neutral-500 mt-4">
-                Pour toute question ou suggestion :
-                <span class="font-mono text-neutral-300">contact@mada-immo.sn</span>
-                <!-- Remplace cette adresse par tes vraies coordonnées -->
-            </p>
+        <section class="bg-neutral-900/40 rounded-3xl p-8 md:p-12 border border-neutral-800 flex flex-col md:flex-row gap-10 items-center">
+            <div class="md:w-1/2 space-y-4">
+                <h2 class="text-2xl font-bold text-white">L'élégance du Mode Sombre</h2>
+                <p class="text-neutral-400 leading-relaxed">
+                    Nous avons fait le choix radical du "Dark Mode Only". Ce n'est pas une option, c'est notre signature.
+                    Il réduit la fatigue oculaire, économise l'énergie sur les écrans OLED et offre une hiérarchie visuelle
+                    où les couleurs (Emeraude, Ambre, Bleu) servent uniquement l'information critique.
+                </p>
+            </div>
+            <div class="md:w-1/2 grid grid-cols-2 gap-4">
+                <div class="h-24 bg-[#0a0a0a] rounded-lg border border-neutral-800 flex items-center justify-center text-xs text-neutral-500">Contraste élevé</div>
+                <div class="h-24 bg-[#171717] rounded-lg border border-neutral-800 flex items-center justify-center text-xs text-neutral-500">Focus visuel</div>
+                <div class="h-24 bg-neutral-900 rounded-lg border border-neutral-800 flex items-center justify-center text-xs text-neutral-500">Confort</div>
+                <div class="h-24 bg-gradient-to-br from-neutral-900 to-black rounded-lg border border-neutral-800 flex items-center justify-center text-xs text-emerald-500 font-bold">Esthétique</div>
+            </div>
         </section>
+
+        <div class="text-center pt-10 border-t border-neutral-800">
+            <h2 class="text-xl font-bold text-white mb-4">Une question sur la plateforme ?</h2>
+            <a href="mailto:contact@mada-immo.sn" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-black font-bold hover:bg-neutral-200 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 3.26a2 2 0 001.5 0L21 8m-9 4v7"/></svg>
+                contact@mada-immo.sn
+            </a>
+        </div>
 
     </div>
 </div>

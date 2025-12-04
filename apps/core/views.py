@@ -13,6 +13,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, FormView
 from django.views.generic.edit import FormMixin
+from django.contrib.auth.models import Group
 
 from .forms import (
     BienForm,
@@ -20,7 +21,7 @@ from .forms import (
     ContactSiteForm,
     ContactAnnonceForm,
     BailForm,
-    EtatDesLieuxForm,
+    EtatDesLieuxForm, LocataireCreationForm,
 )
 from .models import (
     Bien,
@@ -612,3 +613,28 @@ def simulation_paiement_gateway(request, transaction_id):
             return redirect('dashboard')
 
     return render(request, 'paiements/simulation_gateway.html', {'transaction': transaction})
+@login_required
+def add_locataire(request):
+    # Vérification permission admin
+    if not is_admin(request.user):
+        raise PermissionDenied("Accès réservé.")
+
+    if request.method == 'POST':
+        form = LocataireCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()  # Cela sauvegarde User ET UserProfile grâce à notre formulaire modifié
+
+            # Assigner le groupe LOCATAIRE
+            group, _ = Group.objects.get_or_create(name='LOCATAIRE')
+            user.groups.add(group)
+
+            messages.success(request,
+                             f"Locataire {user.first_name} créé avec succès (Téléphone : {user.profile.telephone}).")
+            return redirect('dashboard')
+    else:
+        form = LocataireCreationForm()
+
+    return render(request, 'utilisateurs/add_locataire.html', {
+        'form': form,
+        'user_role': 'ADMIN'
+    })

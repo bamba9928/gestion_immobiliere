@@ -3,29 +3,49 @@
 {% block title %}Erreur Serveur | MADA IMMO{% endblock %}
 
 {% block content %}
-<div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
-    <div class="space-y-6">
-        <div class="w-24 h-24 mx-auto rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20 mb-4">
-            <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
+<div class="min-h-[70vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden">
+
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+    <div class="relative z-10 space-y-8">
+
+        <div class="relative">
+            <h1 class="text-[10rem] md:text-[16rem] leading-none font-black text-transparent select-none opacity-20"
+                style="-webkit-text-stroke: 2px rgba(220, 38, 38, 0.3);"> 500
+            </h1>
+
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="backdrop-blur-md bg-neutral-900/80 border border-red-900/30 px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
+                    <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                    <span class="text-red-500 text-sm md:text-base font-bold uppercase tracking-[0.2em]">
+                        Erreur Système
+                    </span>
+                </div>
+            </div>
         </div>
 
-        <div class="space-y-2 max-w-md mx-auto">
-            <h1 class="text-3xl font-bold text-white">Erreur Serveur</h1>
-            <p class="text-neutral-400">
-                Nos serveurs ont rencontré un problème inattendu. Nos équipes techniques ont été notifiées automatiquement.
+        <div class="space-y-4 max-w-lg mx-auto -mt-10 relative z-20">
+            <h2 class="text-3xl font-bold text-white tracking-tight">Nos serveurs ont trébuché.</h2>
+            <p class="text-neutral-400 text-lg leading-relaxed">
+                Un problème technique inattendu est survenu. L'équipe technique a été notifiée automatiquement.
             </p>
         </div>
 
-        <div class="pt-4 flex gap-4 justify-center">
-            <button onclick="location.reload()" class="px-6 py-2 rounded-lg border border-neutral-700 text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors">
-                Réactualiser
+        <div class="pt-6 flex flex-col sm:flex-row gap-4 justify-center relative z-20">
+            <button onclick="window.location.reload()"
+                    class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-neutral-700 text-neutral-300 font-bold text-sm hover:bg-neutral-800 hover:text-white transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Réessayer
             </button>
-            <a href="{% url 'home' %}" class="px-6 py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-500 transition-colors">
+
+            <a href="{% url 'home' %}"
+               class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-neutral-200 transition-all shadow-lg shadow-white/5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 Retour à l'accueil
             </a>
         </div>
+
+        <p class="text-xs text-neutral-600 font-mono mt-8">ID de l'incident : <span class="select-all">ERR-{% now "U" %}</span></p>
     </div>
 </div>
 {% endblock %}

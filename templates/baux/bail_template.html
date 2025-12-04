@@ -1,58 +1,199 @@
 <!DOCTYPE html>
+{% load humanize %}
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Bail n°{{ bail.numero_contrat }}</title>
+    <title>Contrat de Bail - {{ bail.numero_contrat }}</title>
     <style>
-        body { font-family: sans-serif; font-size: 12px; }
-        h1, h2 { text-align: center; }
-        .section { margin-bottom: 16px; }
-        .label { font-weight: bold; }
+        /* Configuration de la page pour le PDF (A4) */
+        @page {
+            size: A4;
+            margin: 2.5cm;
+            @bottom-center {
+                content: "Page " counter(page);
+                font-size: 10px;
+                color: #666;
+            }
+        }
+
+        body {
+            font-family: "Times New Roman", Times, serif; /* Police standard pour contrats */
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #000;
+            text-align: justify;
+        }
+
+        /* Titres */
+        h1 {
+            text-align: center;
+            font-size: 16pt;
+            text-transform: uppercase;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 12pt;
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-left: 5px solid #333;
+            text-transform: uppercase;
+        }
+
+        /* Texte et labels */
+        p { margin-bottom: 8px; }
+        .label { font-weight: bold; color: #333; }
+        .value { color: #000; font-weight: normal; }
+
+        /* Tableaux pour alignement parfait */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        td { vertical-align: top; padding: 4px; }
+
+        /* Tableaux financiers */
+        .financial-table td { border-bottom: 1px solid #ddd; padding: 6px; }
+        .financial-table tr:last-child td { border-bottom: 2px solid #000; font-weight: bold; }
+
+        /* Signatures */
+        .signature-section { margin-top: 50px; page-break-inside: avoid; }
+        .sign-box {
+            width: 45%;
+            height: 120px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 10pt;
+        }
+
+        .footer-ref {
+            font-size: 9px;
+            color: #888;
+            text-align: center;
+            margin-top: 50px;
+            border-top: 1px solid #eee;
+            padding-top: 5px;
+        }
     </style>
 </head>
 <body>
-    <h1>CONTRAT DE BAIL D'HABITATION</h1>
+
+    <h1>Contrat de Bail d'Habitation</h1>
+    <div style="text-align: center; font-size: 10pt; margin-bottom: 20px;">
+        Réf Contrat : <strong>{{ bail.numero_contrat }}</strong>
+    </div>
 
     <div class="section">
-        <h2>Entre les soussignés</h2>
-        <p>
-            <span class="label>Bailleur :</span>
-            {{ bail.bien.proprietaire.get_full_name }} ({{ bail.bien.proprietaire.email }})
+        <h2>1. Désignation des Parties</h2>
+        <table width="100%">
+            <tr>
+                <td width="50%">
+                    <div style="background: #f9f9f9; padding: 10px; border: 1px solid #eee;">
+                        <span class="label">LE BAILLEUR :</span><br><br>
+                        <strong>{{ bail.bien.proprietaire.get_full_name|upper }}</strong><br>
+                        Email : {{ bail.bien.proprietaire.email|default:"Non renseigné" }}<br>
+                        <em style="font-size: 9pt;">Ci-après dénommé "Le Bailleur"</em>
+                    </div>
+                </td>
+                <td width="50%">
+                    <div style="background: #f9f9f9; padding: 10px; border: 1px solid #eee;">
+                        <span class="label">LE LOCATAIRE :</span><br><br>
+                        <strong>{{ bail.locataire.get_full_name|upper }}</strong><br>
+                        Email : {{ bail.locataire.email|default:"Non renseigné" }}<br>
+                        <em style="font-size: 9pt;">Ci-après dénommé "Le Preneur"</em>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>2. Objet du Contrat (Bien Loué)</h2>
+        <p>Le Bailleur donne en location au Preneur les locaux désignés ci-après :</p>
+        <table>
+            <tr>
+                <td width="30%" class="label">Adresse :</td>
+                <td class="value">{{ bail.bien.adresse }}, {{ bail.bien.ville }}</td>
+            </tr>
+            <tr>
+                <td class="label">Désignation :</td>
+                <td class="value">{{ bail.bien.titre }}</td>
+            </tr>
+            <tr>
+                <td class="label">Consistance :</td>
+                <td class="value">{{ bail.bien.nb_pieces }} pièce(s) pour une surface d'environ {{ bail.bien.surface }} m².</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>3. Durée et Prise d'Effet</h2>
+        <p>Le présent bail est consenti et accepté pour une durée déterminée :</p>
+        <ul>
+            <li><strong>Date de prise d'effet :</strong> {{ bail.date_debut|date:"d F Y" }}</li>
+            <li><strong>Date d'échéance :</strong> {{ bail.date_fin|date:"d F Y" }}</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>4. Conditions Financières</h2>
+        <p>Le loyer est payable d'avance le 05 de chaque mois.</p>
+
+        <table class="financial-table">
+            <tr>
+                <td>Loyer mensuel principal</td>
+                <td style="text-align: right;">{{ bail.loyer_initial|intcomma }} FCFA</td>
+            </tr>
+            <tr>
+                <td>Provision sur charges</td>
+                <td style="text-align: right;">{{ bail.charges_mensuelles|intcomma }} FCFA</td>
+            </tr>
+            <tr>
+                <td><strong>TOTAL MENSUEL</strong></td>
+                <td style="text-align: right;"><strong>{{ bail.loyer_initial|add:bail.charges_mensuelles|intcomma }} FCFA</strong></td>
+            </tr>
+        </table>
+
+        <p style="margin-top: 15px;">
+            <span class="label">Dépôt de garantie (Caution) :</span> Le locataire verse ce jour la somme de
+            <strong>{{ bail.bien.caution|intcomma }} FCFA</strong>.
         </p>
-        <p>
-            <span class="label>Locataire :</span>
-            {{ bail.locataire.get_full_name }} ({{ bail.locataire.email }})
+    </div>
+
+    <div class="section">
+        <h2>5. Obligations Générales</h2>
+        <p style="font-size: 10pt;">
+            Le Preneur s'engage à payer le loyer aux termes convenus, à user paisiblement de la chose louée,
+            et à répondre des dégradations et pertes qui surviennent pendant la durée du contrat.
+            Le Bailleur s'engage à délivrer au Preneur le logement en bon état d'usage.
         </p>
     </div>
 
-    <div class="section">
-        <h2>Bien loué</h2>
-        <p>{{ bail.bien.titre }} – {{ bail.bien.adresse }} – {{ bail.bien.ville }}</p>
-        <p>Surface : {{ bail.bien.surface }} m² – {{ bail.bien.nb_pieces }} pièce(s)</p>
+    <div class="signature-section">
+        <p>Fait à <strong>{{ bail.bien.ville }}</strong>, le <strong>{% now "d F Y" %}</strong>, en deux exemplaires.</p>
+
+        <table width="100%" style="margin-top: 20px;">
+            <tr>
+                <td width="50%">
+                    <div class="sign-box">
+                        <strong>LE BAILLEUR</strong><br>
+                        <span style="font-size: 8pt; font-style: italic;">(Signature précédée de la mention "Lu et approuvé")</span>
+                    </div>
+                </td>
+                <td width="50%">
+                    <div class="sign-box">
+                        <strong>LE LOCATAIRE</strong><br>
+                        <span style="font-size: 8pt; font-style: italic;">(Signature précédée de la mention "Lu et approuvé")</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
     </div>
 
-    <div class="section">
-        <h2>Conditions financières</h2>
-        <p>Loyer mensuel : {{ bail.loyer_initial }} FCFA</p>
-        <p>Charges mensuelles : {{ bail.charges_mensuelles }} FCFA</p>
-        <p>Caution : {{ bail.bien.caution }} FCFA</p>
-        <p>Mode de paiement : {{ bail.get_mode_paiement_display }}</p>
+    <div class="footer-ref">
+        Document généré automatiquement par MADA IMMO | ID: {{ bail.id }}-{{ now|date:"U" }}
     </div>
 
-    <div class="section">
-        <h2>Durée</h2>
-        <p>Du {{ bail.date_debut }} au {{ bail.date_fin }}</p>
-    </div>
-
-    <div class="section">
-        <h2>Signatures</h2>
-        <p>Fait à ............................................ le {{ bail.date_signature|default:today }}</p>
-        <p>
-            <span class="label">Le bailleur</span> : _______________________
-        </p>
-        <p>
-            <span class="label">Le locataire</span> : _______________________
-        </p>
-    </div>
 </body>
 </html>

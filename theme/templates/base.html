@@ -1,19 +1,242 @@
-{% load static tailwind_tags %}
 <!DOCTYPE html>
-<html lang="en">
+{% load static %}
+{% load tailwind_tags %}
+<html lang="fr" class="dark">
 <head>
-    <title>Django Tailwind</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     {% tailwind_css %}
-</head>
+    <!-- Alpine JS -->
+    <script src="{% static 'js/alpine.min.js' %}" defer></script>
+    <title>{% block title %}MADA IMMO | Gestion{% endblock %}</title>
 
-<body class="bg-gray-50 text-black font-serif leading-normal tracking-normal">
-<div class="container mx-auto">
-    <section class="flex items-center justify-center h-screen">
-        <h1 class="text-5xl">Django + Tailwind = ❤️</h1>
-    </section>
-</div>
+    <!-- SEO et métadonnées -->
+    <meta name="description" content="Plateforme de gestion immobilière professionnelle">
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- CSS et PWA -->
+
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+
+
+    <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.06), transparent 25%),
+                        radial-gradient(circle at 80% 10%, rgba(79, 70, 229, 0.08), transparent 30%),
+                        linear-gradient(135deg, #0a0a0a 0%, #050505 50%, #0a0a0a 100%);
+        }
+
+        /* Animation du logo */
+        .logo-icon {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .logo-icon:hover {
+            transform: rotate(-5deg) scale(1.05);
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
+        }
+
+        /* Animation du bouton de déconnexion */
+        .logout-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logout-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+
+        .logout-btn:hover::before {
+            width: 200%;
+            height: 200%;
+        }
+
+        /* Amélioration du navbar glassmorphism */
+        .navbar-glass {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        /* Animation de pulse pour l'indicateur en ligne */
+        @keyframes pulse-ring {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            100% {
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+            }
+        }
+
+        .status-dot {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #10b981, #059669);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #059669, #047857);
+        }
+
+        /* Animation du footer status */
+        .system-indicator {
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-neutral-950 text-neutral-200 antialiased min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white">
+
+    <!-- Navbar Sticky avec effet Glassmorphism amélioré -->
+    <nav class="navbar-glass sticky top-0 z-50 shadow-2xl shadow-black/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex items-center justify-between gap-6">
+
+                <!-- Logo & Marque -->
+                <a href="{% url 'home' %}" class="flex items-center gap-3 group">
+                    <div class="logo-icon h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-indigo-600
+                                flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                        <span class="text-black font-extrabold text-xl">M</span>
+                    </div>
+                    <div class="flex flex-col leading-tight">
+                        <span class="text-sm font-bold tracking-tight text-white group-hover:text-emerald-400 transition-colors duration-300">
+                            MADA IMMO
+                        </span>
+                        <span class="text-[10px] uppercase tracking-[0.15em] text-neutral-500 font-semibold">
+                            Dashboard & Annonces
+                        </span>
+                    </div>
+                </a>
+                <!-- Liens principaux -->
+                <div class="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900/50 border border-neutral-800/70">
+                    <a href="{% url 'home' %}" class="text-sm font-semibold text-neutral-300 hover:text-white transition">Annonces</a>
+                    <span class="text-neutral-700">•</span>
+                    <a href="{% url 'dashboard' %}" class="text-sm font-semibold text-neutral-300 hover:text-white transition">Dashboard</a>
+                    <span class="text-neutral-700">•</span>
+                    <a href="{% url 'about' %}" class="text-sm font-semibold text-neutral-300 hover:text-white transition">À propos</a>
+                    <span class="text-neutral-700">•</span>
+                    <a href="{% url 'contact' %}" class="text-sm font-semibold text-neutral-300 hover:text-white transition">Contact</a>
+                </div>
+
+                <!-- Menu Utilisateur -->
+                <div class="flex items-center gap-4">
+                    {% if user.is_authenticated %}
+
+                        <div class="hidden sm:flex items-center gap-3 px-4 py-2 rounded-lg bg-neutral-900/50 border border-neutral-800/50">
+                            <div class="flex flex-col items-start leading-tight">
+                                <span class="text-sm text-neutral-200 font-semibold">
+                                    {{ user.get_full_name|default:user.username }}
+                                </span>
+                                <div class="flex items-center gap-1.5">
+                                    <div class="status-dot h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
+                                    <span class="text-[10px] text-emerald-400 font-medium uppercase tracking-wider">
+                                        En ligne
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <form action="{% url 'logout' %}" method="post" class="inline">
+                            {% csrf_token %}
+                            <button
+                                type="submit"
+                                class="logout-btn inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                                       border border-neutral-800 bg-neutral-900/80 text-neutral-400 text-xs font-semibold
+                                       hover:border-red-800 hover:text-red-400 hover:bg-red-950/30
+                                       transition-all duration-300 relative z-10"
+                            >
+                                <span>Déconnexion</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <polyline points="16 17 21 12 16 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <line x1="21" y1="12" x2="9" y2="12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </form>
+                    {% else %}
+                        <!-- Bouton connexion -->
+                        <a
+                            href="{% url 'login' %}"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg
+                                   bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-bold
+                                   hover:from-emerald-600 hover:to-emerald-700
+                                   shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50
+                                   transition-all duration-300 hover:scale-105"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="10 17 15 12 10 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="15" y1="12" x2="3" y2="12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Connexion</span>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="border-t border-neutral-900 bg-neutral-950/80 backdrop-blur-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6
+                flex flex-col md:flex-row
+                items-center md:items-center
+                md:justify-between gap-4
+                text-center md:text-left">
+
+        <div>
+            <p class="text-sm text-neutral-300 font-semibold">MADA IMMO</p>
+            <p class="text-xs text-neutral-500">
+                Interface propriétaire pour la gestion immobilière complète.
+            </p>
+        </div>
+
+        <div class="flex flex-wrap justify-center md:justify-end gap-3 text-xs text-neutral-400">
+            <span class="px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800">Baux &amp; loyers</span>
+            <span class="px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800">Interventions</span>
+            <span class="px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800">Documents</span>
+        </div>
+    </div>
+</footer>
+
 </body>
 </html>
