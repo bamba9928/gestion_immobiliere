@@ -1,11 +1,8 @@
-from django.urls import path
 from django.contrib.auth import views as auth_views
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from .views import HomeView, ContactView, AnnonceDetailView, dashboard, add_bien, loyers_list, mark_loyer_paid, \
-    download_quittance, interventions_list, trigger_rent_generation, add_locataire
+from django.urls import path
 
 from . import views
+from .views import ContactView, add_locataire
 
 urlpatterns = [
     # ============================================
@@ -13,6 +10,8 @@ urlpatterns = [
     # ============================================
     path('', views.HomeView.as_view(), name='home'),  # Page d'accueil avec annonces
     path("about/", views.about, name="about"),
+    path('comptabilite/grand-livre/', views.grand_livre, name='grand_livre'),
+    path('comptabilite/add_depense/', views.add_depense, name='add_depense'),
 
     # ============================================
     # AUTHENTIFICATION

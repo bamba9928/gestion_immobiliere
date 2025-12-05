@@ -1,10 +1,11 @@
 # apps/core/services/contrat.py
+import logging
+
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.template.loader import render_to_string
 from django.utils import timezone
 from weasyprint import HTML
-import logging
 
 logger = logging.getLogger(__name__)
 

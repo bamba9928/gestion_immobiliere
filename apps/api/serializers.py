@@ -1,7 +1,8 @@
-from rest_framework import serializers
 from apps.core.models import Intervention, Bien, Bail
 from rest_framework import serializers
+from rest_framework import serializers
 
+from apps.core.models import Intervention, Bien, Bail
 
 
 class BienSerializer(serializers.ModelSerializer):

@@ -1,11 +1,9 @@
 from datetime import date, timedelta
 from decimal import Decimal
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
 
 
 # ================== QUERYSET PERSONNALISÉ ==================
@@ -44,10 +42,10 @@ class BienQuerySet(models.QuerySet):
 
 class Bien(models.Model):
     TYPE_CHOICES = [
-        ('APPARTEMENT', 'Appartement'),
-        ('MAISON', 'Maison'),
-        ('COMMERCE', 'Local Commercial'),
-        ('TERRAIN', 'Terrain'),
+        ("APPARTEMENT", "Appartement"),
+        ("MAISON", "Maison"),
+        ("COMMERCE", "Local Commercial"),
+        ("TERRAIN", "Terrain"),
     ]
 
     # Infos principales
@@ -58,10 +56,10 @@ class Bien(models.Model):
     type_bien = models.CharField(
         max_length=20,
         choices=TYPE_CHOICES,
-        default='APPARTEMENT',
+        default="APPARTEMENT",
     )
     adresse = models.TextField()
-    ville = models.CharField(max_length=100, default='Dakar')
+    ville = models.CharField(max_length=100, default="Dakar")
 
     # Caractéristiques
     surface = models.PositiveIntegerField(help_text="En m²")
@@ -88,10 +86,10 @@ class Bien(models.Model):
     proprietaire = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
-        related_name='biens_possedes',
+        related_name="biens_possedes",
     )
     photo_principale = models.ImageField(
-        upload_to='biens/',
+        upload_to="biens/",
         blank=True,
         null=True,
     )
@@ -111,7 +109,7 @@ class Bien(models.Model):
         verbose_name = "Bien Immobilier"
         verbose_name_plural = "Biens Immobiliers"
         indexes = [
-            models.Index(fields=['est_actif', 'created_at']),
+            models.Index(fields=["est_actif", "created_at"]),
         ]
 
     def __str__(self) -> str:
@@ -155,12 +153,12 @@ class Bail(models.Model):
     bien = models.ForeignKey(
         Bien,
         on_delete=models.PROTECT,
-        related_name='baux',
+        related_name="baux",
     )
     locataire = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
-        related_name='baux',
+        related_name="baux",
     )
 
     # Dates clés
@@ -183,7 +181,7 @@ class Bail(models.Model):
     # État du dossier
     est_signe = models.BooleanField(default=False)
     fichier_contrat = models.FileField(
-        upload_to='baux_signes/',
+        upload_to="baux_signes/",
         blank=True,
         null=True,
         help_text="PDF signé",
@@ -194,9 +192,9 @@ class Bail(models.Model):
     class Meta:
         verbose_name = "Bail / Contrat"
         verbose_name_plural = "Baux"
-        ordering = ['-date_debut']
+        ordering = ["-date_debut"]
         indexes = [
-            models.Index(fields=['bien', 'est_signe', 'date_fin']),
+            models.Index(fields=["bien", "est_signe", "date_fin"]),
         ]
 
     def __str__(self) -> str:
@@ -210,7 +208,11 @@ class Bail(models.Model):
         """Validation métier avant enregistrement."""
         from django.core.exceptions import ValidationError
 
-        # Empêcher la création de baux qui se chevauchent
+        # Vérifier cohérence des dates
+        if self.date_fin <= self.date_debut:
+            raise ValidationError("La date de fin doit être postérieure à la date de début.")
+
+        # Empêcher la création de baux qui se chevauchent (si signé)
         if self.est_signe:
             chevauchements = Bail.objects.filter(
                 bien=self.bien,
@@ -238,16 +240,16 @@ class Bail(models.Model):
 
 class Loyer(models.Model):
     STATUT_CHOICES = [
-        ('A_PAYER', 'À payer'),
-        ('PARTIEL', 'Paiement partiel'),
-        ('PAYE', 'Payé'),
-        ('RETARD', 'En retard'),
+        ("A_PAYER", "À payer"),
+        ("PARTIEL", "Paiement partiel"),
+        ("PAYE", "Payé"),
+        ("RETARD", "En retard"),
     ]
 
     bail = models.ForeignKey(
         Bail,
         on_delete=models.PROTECT,
-        related_name='loyers',
+        related_name="loyers",
     )
     periode_debut = models.DateField()
     periode_fin = models.DateField()
@@ -261,11 +263,11 @@ class Loyer(models.Model):
     statut = models.CharField(
         max_length=10,
         choices=STATUT_CHOICES,
-        default='A_PAYER',
+        default="A_PAYER",
     )
     date_paiement = models.DateTimeField(null=True, blank=True)
     quittance = models.FileField(
-        upload_to='quittances/',
+        upload_to="quittances/",
         null=True,
         blank=True,
     )
@@ -274,7 +276,7 @@ class Loyer(models.Model):
     class Meta:
         verbose_name = "Loyer / Échéance"
         verbose_name_plural = "Loyers"
-        unique_together = ('bail', 'periode_debut')
+        unique_together = ("bail", "periode_debut")
 
     def __str__(self) -> str:
         return f"{self.bail.locataire.username} - {self.periode_debut.strftime('%B %Y')}"
@@ -285,7 +287,7 @@ class Loyer(models.Model):
 
     @property
     def est_en_retard(self) -> bool:
-        return self.statut != 'PAYE' and date.today() > self.date_echeance
+        return self.statut != "PAYE" and date.today() > self.date_echeance
 
     def enregistrer_paiement(self, montant: Decimal) -> None:
         if montant <= 0:
@@ -295,40 +297,41 @@ class Loyer(models.Model):
         self.montant_verse = min(nouveau_total, self.montant_du)
 
         if self.montant_verse >= self.montant_du:
-            self.statut = 'PAYE'
+            self.statut = "PAYE"
             self.date_paiement = timezone.now()
             self.montant_verse = self.montant_du
         else:
-            self.statut = 'PARTIEL'
+            self.statut = "PARTIEL"
             self.date_paiement = None
 
-        self.save(update_fields=['montant_verse', 'statut', 'date_paiement'])
-        if self.statut == 'PAYE':
+        self.save(update_fields=["montant_verse", "statut", "date_paiement"])
+        if self.statut == "PAYE":
             from apps.core.services.quittance import attacher_quittance
 
             attacher_quittance(self)
 
     def actualiser_statut_retard(self) -> None:
-        if self.statut == 'PAYE':
+        if self.statut == "PAYE":
             return
         if date.today() > self.date_echeance:
-            self.statut = 'RETARD'
-            self.save(update_fields=['statut'])
+            self.statut = "RETARD"
+            self.save(update_fields=["statut"])
 
 
 # ===================== MODEL ANNONCE =====================
+
 class Annonce(models.Model):
     STATUT_CHOICES = [
-        ('BROUILLON', 'Brouillon'),
-        ('ATTENTE', 'En attente'),
-        ('PUBLIE', 'Publiée'),
-        ('ARCHIVE', 'Archivée'),
+        ("BROUILLON", "Brouillon"),
+        ("ATTENTE", "En attente"),
+        ("PUBLIE", "Publiée"),
+        ("ARCHIVE", "Archivée"),
     ]
 
     bien = models.ForeignKey(
         Bien,
         on_delete=models.PROTECT,
-        related_name='annonces',
+        related_name="annonces",
     )
     titre = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -336,7 +339,7 @@ class Annonce(models.Model):
     statut = models.CharField(
         max_length=10,
         choices=STATUT_CHOICES,
-        default='BROUILLON',
+        default="BROUILLON",
     )
     date_publication = models.DateTimeField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -345,7 +348,7 @@ class Annonce(models.Model):
     class Meta:
         verbose_name = "Annonce"
         verbose_name_plural = "Annonces"
-        ordering = ['-date_publication']
+        ordering = ["-date_publication"]
 
     def __str__(self) -> str:
         return f"{self.bien} - {self.get_statut_display()}"
@@ -355,39 +358,37 @@ class Annonce(models.Model):
         """
         Indique si l'annonce a été publiée il y a moins de 7 jours.
         Utilisé pour afficher le badge "Nouveau" sur la page d'accueil.
-
-        Returns:
-            bool: True si l'annonce a moins de 7 jours, False sinon
         """
         if not self.date_publication:
             return False
 
-        # Comparer avec timezone-aware datetime
         limite = timezone.now() - timedelta(days=7)
         return self.date_publication >= limite
+
+
 # ===================== MODEL INTERVENTION =====================
 
 class Intervention(models.Model):
     STATUT_CHOICES = [
-        ('NOUVEAU', 'Nouveau'),
-        ('EN_COURS', 'En cours'),
-        ('RESOLU', 'Résolu'),
+        ("NOUVEAU", "Nouveau"),
+        ("EN_COURS", "En cours"),
+        ("RESOLU", "Résolu"),
     ]
 
     bien = models.ForeignKey(
         Bien,
         on_delete=models.PROTECT,
-        related_name='interventions',
+        related_name="interventions",
     )
     locataire = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
-        related_name='interventions',
+        related_name="interventions",
     )
     agent = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
-        related_name='interventions_assignees',
+        related_name="interventions_assignees",
         null=True,
         blank=True,
     )
@@ -396,15 +397,15 @@ class Intervention(models.Model):
     statut = models.CharField(
         max_length=10,
         choices=STATUT_CHOICES,
-        default='NOUVEAU',
+        default="NOUVEAU",
     )
     photo_avant = models.ImageField(
-        upload_to='interventions/avant/',
+        upload_to="interventions/avant/",
         null=True,
         blank=True,
     )
     photo_apres = models.ImageField(
-        upload_to='interventions/apres/',
+        upload_to="interventions/apres/",
         null=True,
         blank=True,
     )
@@ -414,7 +415,7 @@ class Intervention(models.Model):
     class Meta:
         verbose_name = "Intervention"
         verbose_name_plural = "Interventions"
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def __str__(self) -> str:
         return f"{self.objet} - {self.get_statut_display()}"
@@ -424,17 +425,17 @@ class Intervention(models.Model):
 
 class EtatDesLieux(models.Model):
     TYPE_CHOICES = [
-        ('ENTREE', 'Entrée'),
-        ('SORTIE', 'Sortie'),
+        ("ENTREE", "Entrée"),
+        ("SORTIE", "Sortie"),
     ]
 
     bail = models.ForeignKey(
         Bail,
         on_delete=models.CASCADE,
-        related_name='etats_des_lieux',
+        related_name="etats_des_lieux",
     )
     type_edl = models.CharField(max_length=10, choices=TYPE_CHOICES)
-    date_realisation = models.DateField(default=timezone.now)
+    date_realisation = models.DateField(default=timezone.localdate)
     checklist = models.TextField(
         blank=True,
         help_text="Checklist ou notes détaillées de l'état des lieux.",
@@ -443,7 +444,7 @@ class EtatDesLieux(models.Model):
     signature_bailleur = models.BooleanField(default=False)
     signature_locataire = models.BooleanField(default=False)
     pdf = models.FileField(
-        upload_to='edl/',
+        upload_to="edl/",
         blank=True,
         null=True,
         help_text="PDF de l'état des lieux signé.",
@@ -453,7 +454,7 @@ class EtatDesLieux(models.Model):
     class Meta:
         verbose_name = "État des lieux"
         verbose_name_plural = "États des lieux"
-        ordering = ['-date_realisation']
+        ordering = ["-date_realisation"]
 
     def __str__(self):
         return f"EDL {self.get_type_edl_display()} - {self.bail_id}"
@@ -476,38 +477,54 @@ class ContactMessage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.nom} - {self.created_at:%Y-%m-%d}"
 
 
 # ===================== MODEL TRANSACTION =====================
+
 class Transaction(models.Model):
     PROVIDERS = [
-        ('WAVE', 'Wave'),
-        ('OM', 'Orange Money'),
-        ('CASH', 'Espèces'),
+        ("WAVE", "Wave"),
+        ("OM", "Orange Money"),
+        ("CASH", "Espèces"),
+    ]
+    TYPE_FLUX = [
+        ("LOYER", "Paiement Loyer"),
+        ("DEPOT", "Dépôt de garantie"),
+        ("REGUL", "Régularisation Charges"),
     ]
 
     loyer = models.ForeignKey(
         Loyer,
         on_delete=models.CASCADE,
-        related_name='transactions'
+        related_name="transactions",
     )
     montant = models.DecimalField(max_digits=10, decimal_places=0)
     provider = models.CharField(max_length=10, choices=PROVIDERS)
     reference_externe = models.CharField(
         max_length=100,
         blank=True,
-        help_text="ID de transaction fourni par l'opérateur (ex: Wave ID)"
+        help_text="ID de transaction fourni par l'opérateur (ex: Wave ID)",
+    )
+    type_flux = models.CharField(
+        max_length=10,
+        choices=TYPE_FLUX,
+        default="LOYER",
+    )
+    preuve_paiement = models.FileField(
+        upload_to="preuves/",
+        null=True,
+        blank=True,
     )
     est_validee = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
         verbose_name = "Transaction"
         verbose_name_plural = "Transactions"
 
@@ -516,37 +533,60 @@ class Transaction(models.Model):
 
     def get_statut_display(self):
         return "Validée" if self.est_validee else "En attente"
-# ===================== EXTENSION UTILISATEUR (PROFIL) =====================
 
-class UserProfile(models.Model):
-    """
-    Extension du modèle User standard pour stocker des infos supplémentaires
-    comme le téléphone ou la CNI, essentiels pour un bail.
-    """
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
+
+# ===================== MODEL DÉPENSE =====================
+
+class Depense(models.Model):
+    TYPE_DEPENSE = [
+        ("REPARATION", "Réparation / Entretien"),
+        ("EAU_ELEC", "Eau / Électricité (Parties communes)"),
+        ("TAXE", "Taxe Foncière / TOM"),
+        ("ASSURANCE", "Assurance PNO"),
+        ("SYNDIC", "Charges de copropriété"),
+        ("AUTRE", "Autre"),
+    ]
+
+    bien = models.ForeignKey(
+        Bien,
         on_delete=models.CASCADE,
-        related_name='profile'
+        related_name="depenses",
+        verbose_name="Bien concerné",
     )
-    telephone = models.CharField(max_length=20, blank=True, null=True)
-    adresse_postale = models.TextField(blank=True, help_text="Adresse permanente (avant emménagement)")
-    cni_numero = models.CharField(max_length=50, blank=True, verbose_name="Numéro CNI/Passeport")
-    cni_scan = models.FileField(
-        upload_to='users/cni/',
-        blank=True,
+    # Optionnel : lier à un bail spécifique si la dépense est imputable à un locataire
+    bail = models.ForeignKey(
+        Bail,
+        on_delete=models.SET_NULL,
         null=True,
-        verbose_name="Scan CNI/Passeport"
+        blank=True,
+        related_name="depenses_imputables",
     )
-    is_agent = models.BooleanField(default=False, help_text="Cochez si cet utilisateur est un agent immobilier")
+
+    type_depense = models.CharField(max_length=20, choices=TYPE_DEPENSE)
+    libelle = models.CharField(
+        max_length=200,
+        help_text="Ex: Remplacement robinet cuisine",
+    )
+    montant = models.DecimalField(max_digits=10, decimal_places=0)
+    date_paiement = models.DateField(default=timezone.localdate)
+
+    est_recuperable = models.BooleanField(
+        default=False,
+        help_text="Cochez si cette dépense est refacturable au locataire (charges récupérables)",
+    )
+
+    justificatif = models.FileField(
+        upload_to="depenses/justificatifs/",
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Dépense"
+        verbose_name_plural = "Dépenses"
+        ordering = ["-date_paiement"]
 
     def __str__(self):
-        return f"Profil de {self.user.username}"
-
-# Signal pour créer automatiquement le profil quand un User est créé
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_or_update_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-    # Assure que le profil est sauvegardé si l'user est modifié
-    if hasattr(instance, 'profile'):
-        instance.profile.save()
+        return f"{self.libelle} - {self.montant} FCFA"

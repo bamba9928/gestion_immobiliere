@@ -1,6 +1,8 @@
 from datetime import date
+
 from django.db.models import Sum
-from apps.core.models import Bien, Loyer, Bail
+
+from apps.core.models import Bien, Loyer
 
 
 class DashboardService:

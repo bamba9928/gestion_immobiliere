@@ -82,6 +82,7 @@
                     {% with request.resolver_match.url_name as url_name %}
                     <a href="{% url 'home' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 {% if url_name == 'home' %}bg-neutral-800 text-white shadow-sm{% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">Annonces</a>
                     <a href="{% url 'dashboard' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 {% if url_name == 'dashboard' %}bg-neutral-800 text-white shadow-sm{% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">Dashboard</a>
+                    <a href="{% url 'grand_livre' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 {% if url_name == 'conseils_comptabilite' %}bg-neutral-800 text-white shadow-sm{% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">Comptabilité</a>
                     <a href="{% url 'about' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 {% if url_name == 'about' %}bg-neutral-800 text-white shadow-sm{% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">À propos</a>
                     {% endwith %}
                 </div>
@@ -126,6 +127,7 @@
             <div class="px-4 pt-2 pb-6 space-y-1">
                 <a href="{% url 'home' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Annonces</a>
                 <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Dashboard</a>
+                <a href="{% url 'grand_livre' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Comptabilité</a>
                 <a href="{% url 'about' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">À propos</a>
                 <a href="{% url 'contact' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Contact</a>
 

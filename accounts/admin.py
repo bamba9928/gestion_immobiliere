@@ -4,64 +4,34 @@ from django.utils.html import format_html
 
 from .models import CustomUser
 
-
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
-    """
-    Configuration de l'administration pour le modèle CustomUser.
-    Gère l'affichage et l'édition des informations KYC.
-    """
+    model = CustomUser
 
-    # Champs affichés dans le formulaire d'édition
-    fieldsets = UserAdmin.fieldsets + (
-        (
-            "KYC & informations locataire",
-            {
-                "fields": (
-                    "phone_number",
-                    "address",
-                    "kyc_verified",
-                    "kyc_verified_at",
-                    "piece_identite",
-                    "justificatif_domicile",
-                )
-            },
-        ),
-    )
-
-    # Champs affichés dans le formulaire de création
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        (
-            "KYC & informations locataire",
-            {
-                "classes": ("wide",),
-                "fields": (
-                    "phone_number",
-                    "address",
-                    "piece_identite",
-                    "justificatif_domicile",
-                ),
-            },
-        ),
-    )
-
-    # Colonnes affichées dans la liste
     list_display = (
         "username",
         "email",
-        "last_name",
         "first_name",
-        "is_active",
-        "kyc_badge",
-        "piece_identite_link",
-        "justificatif_domicile_link",
+        "last_name",
+        "is_staff",
+        "kyc_verified",      # OK en list_display (propriété)
+        "kyc_status_display" # OK aussi
     )
 
-    # Filtres disponibles
-    list_filter = UserAdmin.list_filter + ("kyc_verified",)
+    # NE PAS mettre kyc_verified ici
+    list_filter = (
+        "is_staff",
+        "is_superuser",
+        "is_active",
+        "groups",
+    )
 
-    # Champs en lecture seule
-    readonly_fields = ("kyc_verified_at",)
+    # NE PAS mettre kyc_verified_at ici si le champ n'existe pas
+    readonly_fields = ()
+
+    fieldsets = UserAdmin.fieldsets + (
+        ("Infos supplémentaires", {"fields": ("phone_number", "address")}),
+    )
 
     def kyc_badge(self, obj: CustomUser) -> str:
         """

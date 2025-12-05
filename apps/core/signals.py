@@ -1,7 +1,9 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
+
 from .models import Annonce, Bail
+
 
 @receiver(post_save, sender=Bail)
 def archive_annonces_on_signed_bail(sender, instance: Bail, **kwargs):

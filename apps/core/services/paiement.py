@@ -1,5 +1,6 @@
 import logging
-from ..models import Transaction, Loyer
+
+from ..models import Transaction
 
 logger = logging.getLogger(__name__)
 

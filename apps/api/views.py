@@ -1,12 +1,11 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.api.permissions import IsTenant
 from apps.core.models import Bien, Intervention
 from apps.core.permissions import get_active_bail
-
 from .serializers import (
     BienSerializer,
     InterventionSerializer,

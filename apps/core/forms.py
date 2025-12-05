@@ -1,14 +1,12 @@
 from django import forms
-from django.utils import timezone
 from django.contrib.auth import get_user_model  # <--- IMPORT CRUCIAL
-from django.contrib.auth.models import Group
 
 # On récupère le modèle utilisateur actif (CustomUser) au lieu du User par défaut
 User = get_user_model()
 
 from .models import (
     ContactMessage, Bien, Bail, Loyer,
-    Annonce, Intervention, EtatDesLieux, UserProfile
+    Annonce, Intervention, EtatDesLieux, Depense
 )
 
 # ============================================================================
@@ -236,3 +234,16 @@ class LocataireCreationForm(forms.ModelForm):
                 user.profile.cni_numero = self.cleaned_data['cni_numero']
                 user.profile.save()
         return user
+class DepenseForm(forms.ModelForm):
+    class Meta:
+        model = Depense
+        fields = ['bien', 'type_depense', 'libelle', 'montant', 'date_paiement', 'est_recuperable', 'justificatif']
+        widgets = {
+            'bien': forms.Select(attrs={'class': STYLE_INPUT}),
+            'type_depense': forms.Select(attrs={'class': STYLE_INPUT}),
+            'libelle': forms.TextInput(attrs={'class': STYLE_INPUT}),
+            'montant': forms.NumberInput(attrs={'class': STYLE_INPUT}),
+            'date_paiement': forms.DateInput(attrs={'class': STYLE_INPUT, 'type': 'date'}),
+            'est_recuperable': forms.CheckboxInput(attrs={'class': STYLE_CHECKBOX}),
+            'justificatif': forms.ClearableFileInput(attrs={'class': STYLE_FILE}),
+        }

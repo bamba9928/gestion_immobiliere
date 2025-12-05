@@ -1,7 +1,9 @@
-from pathlib import Path
 import os
+from pathlib import Path
+
 from celery.schedules import crontab
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # Build paths inside the project

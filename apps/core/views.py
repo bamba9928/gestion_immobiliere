@@ -1,19 +1,22 @@
 import logging
+from datetime import date
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.core.management import call_command
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.http import FileResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, FormView
 from django.views.generic.edit import FormMixin
-from django.contrib.auth.models import Group
+from django.db.models.functions import TruncMonth
+from itertools import chain
 
 from .forms import (
     BienForm,
@@ -29,7 +32,7 @@ from .models import (
     Loyer,
     Intervention,
     Annonce,
-    EtatDesLieux, Transaction,
+    EtatDesLieux, Transaction, Depense,
 )
 from .permissions import (
     is_admin,
@@ -37,6 +40,10 @@ from .permissions import (
     is_locataire,
     get_active_bail,
 )
+
+from .forms import DepenseForm
+from .models import Depense
+
 from .services.paiement import PaymentService
 from .services.stats import DashboardService
 
@@ -196,7 +203,60 @@ class ContactView(FormView):
 
 def about(request):
     return render(request, "about.html")
+@login_required
+def grand_livre(request):
+    if not is_admin(request.user) and not is_bailleur(request.user):
+        raise PermissionDenied
 
+    # Filtre temporel (par défaut : année en cours)
+    annee = request.GET.get('annee', date.today().year)
+
+    # 1. Recettes (Transactions validées)
+    recettes = Transaction.objects.filter(
+        est_validee=True,
+        created_at__year=annee
+    ).select_related('loyer__bail__bien')
+
+    # 2. Dépenses
+    depenses = Depense.objects.filter(
+        date_paiement__year=annee
+    ).select_related('bien')
+
+    # Si c'est un bailleur, on filtre uniquement ses biens
+    if is_bailleur(request.user):
+        recettes = recettes.filter(loyer__bail__bien__proprietaire=request.user)
+        depenses = depenses.filter(bien__proprietaire=request.user)
+
+    # Agrégations pour les KPI
+    total_recettes = recettes.aggregate(Sum('montant'))['montant__sum'] or 0
+    total_depenses = depenses.aggregate(Sum('montant'))['montant__sum'] or 0
+    cash_flow = total_recettes - total_depenses
+
+    # Fusionner les listes pour l'affichage chronologique
+    # On ajoute un attribut 'type_flux' à la volée pour le template
+    for r in recettes:
+        r.flux = 'CREDIT'
+        r.date_ope = r.created_at.date()
+        r.libelle_comptable = f"Loyer {r.loyer.periode_debut.strftime('%m/%Y')} - {r.loyer.bail.locataire.last_name}"
+
+    for d in depenses:
+        d.flux = 'DEBIT'
+        d.date_ope = d.date_paiement
+        d.libelle_comptable = f"{d.get_type_depense_display()} : {d.libelle}"
+
+    mouvements = sorted(
+        chain(recettes, depenses),
+        key=lambda x: x.date_ope,
+        reverse=True
+    )
+
+    return render(request, 'comptabilite/grand_livre.html', {
+        'mouvements': mouvements,
+        'total_recettes': total_recettes,
+        'total_depenses': total_depenses,
+        'cash_flow': cash_flow,
+        'annee_courante': int(annee),
+    })
 
 # ============================================================================
 # TABLEAU DE BORD & GESTION (Protégé par login)
@@ -637,4 +697,41 @@ def add_locataire(request):
     return render(request, 'utilisateurs/add_locataire.html', {
         'form': form,
         'user_role': 'ADMIN'
+    })
+@login_required
+def add_depense(request):
+    """
+    Formulaire d'ajout d'une dépense (Facture, réparation, etc.).
+    Accessible aux Admins et aux Bailleurs.
+    """
+    # 1. Vérification des permissions
+    if not (is_admin(request.user) or is_bailleur(request.user)):
+        raise PermissionDenied("Vous n'avez pas les droits pour ajouter une dépense.")
+
+    # 2. Gestion du formulaire (POST / GET)
+    if request.method == 'POST':
+        form = DepenseForm(request.POST, request.FILES)
+
+        # Filtrer le queryset 'bien' pour les bailleurs (sécurité)
+        if is_bailleur(request.user):
+            form.fields['bien'].queryset = Bien.objects.filter(proprietaire=request.user)
+
+        if form.is_valid():
+            depense = form.save()
+            messages.success(request, f"Dépense '{depense.libelle}' enregistrée avec succès.")
+            # Redirection vers le Grand Livre pour voir l'écriture
+            return redirect('grand_livre')
+        else:
+            messages.error(request, "Erreur dans le formulaire. Veuillez vérifier les champs.")
+
+    else:
+        form = DepenseForm()
+        # Filtrer le queryset 'bien' pour l'affichage initial
+        if is_bailleur(request.user):
+            form.fields['bien'].queryset = Bien.objects.filter(proprietaire=request.user)
+
+    # 3. Rendu du template
+    return render(request, 'comptabilite/add_depense.html', {
+        'form': form,
+        'user_role': 'ADMIN' if is_admin(request.user) else 'BAILLEUR',
     })

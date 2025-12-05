@@ -33,6 +33,9 @@ Fonctionnalités principales
 - 🛠️ Gestion des interventions / maintenance
   - Suivi des interventions techniques sur les biens
   - Statut des interventions (en attente, en cours, résolu)
+📑 Conformité et comptabilité
+  - Guide intégré des bonnes pratiques comptables pour la gestion locative
+  - Rappels sur les quittances, la traçabilité des dépôts de garantie et les contrôles périodiques
 
 - 📊 Tableau de bord (Dashboard)
   - Vue synthétique des loyers à encaisser

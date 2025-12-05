@@ -11,9 +11,11 @@ Usage:
 """
 import logging
 from datetime import date
+
 from dateutil.relativedelta import relativedelta
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+
 from apps.core.models import Bail, Loyer
 
 logger = logging.getLogger(__name__)
