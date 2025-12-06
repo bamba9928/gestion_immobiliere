@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Bien, Bail, Loyer
+from .models import Bien, Bail, Loyer, HistoriqueRelance
 
 # Configuration de l'interface admin
 admin.site.site_header = "MADA IMMO Administration"
@@ -181,3 +181,8 @@ class LoyerAdmin(admin.ModelAdmin, LocataireKycMixin):
             colors.get(obj.statut, 'black'),
             obj.get_statut_display()
         )
+@admin.register(HistoriqueRelance)
+class HistoriqueRelanceAdmin(admin.ModelAdmin):
+    list_display = ("loyer", "date_envoi", "canal", "succes")
+    list_filter = ("canal", "succes", "date_envoi")
+    search_fields = ("loyer__bail__locataire__username", "loyer__bail__locataire__last_name")

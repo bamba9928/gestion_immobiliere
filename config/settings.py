@@ -12,9 +12,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-y)wq&$_qu-m-6-^fc@j)ge+xq=^5ri53uokr2ynu^&zi8lgjq+'
 
 DEBUG = True
+# Autorise TOUTES les URLs ngrok (pratique pour le dev)
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.ngrok-free.app',
+    'https://*.ngrok.io'
+]
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']  # Ou plus précis : ['.ngrok-free.app', 'localhost']
 AUTH_USER_MODEL = "accounts.CustomUser"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ========================================================

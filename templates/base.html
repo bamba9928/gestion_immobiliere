@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 {% load static %}
 {% load tailwind_tags %}
-<html lang="fr" class="dark">
+<html lang="fr"
+      class="{% if request.COOKIES.theme %}{{ request.COOKIES.theme }}{% else %}dark{% endif %}"
+      x-data="{ mobileMenuOpen: false }"
+      x-init="const savedTheme = localStorage.getItem('theme') || 'dark'; document.documentElement.className = savedTheme">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}MADA IMMO | Gestion{% endblock %}</title>
     <script src="{% static 'js/alpine.min.js' %}" defer></script>
+    <!-- <script src="{% static 'js/@alpinejs/collapse.min.js' %}" defer></script> -->
     <meta name="description" content="Plateforme de gestion immobilière professionnelle">
-    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="theme-color" content="#0a0a0a">
+    <script src="https://cdn.tailwindcss.com"></script>
 
     {% tailwind_css %}
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
     <style>
         [x-cloak] { display: none !important; }
@@ -30,7 +33,6 @@
             background-attachment: fixed;
         }
 
-        /* Glassmorphism Navbar */
         .navbar-glass {
             background: rgba(10, 10, 10, 0.8);
             backdrop-filter: blur(12px);
@@ -38,13 +40,18 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* Scrollbar */
+        /* Scrollbar pour WebKit */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0a0a0a; }
         ::-webkit-scrollbar-thumb { background: #262626; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #10b981; }
 
-        /* Animation Pulse Status */
+        /* Scrollbar pour Firefox */
+        html {
+            scrollbar-width: thin;
+            scrollbar-color: #262626 #0a0a0a;
+        }
+
         @keyframes pulse-ring {
             0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
             100% { transform: scale(2); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
@@ -58,12 +65,19 @@
             z-index: -1;
             animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
         }
+
+        /* Désactiver backdrop-filter sur petits écrans pour performance */
+        @media (max-width: 768px) {
+            .navbar-glass {
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 
-<body class="bg-neutral-950 text-neutral-200 antialiased min-h-screen flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200"
-      x-data="{ mobileMenuOpen: false }">
+<body class="bg-neutral-950 text-neutral-200 antialiased min-h-screen flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200">
 
     <nav class="navbar-glass sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -73,20 +87,41 @@
                     <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform duration-300">
                         <span class="text-neutral-950 font-black text-lg">M</span>
                     </div>
-                    <div class="flex flex-col">
-                        <span class="text-sm font-bold text-white tracking-wide">MADA IMMO</span>
-                    </div>
+                    <span class="text-sm font-bold text-white tracking-wide">MADA IMMO</span>
                 </a>
 
-                <div class="hidden md:flex items-center gap-1 bg-neutral-900/40 p-1.5 rounded-full border border-neutral-800/50 backdrop-blur-md">
-                    {% with request.resolver_match.url_name as url_name %}
-                    <a href="{% url 'home' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 {% if url_name == 'home' %}bg-neutral-800 text-white shadow-sm{% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">Annonces</a>
-                    <a href="{% url 'dashboard' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 {% if url_name == 'dashboard' %}bg-neutral-800 text-white shadow-sm{% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">Dashboard</a>
-                    <a href="{% url 'grand_livre' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 {% if url_name == 'conseils_comptabilite' %}bg-neutral-800 text-white shadow-sm{% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">Comptabilité</a>
-                    <a href="{% url 'about' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 {% if url_name == 'about' %}bg-neutral-800 text-white shadow-sm{% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">À propos</a>
+                <!-- Navigation desktop -->
+                <div class="hidden md:flex items-center gap-1 bg-neutral-900/40 p-1.5 rounded-full border border-neutral-800/50">
+                    {% with request.resolver_match.url_name|default:"" as url_name %}
+                        <a href="{% url 'home' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
+                               {% if url_name == 'home' %}bg-neutral-800 text-white shadow-sm
+                               {% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">
+                            Annonces
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
+                               {% if url_name == 'dashboard' %}bg-neutral-800 text-white shadow-sm
+                               {% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">
+                            Dashboard
+                        </a>
+                        <a href="{% url 'grand_livre' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
+                               {% if url_name == 'grand_livre' or url_name == 'add_depense' %}bg-neutral-800 text-white shadow-sm
+                               {% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">
+                            Comptabilité
+                        </a>
+                        <a href="{% url 'about' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
+                               {% if url_name == 'about' %}bg-neutral-800 text-white shadow-sm
+                               {% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">
+                            À propos
+                        </a>
+                        <a href="{% url 'contact' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
+                               {% if url_name == 'contact' %}bg-neutral-800 text-white shadow-sm
+                               {% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">
+                            Contactez-nous
+                        </a>
                     {% endwith %}
                 </div>
 
+                <!-- Actions utilisateur desktop -->
                 <div class="hidden md:flex items-center gap-4">
                     {% if user.is_authenticated %}
                         <div class="flex items-center gap-3 pl-4 border-l border-neutral-800">
@@ -96,11 +131,12 @@
                                     En ligne <span class="relative flex h-1.5 w-1.5 status-dot bg-emerald-500 rounded-full"></span>
                                 </div>
                             </div>
-
                             <form action="{% url 'logout' %}" method="post">
                                 {% csrf_token %}
                                 <button type="submit" class="p-2 rounded-lg text-neutral-400 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Se déconnecter">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
                                 </button>
                             </form>
                         </div>
@@ -111,30 +147,33 @@
                     {% endif %}
                 </div>
 
+                <!-- Bouton menu mobile -->
                 <div class="flex md:hidden">
                     <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" class="text-neutral-400 hover:text-white p-2">
                         <span class="sr-only">Ouvrir le menu</span>
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" x-show="!mobileMenuOpen"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" x-show="mobileMenuOpen" x-cloak/>
+                        <!-- Version corrigée sans x-show sur les path -->
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            <path x-show="mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" x-cloak></path>
                         </svg>
                     </button>
                 </div>
             </div>
         </div>
 
-        <div x-show="mobileMenuOpen" x-collapse x-cloak class="md:hidden border-b border-neutral-800 bg-black/95 backdrop-blur-xl">
+        <!-- Menu mobile -->
+        <div x-show="mobileMenuOpen" x-collapse x-cloak class="md:hidden border-b border-neutral-800 bg-black/95">
             <div class="px-4 pt-2 pb-6 space-y-1">
                 <a href="{% url 'home' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Annonces</a>
                 <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Dashboard</a>
                 <a href="{% url 'grand_livre' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Comptabilité</a>
                 <a href="{% url 'about' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">À propos</a>
-                <a href="{% url 'contact' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Contact</a>
+                <a href="{% url 'contact' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Contactez-nous</a>
 
                 <div class="mt-4 pt-4 border-t border-neutral-800">
                     {% if user.is_authenticated %}
                         <div class="flex items-center px-3 mb-3">
-                            <div class="ml-0">
+                            <div>
                                 <div class="text-base font-medium leading-none text-white">{{ user.username }}</div>
                                 <div class="text-xs text-emerald-500 mt-1">Connecté</div>
                             </div>
@@ -146,13 +185,16 @@
                             </button>
                         </form>
                     {% else %}
-                        <a href="{% url 'login' %}" class="block px-3 py-2 text-center rounded-md font-bold bg-emerald-600 text-white">Connexion</a>
+                        <a href="{% url 'login' %}" class="block px-3 py-2 text-center rounded-md font-bold bg-emerald-600 text-white hover:bg-emerald-500">
+                            Connexion
+                        </a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </nav>
 
+    <!-- Messages utilisateur -->
     {% if messages %}
     <div class="fixed top-20 right-5 z-50 flex flex-col gap-2 pointer-events-none">
         {% for message in messages %}
@@ -166,47 +208,59 @@
                  x-transition:leave-start="opacity-100 translate-x-0"
                  x-transition:leave-end="opacity-0 translate-x-8"
                  class="pointer-events-auto flex items-center w-full max-w-xs p-4 rounded-lg shadow-2xl border
-                 {% if message.tags == 'error' %}bg-red-950/90 border-red-800 text-red-200{% elif message.tags == 'success' %}bg-emerald-950/90 border-emerald-800 text-emerald-200{% else %}bg-neutral-900/90 border-neutral-700 text-neutral-200{% endif %} backdrop-blur-md">
+                 {% if message.tags == 'error' %}bg-red-950/90 border-red-800 text-red-200
+                 {% elif message.tags == 'success' %}bg-emerald-950/90 border-emerald-800 text-emerald-200
+                 {% else %}bg-neutral-900/90 border-neutral-700 text-neutral-200{% endif %}">
 
                 <div class="flex-shrink-0">
                     {% if message.tags == 'success' %}
-                        <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
                     {% elif message.tags == 'error' %}
-                        <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                        <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                        </svg>
                     {% endif %}
                 </div>
                 <div class="ml-3 text-sm font-normal">{{ message }}</div>
-                <button @click="show = false" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-black/20 focus:ring-2 focus:ring-neutral-500">
+                <button @click="show = false" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-black/20">
                     <span class="sr-only">Fermer</span>
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
                 </button>
             </div>
         {% endfor %}
     </div>
     {% endif %}
 
+    <!-- Contenu principal -->
     <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-0">
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-64 bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none -z-10"></div>
-
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-64 bg-emerald-500/10 blur-[70px] rounded-full pointer-events-none -z-10"></div>
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Footer -->
     <footer class="border-t border-neutral-900 bg-black/40 backdrop-blur-sm mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                <div>
-                    <div class="flex items-center gap-2 mb-2">
-                    </div>
-                    <p class="text-xs text-neutral-500 max-w-xs">
-                       Mada Immo &copy; {% now "Y" %} Tous droits réservés.
-                    </p>
-                </div>
+                <p class="text-xs text-neutral-500">
+                   Mada Immo &copy; {% now "Y" %} Tous droits réservés.
+                </p>
+                <div class="flex gap-4 text-xs font-medium">
+                <a href="#" onclick="return false;" class="text-neutral-600 cursor-default">
+                    Mentions légales
+                    </a>
 
-                <div class="flex gap-4 text-xs font-medium text-neutral-500">
-                    <a href="#" class="hover:text-emerald-400 transition-colors">Mentions légales</a>
-                    <a href="#" class="hover:text-emerald-400 transition-colors">Confidentialité</a>
-                    <a href="#" class="hover:text-emerald-400 transition-colors">Support</a>
-                </div>
+                <a href="#" onclick="return false;" class="text-neutral-600 cursor-default">
+                    Confidentialité
+                    </a>
+
+                <a href="#" onclick="return false;" class="text-neutral-600 cursor-default">
+                    Support
+                    </a>
+            </div>
             </div>
         </div>
     </footer>

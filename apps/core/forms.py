@@ -1,5 +1,7 @@
 from django import forms
-from django.contrib.auth import get_user_model  # <--- IMPORT CRUCIAL
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UserCreationForm
+from django import forms
 
 # On récupère le modèle utilisateur actif (CustomUser) au lieu du User par défaut
 User = get_user_model()
@@ -200,38 +202,43 @@ class ContactSiteForm(forms.Form):
         if not email and not telephone:
             raise forms.ValidationError("Merci de renseigner au moins un moyen de contact.")
         return cleaned_data
-
-
-class LocataireCreationForm(forms.ModelForm):
+class LocataireCreationForm(UserCreationForm):
     """Formulaire spécifique pour la création de locataire avec infos étendues"""
 
-    first_name = forms.CharField(label="Prénom", required=True, widget=forms.TextInput(attrs={'class': STYLE_INPUT}))
-    last_name = forms.CharField(label="Nom", required=True, widget=forms.TextInput(attrs={'class': STYLE_INPUT}))
-    email = forms.EmailField(label="Email", required=True, widget=forms.EmailInput(attrs={'class': STYLE_INPUT}))
-    password = forms.CharField(label="Mot de passe", widget=forms.PasswordInput(attrs={'class': STYLE_INPUT}))
+    telephone = forms.CharField(
+        label="Téléphone",
+        required=True,
+        widget=forms.TextInput(attrs={'class': STYLE_INPUT, 'placeholder': '+221...'})
+    )
+    cni_numero = forms.CharField(
+        label="Numéro CNI / Passeport",
+        required=True,
+        widget=forms.TextInput(attrs={'class': STYLE_INPUT})
+    )
 
-    telephone = forms.CharField(label="Téléphone", required=True,
-                                widget=forms.TextInput(attrs={'class': STYLE_INPUT, 'placeholder': '+221...'}))
-    cni_numero = forms.CharField(label="Numéro CNI / Passeport", required=True,
-                                 widget=forms.TextInput(attrs={'class': STYLE_INPUT}))
-
-    class Meta:
-        # CORRECTION ICI : On utilise User (qui est get_user_model())
+    class Meta(UserCreationForm.Meta):
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'password')
+        fields = (
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+        )
         widgets = {
-            'username': forms.TextInput(attrs={'class': STYLE_INPUT}),
+            "username": forms.TextInput(attrs={"class": STYLE_INPUT}),
+            "first_name": forms.TextInput(attrs={"class": STYLE_INPUT}),
+            "last_name": forms.TextInput(attrs={"class": STYLE_INPUT}),
+            "email": forms.EmailInput(attrs={"class": STYLE_INPUT}),
         }
 
     def save(self, commit=True):
-        user = super().save(commit=False)
-        user.set_password(self.cleaned_data['password'])
+        user = super().save(commit=False)  # gère déjà password1/password2 + validation
         if commit:
             user.save()
-            # Mise à jour du UserProfile via le signal
-            if hasattr(user, 'profile'):
-                user.profile.telephone = self.cleaned_data['telephone']
-                user.profile.cni_numero = self.cleaned_data['cni_numero']
+
+            if hasattr(user, "profile"):
+                user.profile.telephone = self.cleaned_data["telephone"]
+                user.profile.cni_numero = self.cleaned_data["cni_numero"]
                 user.profile.save()
         return user
 class DepenseForm(forms.ModelForm):

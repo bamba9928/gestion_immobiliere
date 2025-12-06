@@ -48,6 +48,12 @@ urlpatterns = [
         views.add_etat_des_lieux,
         name="add_etat_des_lieux",
     ),
+    path(
+        "gestion/baux/<int:bail_id>/generate-pdf/",
+        views.generate_lease_pdf,
+        name="generate_lease_pdf",
+    ),
+
     # Actions admin
     path('gestion/actions/generate-rents/', views.trigger_rent_generation, name='trigger_rent_generation'),
 

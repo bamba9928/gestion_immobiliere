@@ -1,5 +1,6 @@
 import logging
 from datetime import date
+from itertools import chain
 
 from django.conf import settings
 from django.contrib import messages
@@ -15,8 +16,6 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, FormView
 from django.views.generic.edit import FormMixin
-from django.db.models.functions import TruncMonth
-from itertools import chain
 
 from .forms import (
     BienForm,
@@ -24,7 +23,9 @@ from .forms import (
     ContactSiteForm,
     ContactAnnonceForm,
     BailForm,
-    EtatDesLieuxForm, LocataireCreationForm,
+    EtatDesLieuxForm,
+    LocataireCreationForm,
+    DepenseForm,          # ajouté ici
 )
 from .models import (
     Bien,
@@ -32,7 +33,9 @@ from .models import (
     Loyer,
     Intervention,
     Annonce,
-    EtatDesLieux, Transaction, Depense,
+    EtatDesLieux,
+    Transaction,
+    Depense,
 )
 from .permissions import (
     is_admin,
@@ -40,9 +43,6 @@ from .permissions import (
     is_locataire,
     get_active_bail,
 )
-
-from .forms import DepenseForm
-from .models import Depense
 
 from .services.paiement import PaymentService
 from .services.stats import DashboardService
@@ -74,28 +74,30 @@ class HomeView(ListView):
     def get_queryset(self):
         queryset = self.get_base_queryset()
 
-        # Filtre de recherche
-        if q := self.request.GET.get('q'):
+        if q := self.request.GET.get("q"):
             queryset = queryset.filter(
-                Q(bien__ville__icontains=q) |
-                Q(bien__adresse__icontains=q) |
-                Q(titre__icontains=q) |
-                Q(description__icontains=q)
+                Q(bien__ville__icontains=q)
+                | Q(bien__adresse__icontains=q)
+                | Q(titre__icontains=q)
+                | Q(description__icontains=q)
             )
 
-        # Filtres avancés
-        if type_bien := self.request.GET.get('type'):
+        if type_bien := self.request.GET.get("type"):
             queryset = queryset.filter(bien__type_bien=type_bien)
 
-        if ville := self.request.GET.get('ville'):
+        if ville := self.request.GET.get("ville"):
             queryset = queryset.filter(bien__ville=ville)
 
-        if prix_max := self.request.GET.get('prix_max'):
+        if prix_max := self.request.GET.get("prix_max"):
             queryset = queryset.filter(prix__lte=prix_max)
 
-        # Tri
-        sort = self.request.GET.get('sort', '-date_publication')
+        allowed_sorts = ["-date_publication", "date_publication", "prix", "-prix"]
+        sort = self.request.GET.get("sort", "-date_publication")
+        if sort not in allowed_sorts:
+            sort = "-date_publication"
+
         return queryset.order_by(sort)
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -208,56 +210,61 @@ def grand_livre(request):
     if not is_admin(request.user) and not is_bailleur(request.user):
         raise PermissionDenied
 
-    # Filtre temporel (par défaut : année en cours)
-    annee = request.GET.get('annee', date.today().year)
+    # Filtre temporel (par défaut : année en cours) + conversion sécurisée
+    try:
+        annee = int(request.GET.get("annee", date.today().year))
+    except (TypeError, ValueError):
+        annee = date.today().year
 
     # 1. Recettes (Transactions validées)
     recettes = Transaction.objects.filter(
         est_validee=True,
-        created_at__year=annee
-    ).select_related('loyer__bail__bien')
+        created_at__year=annee,
+    ).select_related("loyer__bail__bien")
 
     # 2. Dépenses
     depenses = Depense.objects.filter(
-        date_paiement__year=annee
-    ).select_related('bien')
+        date_paiement__year=annee,
+    ).select_related("bien")
 
-    # Si c'est un bailleur, on filtre uniquement ses biens
     if is_bailleur(request.user):
         recettes = recettes.filter(loyer__bail__bien__proprietaire=request.user)
         depenses = depenses.filter(bien__proprietaire=request.user)
 
-    # Agrégations pour les KPI
-    total_recettes = recettes.aggregate(Sum('montant'))['montant__sum'] or 0
-    total_depenses = depenses.aggregate(Sum('montant'))['montant__sum'] or 0
+    total_recettes = recettes.aggregate(Sum("montant"))["montant__sum"] or 0
+    total_depenses = depenses.aggregate(Sum("montant"))["montant__sum"] or 0
     cash_flow = total_recettes - total_depenses
 
-    # Fusionner les listes pour l'affichage chronologique
-    # On ajoute un attribut 'type_flux' à la volée pour le template
     for r in recettes:
-        r.flux = 'CREDIT'
+        r.flux = "CREDIT"
         r.date_ope = r.created_at.date()
-        r.libelle_comptable = f"Loyer {r.loyer.periode_debut.strftime('%m/%Y')} - {r.loyer.bail.locataire.last_name}"
+        r.libelle_comptable = (
+            f"Loyer {r.loyer.periode_debut.strftime('%m/%Y')} "
+            f"- {r.loyer.bail.locataire.last_name}"
+        )
 
     for d in depenses:
-        d.flux = 'DEBIT'
+        d.flux = "DEBIT"
         d.date_ope = d.date_paiement
         d.libelle_comptable = f"{d.get_type_depense_display()} : {d.libelle}"
 
     mouvements = sorted(
         chain(recettes, depenses),
         key=lambda x: x.date_ope,
-        reverse=True
+        reverse=True,
     )
 
-    return render(request, 'comptabilite/grand_livre.html', {
-        'mouvements': mouvements,
-        'total_recettes': total_recettes,
-        'total_depenses': total_depenses,
-        'cash_flow': cash_flow,
-        'annee_courante': int(annee),
-    })
-
+    return render(
+        request,
+        "comptabilite/grand_livre.html",
+        {
+            "mouvements": mouvements,
+            "total_recettes": total_recettes,
+            "total_depenses": total_depenses,
+            "cash_flow": cash_flow,
+            "annee_courante": annee,
+        },
+    )
 # ============================================================================
 # TABLEAU DE BORD & GESTION (Protégé par login)
 # ============================================================================
@@ -265,7 +272,7 @@ def grand_livre(request):
 @login_required
 def dashboard(request):
     """Tableau de bord multi-rôles centralisé (délégué au service de stats)"""
-    context = {"user": request.user}
+    context = {"user": request.user, "today": date.today()}
     service = DashboardService()
 
     if is_admin(request.user):
@@ -413,31 +420,34 @@ def bail_detail(request, pk):
 # ============================================================================
 # GESTION DES LOYERS
 # ============================================================================
-
 @login_required
 def loyers_list(request):
     """Gestion des loyers (Admin uniquement)"""
     if not is_admin(request.user):
         raise PermissionDenied("Accès réservé aux administrateurs.")
 
-    statut = request.GET.get('statut')
-    loyers = Loyer.objects.select_related('bail__locataire', 'bail__bien').order_by('-date_echeance')
+    statut = request.GET.get("statut")
+
+    base_qs = Loyer.objects.select_related("bail__locataire", "bail__bien")
+    loyers = base_qs.order_by("-date_echeance")
 
     if statut:
         loyers = loyers.filter(statut=statut)
 
     stats = {
-        'total_retard': loyers.filter(statut='RETARD').count(),
-        'total_attente': loyers.filter(statut='A_PAYER').count(),
+        "total_retard": base_qs.filter(statut="RETARD").count(),
+        "total_attente": base_qs.filter(statut="A_PAYER").count(),
     }
 
-    return render(request, 'interventions/loyers_list.html', {
-        'loyers': loyers,
-        'current_statut': statut,
-        'stats': stats,
-    })
-
-
+    return render(
+        request,
+        "interventions/loyers_list.html",
+        {
+            "loyers": loyers,
+            "current_statut": statut,
+            "stats": stats,
+        },
+    )
 @login_required
 def mark_loyer_paid(request, loyer_id):
     """Marquer un loyer comme payé (Admin uniquement)"""
@@ -634,26 +644,25 @@ def trigger_rent_generation(request):
         messages.error(request, "Une erreur est survenue. Contactez l'administrateur.")
 
     return redirect('dashboard')
-
-
 @login_required
 def initier_paiement(request, loyer_id):
     """Crée la transaction et redirige vers la page de simulation."""
+    if request.method != "POST":
+        messages.warning(request, "Méthode non autorisée.")
+        return redirect("dashboard")
+
     loyer = get_object_or_404(Loyer, id=loyer_id, bail__locataire=request.user)
 
-    if loyer.statut == 'PAYE':
+    if loyer.statut == "PAYE":
         messages.info(request, "Ce loyer est déjà payé.")
-        return redirect('dashboard')
+        return redirect("dashboard")
 
-    # On utilise Wave par défaut pour la démo, ou on récupère via POST
-    provider = request.POST.get('provider', 'WAVE')
+    provider = request.POST.get("provider", "WAVE")
 
     service = PaymentService()
     transaction = service.creer_transaction(loyer, provider)
 
-    # Redirection vers notre "fausse" page de paiement
-    return redirect('simulation_paiement_gateway', transaction_id=transaction.id)
-
+    return redirect("simulation_paiement_gateway", transaction_id=transaction.id)
 
 @login_required
 def simulation_paiement_gateway(request, transaction_id):
@@ -735,3 +744,20 @@ def add_depense(request):
         'form': form,
         'user_role': 'ADMIN' if is_admin(request.user) else 'BAILLEUR',
     })
+@login_required
+def generate_lease_pdf(request, bail_id):
+    bail = get_object_or_404(Bail, pk=bail_id)
+
+    # Permissions : admin ou propriétaire du bien
+    if not (is_admin(request.user) or bail.bien.proprietaire == request.user):
+        raise PermissionDenied("Vous n'avez pas le droit de générer ce contrat.")
+
+    try:
+        from apps.core.services.contrat import sauvegarder_contrat
+        sauvegarder_contrat(bail)
+        messages.success(request, "Contrat PDF généré et attaché au bail.")
+    except Exception as e:
+        logger.error(f"Erreur génération contrat PDF pour le bail {bail.id}: {e}")
+        messages.error(request, "Impossible de générer le contrat. Contactez l'administrateur.")
+
+    return redirect("bail_detail", pk=bail.pk)

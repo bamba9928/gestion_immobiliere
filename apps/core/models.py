@@ -590,3 +590,33 @@ class Depense(models.Model):
 
     def __str__(self):
         return f"{self.libelle} - {self.montant} FCFA"
+# ===================== MODEL HISTORIQUE RELANCE =====================
+
+class HistoriqueRelance(models.Model):
+    CANAL_CHOICES = [
+        ("EMAIL", "Email"),
+        ("SMS", "SMS"),
+        ("AUTRE", "Autre"),
+    ]
+
+    loyer = models.ForeignKey(
+        Loyer,
+        on_delete=models.CASCADE,
+        related_name="relances",
+    )
+    date_envoi = models.DateTimeField(auto_now_add=True)
+    canal = models.CharField(
+        max_length=10,
+        choices=CANAL_CHOICES,
+        default="EMAIL",
+    )
+    succes = models.BooleanField(default=True)
+    message = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = "Relance de paiement"
+        verbose_name_plural = "Relances de paiement"
+        ordering = ["-date_envoi"]
+
+    def __str__(self):
+        return f"Relance {self.canal} pour loyer {self.loyer_id} ({self.date_envoi:%Y-%m-%d %H:%M})"
