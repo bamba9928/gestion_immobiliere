@@ -231,8 +231,14 @@ class LocataireCreationForm(UserCreationForm):
             "email": forms.EmailInput(attrs={"class": STYLE_INPUT}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Appliquer le style Tailwind aux champs de mot de passe
+        self.fields["password1"].widget.attrs.setdefault("class", STYLE_INPUT)
+        self.fields["password2"].widget.attrs.setdefault("class", STYLE_INPUT)
+
     def save(self, commit=True):
-        user = super().save(commit=False)  # gère déjà password1/password2 + validation
+        user = super().save(commit=False)  # gère déjà password1/password2 + hash
         if commit:
             user.save()
 

@@ -10,7 +10,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}MADA IMMO | Gestion{% endblock %}</title>
     <script src="{% static 'js/alpine.min.js' %}" defer></script>
-    <!-- <script src="{% static 'js/@alpinejs/collapse.min.js' %}" defer></script> -->
     <meta name="description" content="Plateforme de gestion immobilière professionnelle">
     <meta name="theme-color" content="#0a0a0a">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -40,13 +39,11 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* Scrollbar pour WebKit */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0a0a0a; }
         ::-webkit-scrollbar-thumb { background: #262626; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #10b981; }
 
-        /* Scrollbar pour Firefox */
         html {
             scrollbar-width: thin;
             scrollbar-color: #262626 #0a0a0a;
@@ -66,7 +63,6 @@
             animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
         }
 
-        /* Désactiver backdrop-filter sur petits écrans pour performance */
         @media (max-width: 768px) {
             .navbar-glass {
                 backdrop-filter: none;
@@ -90,7 +86,6 @@
                     <span class="text-sm font-bold text-white tracking-wide">MADA IMMO</span>
                 </a>
 
-                <!-- Navigation desktop -->
                 <div class="hidden md:flex items-center gap-1 bg-neutral-900/40 p-1.5 rounded-full border border-neutral-800/50">
                     {% with request.resolver_match.url_name|default:"" as url_name %}
                         <a href="{% url 'home' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
@@ -103,11 +98,16 @@
                                {% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">
                             Dashboard
                         </a>
-                        <a href="{% url 'grand_livre' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
-                               {% if url_name == 'grand_livre' or url_name == 'add_depense' %}bg-neutral-800 text-white shadow-sm
-                               {% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">
-                            Comptabilité
-                        </a>
+
+                        {# RESTRICTION ADMIN / STAFF pour la Comptabilité (Desktop) #}
+                        {% if user.is_superuser or user.is_staff %}
+                            <a href="{% url 'grand_livre' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
+                                   {% if url_name == 'grand_livre' or url_name == 'add_depense' %}bg-neutral-800 text-white shadow-sm
+                                   {% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">
+                                Comptabilité
+                            </a>
+                        {% endif %}
+
                         <a href="{% url 'about' %}" class="px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200
                                {% if url_name == 'about' %}bg-neutral-800 text-white shadow-sm
                                {% else %}text-neutral-400 hover:text-white hover:bg-neutral-800/50{% endif %}">
@@ -121,7 +121,6 @@
                     {% endwith %}
                 </div>
 
-                <!-- Actions utilisateur desktop -->
                 <div class="hidden md:flex items-center gap-4">
                     {% if user.is_authenticated %}
                         <div class="flex items-center gap-3 pl-4 border-l border-neutral-800">
@@ -147,11 +146,9 @@
                     {% endif %}
                 </div>
 
-                <!-- Bouton menu mobile -->
                 <div class="flex md:hidden">
                     <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" class="text-neutral-400 hover:text-white p-2">
                         <span class="sr-only">Ouvrir le menu</span>
-                        <!-- Version corrigée sans x-show sur les path -->
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                             <path x-show="mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" x-cloak></path>
@@ -161,12 +158,16 @@
             </div>
         </div>
 
-        <!-- Menu mobile -->
         <div x-show="mobileMenuOpen" x-collapse x-cloak class="md:hidden border-b border-neutral-800 bg-black/95">
             <div class="px-4 pt-2 pb-6 space-y-1">
                 <a href="{% url 'home' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Annonces</a>
                 <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Dashboard</a>
-                <a href="{% url 'grand_livre' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Comptabilité</a>
+
+                {# RESTRICTION ADMIN / STAFF pour la Comptabilité (Mobile) #}
+                {% if user.is_superuser or user.is_staff %}
+                    <a href="{% url 'grand_livre' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Comptabilité</a>
+                {% endif %}
+
                 <a href="{% url 'about' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">À propos</a>
                 <a href="{% url 'contact' %}" class="block px-3 py-2 rounded-md text-base font-medium text-neutral-300 hover:text-white hover:bg-neutral-800">Contactez-nous</a>
 
@@ -194,7 +195,6 @@
         </div>
     </nav>
 
-    <!-- Messages utilisateur -->
     {% if messages %}
     <div class="fixed top-20 right-5 z-50 flex flex-col gap-2 pointer-events-none">
         {% for message in messages %}
@@ -235,13 +235,11 @@
     </div>
     {% endif %}
 
-    <!-- Contenu principal -->
     <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-0">
         <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-64 bg-emerald-500/10 blur-[70px] rounded-full pointer-events-none -z-10"></div>
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
     <footer class="border-t border-neutral-900 bg-black/40 backdrop-blur-sm mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">

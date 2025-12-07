@@ -2,7 +2,8 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from . import views
-from .views import ContactView, add_locataire
+from .views import ContactView, add_locataire, add_bailleur, add_agent
+
 
 urlpatterns = [
     # ============================================
@@ -27,6 +28,8 @@ urlpatterns = [
     # ============================================
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard/locataires/add/', add_locataire, name='add_locataire'),
+    path('dashboard/bailleur/nouveau/', add_bailleur, name='add_bailleur'),
+    path('dashboard/agent/nouveau/', add_agent, name='add_agent'),
 
     # Gestion des biens
     path('gestion/biens/add/', views.add_bien, name='add_bien'),

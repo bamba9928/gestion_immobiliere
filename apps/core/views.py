@@ -25,7 +25,7 @@ from .forms import (
     BailForm,
     EtatDesLieuxForm,
     LocataireCreationForm,
-    DepenseForm,          # ajouté ici
+    DepenseForm,
 )
 from .models import (
     Bien,
@@ -55,17 +55,12 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 class HomeView(ListView):
-    """Page d'accueil publique avec annonces immobilières"""
     model = Annonce
     template_name = 'home.html'
     context_object_name = 'annonces'
     paginate_by = 9
 
     def get_base_queryset(self):
-        """
-        Base : annonces publiées dont le bien est disponible
-        (est_actif=True + pas de bail actif signé).
-        """
         return Annonce.objects.filter(
             statut='PUBLIE',
             bien__in=Bien.objects.disponibles()
@@ -101,10 +96,7 @@ class HomeView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # queryset de base (sans filtres) pour remplir les villes
         base_qs = self.get_base_queryset()
-
         paginator = context.get("paginator")
 
         context.update({
@@ -115,14 +107,12 @@ class HomeView(ListView):
                 .distinct()
                 .order_by("bien__ville")
             ),
-            # nombre d'annonces APRÈS filtres (via le paginator)
             "annonces_count": paginator.count if paginator else 0,
         })
         return context
 
 
 class AnnonceDetailView(FormMixin, DetailView):
-    """Page de détail d'une annonce publique + formulaire de contact."""
     model = Annonce
     template_name = 'biens/annonce_detail.html'
     context_object_name = 'annonce'
@@ -171,7 +161,6 @@ class AnnonceDetailView(FormMixin, DetailView):
 
 
 class ContactView(FormView):
-    """Page de contact générale du site"""
     template_name = "pages/contact.html"
     form_class = ContactSiteForm
     success_url = reverse_lazy("contact")
@@ -205,12 +194,16 @@ class ContactView(FormView):
 
 def about(request):
     return render(request, "about.html")
+
+
 @login_required
 def grand_livre(request):
-    if not is_admin(request.user) and not is_bailleur(request.user):
-        raise PermissionDenied
+    # =======================================================
+    # MODIFICATION : Restriction stricte à l'ADMINISTRATEUR
+    # =======================================================
+    if not is_admin(request.user):
+        raise PermissionDenied("Accès réservé aux administrateurs.")
 
-    # Filtre temporel (par défaut : année en cours) + conversion sécurisée
     try:
         annee = int(request.GET.get("annee", date.today().year))
     except (TypeError, ValueError):
@@ -227,9 +220,8 @@ def grand_livre(request):
         date_paiement__year=annee,
     ).select_related("bien")
 
-    if is_bailleur(request.user):
-        recettes = recettes.filter(loyer__bail__bien__proprietaire=request.user)
-        depenses = depenses.filter(bien__proprietaire=request.user)
+    # Note: La logique de filtrage 'proprietaire' a été retirée car seul l'admin accède ici.
+    # L'admin voit TOUT.
 
     total_recettes = recettes.aggregate(Sum("montant"))["montant__sum"] or 0
     total_depenses = depenses.aggregate(Sum("montant"))["montant__sum"] or 0
@@ -265,6 +257,8 @@ def grand_livre(request):
             "annee_courante": annee,
         },
     )
+
+
 # ============================================================================
 # TABLEAU DE BORD & GESTION (Protégé par login)
 # ============================================================================
@@ -281,33 +275,51 @@ def dashboard(request):
 
     elif is_bailleur(request.user):
         context["user_role"] = "BAILLEUR"
+        # On appelle la nouvelle méthode pour le bailleur
         context.update(service.get_bailleur_stats(request.user))
 
     elif is_locataire(request.user):
         bail = get_active_bail(request.user)
-        context.update({
-            "user_role": "LOCATAIRE",
-            "bail": bail,
-        })
+
         if bail:
-            context["dernier_loyer"] = (
+            loyers_qs = (
                 Loyer.objects.filter(bail=bail)
                 .order_by("-date_echeance")
-                .first()
             )
+            dernier_loyer = loyers_qs.first()
+
+            interventions_qs = (
+                Intervention.objects.filter(
+                    bien=bail.bien,
+                    locataire=request.user,
+                )
+                .select_related("bien")
+                .order_by("-created_at")[:5]
+            )
+        else:
+            loyers_qs = Loyer.objects.none()
+            dernier_loyer = None
+            interventions_qs = Intervention.objects.none()
+
+        context.update(
+            {
+                "user_role": "LOCATAIRE",
+                "bail": bail,
+                "loyers": loyers_qs,
+                "dernier_loyer": dernier_loyer,
+                "interventions_recents": interventions_qs,
+                "has_active_bail": bool(bail),
+            }
+        )
     else:
+        # Agent ou autre
         context["user_role"] = "AGENT"
 
     return render(request, "dashboard.html", context)
 
 
-# ============================================================================
-# GESTION DES BIENS
-# ============================================================================
-
 @login_required
 def add_bien(request):
-    """Ajout d'un bien (Admin ou Propriétaire)"""
     if not (is_admin(request.user) or is_bailleur(request.user)):
         raise PermissionDenied("Seuls les administrateurs et propriétaires peuvent ajouter des biens.")
 
@@ -330,15 +342,9 @@ def add_bien(request):
 
 @login_required
 def add_bail(request):
-    """
-    Création d'un bail depuis le dashboard.
-    - Admin : voit tous les biens.
-    - Bailleur : ne voit que ses propres biens.
-    """
     if not (is_admin(request.user) or is_bailleur(request.user)):
         raise PermissionDenied("Seuls les administrateurs et bailleurs peuvent créer un bail.")
 
-    # Définir le queryset de base selon le rôle
     if is_bailleur(request.user):
         biens_queryset = Bien.objects.filter(proprietaire=request.user)
     else:
@@ -350,8 +356,6 @@ def add_bail(request):
 
         if form.is_valid():
             bail = form.save()
-
-            # Génération automatique du contrat PDF
             try:
                 from apps.core.services.contrat import sauvegarder_contrat
                 sauvegarder_contrat(bail)
@@ -373,17 +377,12 @@ def add_bail(request):
             "user_role": "ADMIN" if is_admin(request.user) else "BAILLEUR",
         },
     )
+
+
 @login_required
 def bail_detail(request, pk):
-    """
-    Fiche détaillée d'un bail :
-    - infos bail
-    - loyers associés
-    - états des lieux (entrée/sortie)
-    """
     bail = get_object_or_404(Bail, pk=pk)
 
-    # Permissions : admin, propriétaire du bien ou locataire
     if not (
             is_admin(request.user)
             or bail.bien.proprietaire == request.user
@@ -393,12 +392,9 @@ def bail_detail(request, pk):
 
     loyers = bail.loyers.order_by("-date_echeance")
     etats = bail.etats_des_lieux.order_by("-date_realisation")
-
-    # Pour le template : séparer entrée / sortie si besoin
     edl_entree = etats.filter(type_edl="ENTREE").first()
     edl_sortie = etats.filter(type_edl="SORTIE").first()
 
-    # Déterminer le rôle de l'utilisateur
     if is_admin(request.user):
         user_role = "ADMIN"
     elif bail.bien.proprietaire == request.user:
@@ -417,17 +413,12 @@ def bail_detail(request, pk):
     return render(request, "baux/bail_detail.html", context)
 
 
-# ============================================================================
-# GESTION DES LOYERS
-# ============================================================================
 @login_required
 def loyers_list(request):
-    """Gestion des loyers (Admin uniquement)"""
     if not is_admin(request.user):
         raise PermissionDenied("Accès réservé aux administrateurs.")
 
     statut = request.GET.get("statut")
-
     base_qs = Loyer.objects.select_related("bail__locataire", "bail__bien")
     loyers = base_qs.order_by("-date_echeance")
 
@@ -448,9 +439,10 @@ def loyers_list(request):
             "stats": stats,
         },
     )
+
+
 @login_required
 def mark_loyer_paid(request, loyer_id):
-    """Marquer un loyer comme payé (Admin uniquement)"""
     if not is_admin(request.user):
         raise PermissionDenied("Accès réservé aux administrateurs.")
 
@@ -474,13 +466,11 @@ def mark_loyer_paid(request, loyer_id):
 
 @login_required
 def download_quittance(request, loyer_id):
-    """Téléchargement de quittance PDF (Admin ou Locataire concerné)"""
     loyer = get_object_or_404(
         Loyer.objects.select_related('bail__locataire'),
         id=loyer_id,
     )
 
-    # Permissions : admin ou locataire concerné
     if not is_admin(request.user) and loyer.bail.locataire != request.user:
         raise PermissionDenied("Accès non autorisé à cette quittance.")
 
@@ -488,7 +478,6 @@ def download_quittance(request, loyer_id):
         messages.error(request, "La quittance n'est disponible que pour les loyers payés.")
         return redirect('dashboard')
 
-    # Génération à la volée si absente
     if not loyer.quittance:
         try:
             from apps.core.services.quittance import attacher_quittance
@@ -498,7 +487,6 @@ def download_quittance(request, loyer_id):
             messages.error(request, "Impossible de générer la quittance. Contactez l'administrateur.")
             return redirect('dashboard')
 
-    # Vérifier que la quittance a bien été attachée
     if not loyer.quittance:
         messages.error(request, "La quittance n'est pas disponible pour le moment.")
         return redirect('dashboard')
@@ -511,34 +499,51 @@ def download_quittance(request, loyer_id):
     )
 
 
-# ============================================================================
-# GESTION DES INTERVENTIONS
-# ============================================================================
-
 @login_required
 def interventions_list(request):
-    """Gestion des interventions (Admin ou Locataire avec bail actif)"""
+    # 1. Détermination des rôles
     user_is_admin = is_admin(request.user)
-    bail = get_active_bail(request.user) if not user_is_admin else None
+    user_is_bailleur = is_bailleur(request.user)
 
+    # 2. Récupération du bail (uniquement utile si c'est un locataire)
+    bail = None
+    if not user_is_admin and not user_is_bailleur:
+        bail = get_active_bail(request.user)
+
+    # 3. Filtrage des interventions (QuerySet)
     if user_is_admin:
+        # L'admin voit TOUT
         interventions = Intervention.objects.select_related(
             'bien', 'locataire', 'bien__proprietaire'
         ).all().order_by('-created_at')
+
+    elif user_is_bailleur:
+        # Le bailleur voit les interventions sur SES biens
+        interventions = Intervention.objects.filter(
+            bien__proprietaire=request.user
+        ).select_related('bien', 'locataire').order_by('-created_at')
+
     elif bail:
+        # Le locataire voit les interventions sur SON logement (via le bail)
         interventions = Intervention.objects.filter(
             bien=bail.bien,
             locataire=request.user
         ).select_related('bien').order_by('-created_at')
+
     else:
+        # Ni admin, ni bailleur, et pas de bail actif
         return render(request, 'interventions/pas_de_bail.html', {
             'message': "Vous n'avez aucun bail actif."
         })
 
+    # 4. Gestion du formulaire (Création)
     form = InterventionForm()
+
     if request.method == 'POST':
-        if user_is_admin:
-            messages.error(request, "Les administrateurs ne peuvent pas créer d'interventions.")
+        # On empêche l'admin et le bailleur de créer une demande via cette vue
+        # (C'est généralement le locataire qui signale un problème ici)
+        if user_is_admin or user_is_bailleur:
+            messages.error(request, "Seuls les locataires peuvent créer une demande d'intervention ici.")
             return redirect('interventions_list')
 
         if not bail:
@@ -549,32 +554,30 @@ def interventions_list(request):
         if form.is_valid():
             intervention = form.save(commit=False)
             intervention.locataire = request.user
+            # On lie l'intervention au bien du bail courant
             intervention.bien = bail.bien
             intervention.save()
             messages.success(request, "Demande d'intervention enregistrée avec succès.")
             return redirect('interventions_list')
 
+    # 5. Détermination du rôle pour le template (affichage conditionnel)
+    if user_is_admin:
+        role_str = 'ADMIN'
+    elif user_is_bailleur:
+        role_str = 'BAILLEUR'
+    else:
+        role_str = 'LOCATAIRE'
+
     return render(request, 'interventions/interventions_list.html', {
         'interventions': interventions,
         'form': form,
-        'user_role': 'ADMIN' if user_is_admin else 'LOCATAIRE',
-        'bail': bail,
+        'user_role': role_str,
+        'bail': bail,  # Sera None pour admin et bailleur
     })
-
-
-# ============================================================================
-# GESTION DES ÉTATS DES LIEUX
-# ============================================================================
-
 @login_required
 def add_etat_des_lieux(request, bail_id, type_edl):
-    """
-    Création d'un EDL d'entrée ou de sortie pour un bail donné.
-    type_edl: 'ENTREE' ou 'SORTIE'
-    """
     bail = get_object_or_404(Bail, pk=bail_id)
 
-    # Permissions
     if not (
             is_admin(request.user)
             or bail.bien.proprietaire == request.user
@@ -592,7 +595,6 @@ def add_etat_des_lieux(request, bail_id, type_edl):
         date_realisation=timezone.now().date(),
     )
 
-    # Désactiver les champs sensibles
     disabled_fields = ['bail', 'type_edl']
 
     if request.method == "POST":
@@ -622,13 +624,8 @@ def add_etat_des_lieux(request, bail_id, type_edl):
     )
 
 
-# ============================================================================
-# ACTIONS ADMINISTRATIVES
-# ============================================================================
-
 @login_required
 def trigger_rent_generation(request):
-    """Lancement manuel de la génération des loyers (Admin uniquement)"""
     if not is_admin(request.user):
         raise PermissionDenied("Seul un administrateur peut générer les loyers.")
 
@@ -644,9 +641,10 @@ def trigger_rent_generation(request):
         messages.error(request, "Une erreur est survenue. Contactez l'administrateur.")
 
     return redirect('dashboard')
+
+
 @login_required
 def initier_paiement(request, loyer_id):
-    """Crée la transaction et redirige vers la page de simulation."""
     if request.method != "POST":
         messages.warning(request, "Méthode non autorisée.")
         return redirect("dashboard")
@@ -658,19 +656,17 @@ def initier_paiement(request, loyer_id):
         return redirect("dashboard")
 
     provider = request.POST.get("provider", "WAVE")
-
     service = PaymentService()
     transaction = service.creer_transaction(loyer, provider)
 
     return redirect("simulation_paiement_gateway", transaction_id=transaction.id)
 
+
 @login_required
 def simulation_paiement_gateway(request, transaction_id):
-    """Page factice qui simule l'interface de Wave ou Orange Money."""
     transaction = get_object_or_404(Transaction, id=transaction_id, loyer__bail__locataire=request.user)
 
     if request.method == 'POST':
-        # L'utilisateur clique sur "Confirmer le paiement" sur la fausse page
         service = PaymentService()
         succes = service.valider_transaction(transaction.id)
 
@@ -682,21 +678,19 @@ def simulation_paiement_gateway(request, transaction_id):
             return redirect('dashboard')
 
     return render(request, 'paiements/simulation_gateway.html', {'transaction': transaction})
+
+
 @login_required
 def add_locataire(request):
-    # Vérification permission admin
     if not is_admin(request.user):
         raise PermissionDenied("Accès réservé.")
 
     if request.method == 'POST':
         form = LocataireCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()  # Cela sauvegarde User ET UserProfile grâce à notre formulaire modifié
-
-            # Assigner le groupe LOCATAIRE
+            user = form.save()
             group, _ = Group.objects.get_or_create(name='LOCATAIRE')
             user.groups.add(group)
-
             messages.success(request,
                              f"Locataire {user.first_name} créé avec succès (Téléphone : {user.profile.telephone}).")
             return redirect('dashboard')
@@ -707,48 +701,91 @@ def add_locataire(request):
         'form': form,
         'user_role': 'ADMIN'
     })
+
+
 @login_required
 def add_depense(request):
-    """
-    Formulaire d'ajout d'une dépense (Facture, réparation, etc.).
-    Accessible aux Admins et aux Bailleurs.
-    """
-    # 1. Vérification des permissions
     if not (is_admin(request.user) or is_bailleur(request.user)):
         raise PermissionDenied("Vous n'avez pas les droits pour ajouter une dépense.")
 
-    # 2. Gestion du formulaire (POST / GET)
     if request.method == 'POST':
         form = DepenseForm(request.POST, request.FILES)
-
-        # Filtrer le queryset 'bien' pour les bailleurs (sécurité)
         if is_bailleur(request.user):
             form.fields['bien'].queryset = Bien.objects.filter(proprietaire=request.user)
 
         if form.is_valid():
             depense = form.save()
             messages.success(request, f"Dépense '{depense.libelle}' enregistrée avec succès.")
-            # Redirection vers le Grand Livre pour voir l'écriture
-            return redirect('grand_livre')
+            # Redirection conditionnelle: le bailleur n'a pas accès au grand livre
+            if is_admin(request.user):
+                return redirect('grand_livre')
+            else:
+                return redirect('dashboard')
         else:
             messages.error(request, "Erreur dans le formulaire. Veuillez vérifier les champs.")
 
     else:
         form = DepenseForm()
-        # Filtrer le queryset 'bien' pour l'affichage initial
         if is_bailleur(request.user):
             form.fields['bien'].queryset = Bien.objects.filter(proprietaire=request.user)
 
-    # 3. Rendu du template
     return render(request, 'comptabilite/add_depense.html', {
         'form': form,
         'user_role': 'ADMIN' if is_admin(request.user) else 'BAILLEUR',
     })
 @login_required
+def add_bailleur(request):
+    if not is_admin(request.user):
+        raise PermissionDenied("Accès réservé.")
+
+    if request.method == 'POST':
+        form = LocataireCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            group, _ = Group.objects.get_or_create(name='BAILLEUR')
+            user.groups.add(group)
+
+            messages.success(
+                request,
+                f"Bailleur {user.get_full_name() or user.username} créé avec succès."
+            )
+            return redirect('dashboard')
+    else:
+        form = LocataireCreationForm()
+
+    return render(request, 'utilisateurs/add_bailleur.html', {
+        'form': form,
+        'user_role': 'ADMIN',
+    })
+@login_required
+def add_agent(request):
+    if not is_admin(request.user):
+        raise PermissionDenied("Accès réservé.")
+
+    if request.method == 'POST':
+        form = LocataireCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            group, _ = Group.objects.get_or_create(name='AGENT')
+            user.groups.add(group)
+
+            messages.success(
+                request,
+                f"Agent {user.get_full_name() or user.username} créé avec succès."
+            )
+            return redirect('dashboard')
+    else:
+        form = LocataireCreationForm()
+
+    return render(request, 'utilisateurs/add_agent.html', {
+        'form': form,
+        'user_role': 'ADMIN',
+    })
+
+@login_required
 def generate_lease_pdf(request, bail_id):
     bail = get_object_or_404(Bail, pk=bail_id)
 
-    # Permissions : admin ou propriétaire du bien
     if not (is_admin(request.user) or bail.bien.proprietaire == request.user):
         raise PermissionDenied("Vous n'avez pas le droit de générer ce contrat.")
 
