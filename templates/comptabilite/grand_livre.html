@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Grand Livre Comptable | MADA IMMO{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+
+    {# Barre de filtrage par année + export Excel #}
+    <div class="flex items-center justify-between gap-4">
+        <form method="get" class="flex items-center gap-3">
+            <label for="annee" class="text-xs font-semibold text-neutral-400 uppercase">
+                Année
+            </label>
+            <select
+                id="annee"
+                name="annee"
+                class="bg-neutral-900 border border-neutral-700 text-neutral-100 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+                {% for annee in annees_disponibles %}
+                    <option value="{{ annee }}" {% if annee == annee_courante %}selected{% endif %}>
+                        {{ annee }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button
+                type="submit"
+                class="px-3 py-2 rounded-xl text-xs font-semibold bg-neutral-800 border border-neutral-700 text-neutral-200 hover:bg-neutral-700 transition-colors"
+            >
+                Filtrer
+            </button>
+        </form>
+
+        <div class="flex items-center gap-3">
+            <a href="{% url 'export_grand_livre' %}?annee={{ annee_courante }}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-sm shadow-lg transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Exporter Excel
+            </a>
+        </div>
+    </div>
+
+    <div class="flex justify-between items-end">
+        <h1 class="text-3xl font-black text-white">Grand Livre {{ annee_courante }}</h1>
+        <div class="flex gap-4">
+            <div class="bg-neutral-900 px-4 py-2 rounded-xl border border-neutral-800">
+                <span class="text-xs text-neutral-500 uppercase">Recettes</span>
+                <p class="text-emerald-500 font-bold">{{ total_recettes|intcomma }}</p>
+            </div>
+            <div class="bg-neutral-900 px-4 py-2 rounded-xl border border-neutral-800">
+                <span class="text-xs text-neutral-500 uppercase">Dépenses</span>
+                <p class="text-red-500 font-bold">{{ total_depenses|intcomma }}</p>
+            </div>
+            <div class="bg-neutral-900 px-4 py-2 rounded-xl border border-neutral-800">
+                <span class="text-xs text-neutral-500 uppercase">Cash Flow</span>
+                <p class="{% if cash_flow >= 0 %}text-blue-400{% else %}text-red-400{% endif %} font-bold">
+                    {{ cash_flow|intcomma }} FCFA
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
+        <table class="w-full text-left text-sm text-neutral-400">
+            <thead class="bg-neutral-950 text-neutral-200 uppercase font-bold text-xs">
+                <tr>
+                    <th class="px-6 py-4">Date</th>
+                    <th class="px-6 py-4">Libellé</th>
+                    <th class="px-6 py-4 text-right">Débit (Sortie)</th>
+                    <th class="px-6 py-4 text-right">Crédit (Entrée)</th>
+                    <th class="px-6 py-4">Pièce</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-neutral-800">
+                {% for mouv in mouvements %}
+                <tr class="hover:bg-neutral-800/50 transition-colors">
+                    <td class="px-6 py-4 font-mono">{{ mouv.date_ope|date:"d/m/Y" }}</td>
+                    <td class="px-6 py-4">
+                        <span class="text-white font-medium">{{ mouv.libelle_comptable }}</span>
+                        {% if mouv.flux == 'DEBIT' %}
+                            <div class="text-xs text-neutral-600">{{ mouv.bien.titre }}</div>
+                        {% else %}
+                            <div class="text-xs text-neutral-600">{{ mouv.loyer.bail.bien.titre }}</div>
+                        {% endif %}
+                    </td>
+
+                    <td class="px-6 py-4 text-right">
+                        {% if mouv.flux == 'DEBIT' %}
+                            <span class="text-red-400 font-mono">- {{ mouv.montant|intcomma }}</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="px-6 py-4 text-right">
+                        {% if mouv.flux == 'CREDIT' %}
+                            <span class="text-emerald-400 font-mono">+ {{ mouv.montant|intcomma }}</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="px-6 py-4">
+                        {% if mouv.flux == 'DEBIT' and mouv.justificatif %}
+                            <a href="{{ mouv.justificatif.url }}" target="_blank" class="text-blue-400 hover:underline">
+                                Voir Facture
+                            </a>
+                        {% elif mouv.flux == 'CREDIT' %}
+                            <a href="{% url 'download_quittance' mouv.loyer.id %}" class="text-emerald-500 hover:underline">
+                                Quittance
+                            </a>
+                        {% else %}
+                            <span class="text-neutral-700">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-12 text-center text-neutral-500">
+                        Aucun mouvement comptable pour cette période.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

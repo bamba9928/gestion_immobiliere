@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Nouveau Bailleur | MADA IMMO{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+
+    {# HEADER #}
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-black text-white tracking-tight">
+                Nouveau Bailleur
+            </h1>
+            <p class="text-neutral-400 mt-2">
+                Créez un compte utilisateur dédié à un propriétaire.
+            </p>
+        </div>
+        <a href="{% url 'dashboard' %}"
+           class="inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-medium
+                  text-neutral-400 bg-neutral-900 border border-neutral-800
+                  hover:text-white hover:border-neutral-600 transition-all">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Retour au tableau de bord
+        </a>
+    </div>
+
+    {# FORMULAIRE CARD #}
+    <div class="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-8 relative overflow-hidden">
+
+        {# Décoration d'arrière-plan #}
+        <div class="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+
+        <form method="post" class="relative z-10 space-y-6">
+            {% csrf_token %}
+
+            {# Gestion des erreurs globales #}
+            {% if form.non_field_errors %}
+                <div class="p-4 rounded-xl bg-red-900/20 border border-red-500/30 text-red-400 text-sm">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            {# Boucle sur les champs pour appliquer le style Tailwind #}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% for field in form %}
+                    <div class="{% if field.name == 'adresse' or field.name == 'email' %}md:col-span-2{% endif %}">
+                        <label for="{{ field.id_for_label }}" class="block text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">
+                            {{ field.label }}
+                            {% if field.field.required %}<span class="text-sky-500">*</span>{% endif %}
+                        </label>
+
+                        <div class="relative">
+                            {# Rendu du champ avec classes dynamiques #}
+                            <input type="{{ field.field.widget.input_type|default:'text' }}"
+                                   name="{{ field.name }}"
+                                   id="{{ field.id_for_label }}"
+                                   value="{{ field.value|default:'' }}"
+                                   class="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-4 py-3 text-white placeholder-neutral-500
+                                          focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition-all
+                                          {% if field.errors %}border-red-500 focus:ring-red-500/50 focus:border-red-500{% endif %}"
+                                   {% if field.field.required %}required{% endif %}>
+                        </div>
+
+                        {# Erreurs de champ #}
+                        {% if field.errors %}
+                            <p class="mt-1 text-xs text-red-400 font-medium">
+                                {{ field.errors.0 }}
+                            </p>
+                        {% endif %}
+
+                        {# Aide #}
+                        {% if field.help_text %}
+                            <p class="mt-1 text-xs text-neutral-500">
+                                {{ field.help_text|safe }}
+                            </p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="pt-6 border-t border-neutral-800 flex items-center justify-end">
+                <button type="submit"
+                        class="inline-flex items-center justify-center px-8 py-3 rounded-xl font-bold text-white
+                               bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-500 hover:to-sky-400
+                               shadow-lg shadow-sky-900/20 hover:shadow-sky-900/40 transform hover:-translate-y-0.5 transition-all">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                    Créer le Bailleur
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
