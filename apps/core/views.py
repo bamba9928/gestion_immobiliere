@@ -1,7 +1,8 @@
 import logging
 from datetime import date
 from itertools import chain
-
+from django.contrib.auth import get_user_model
+import mimetypes
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -10,12 +11,15 @@ from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.core.management import call_command
 from django.db.models import Q, Sum
-from django.http import FileResponse
+from django.http import FileResponse, Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, FormView
 from django.views.generic.edit import FormMixin
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from django.http import HttpResponse
 
 from .forms import (
     BienForm,
@@ -191,10 +195,8 @@ class ContactView(FormView):
 
         return super().form_valid(form)
 
-
 def about(request):
     return render(request, "about.html")
-
 
 @login_required
 def grand_livre(request):
@@ -245,7 +247,19 @@ def grand_livre(request):
         key=lambda x: x.date_ope,
         reverse=True,
     )
+    # Années disponibles (à partir des données réelles)
+    annees_recettes = Transaction.objects.filter(
+        est_validee=True
+    ).dates("created_at", "year")
 
+    annees_depenses = Depense.objects.all().dates("date_paiement", "year")
+
+    annees_disponibles = sorted(
+        {d.year for d in chain(annees_recettes, annees_depenses)},
+        reverse=True,
+    )
+    if not annees_disponibles:
+        annees_disponibles = [annee]
     return render(
         request,
         "comptabilite/grand_livre.html",
@@ -255,10 +269,9 @@ def grand_livre(request):
             "total_depenses": total_depenses,
             "cash_flow": cash_flow,
             "annee_courante": annee,
+            "annees_disponibles": annees_disponibles,
         },
     )
-
-
 # ============================================================================
 # TABLEAU DE BORD & GESTION (Protégé par login)
 # ============================================================================
@@ -798,3 +811,238 @@ def generate_lease_pdf(request, bail_id):
         messages.error(request, "Impossible de générer le contrat. Contactez l'administrateur.")
 
     return redirect("bail_detail", pk=bail.pk)
+@login_required
+def download_contrat(request, bail_id):
+    """
+    Vue sécurisée pour télécharger le contrat de bail.
+    Vérifie que l'utilisateur est soit l'admin, le propriétaire ou le locataire.
+    """
+    bail = get_object_or_404(Bail, pk=bail_id)
+
+    # Vérification stricte des droits
+    is_proprio = (bail.bien.proprietaire == request.user)
+    is_locataire = (bail.locataire == request.user)
+
+    if not (is_admin(request.user) or is_proprio or is_locataire):
+        raise PermissionDenied("Vous n'avez pas l'autorisation de télécharger ce contrat.")
+
+    if not bail.fichier_contrat:
+        raise Http404("Aucun contrat signé n'est disponible pour ce bail.")
+
+    # Servir le fichier
+    response = FileResponse(
+        bail.fichier_contrat.open('rb'),
+        content_type='application/pdf'
+    )
+    # 'inline' permet l'affichage dans le navigateur, 'attachment' force le téléchargement
+    response['Content-Disposition'] = f'inline; filename="Bail_{bail.id}.pdf"'
+    return response
+
+
+@login_required
+def download_kyc(request, user_id, doc_type):
+    """
+    Vue sécurisée pour télécharger les pièces d'identité (CNI, Justificatifs).
+    Accès réservé à l'utilisateur lui-même ou à un administrateur.
+    """
+    User = get_user_model()
+    target_user = get_object_or_404(User, pk=user_id)
+
+    # Seul l'admin ou l'utilisateur concerné peut voir ses documents
+    if not (is_admin(request.user) or request.user == target_user):
+        raise PermissionDenied("Accès refusé aux documents personnels.")
+
+    # Récupération du profil
+    profile = getattr(target_user, 'profile', None)
+    if not profile:
+        raise Http404("Profil utilisateur introuvable.")
+
+    # Sélection du fichier selon le type demandé
+    file_obj = None
+    if doc_type == 'cni':
+        file_obj = profile.cni_scan
+    elif doc_type == 'justificatif':
+        file_obj = profile.justificatif_domicile
+
+    if not file_obj:
+        raise Http404("Document non trouvé.")
+
+    # Détection du type MIME (pdf, jpg, png...)
+    content_type, _ = mimetypes.guess_type(file_obj.name)
+    if not content_type:
+        content_type = 'application/octet-stream'
+
+    return FileResponse(
+        file_obj.open('rb'),
+        content_type=content_type,
+        filename=file_obj.name.split('/')[-1]
+    )
+@login_required
+def export_grand_livre_excel(request):
+    if not is_admin(request.user):
+        raise PermissionDenied("Accès réservé aux administrateurs.")
+
+    try:
+        annee = int(request.GET.get("annee", date.today().year))
+    except (TypeError, ValueError):
+        annee = date.today().year
+
+    # 1. Récupération des données (identique à la vue grand_livre)
+    recettes = Transaction.objects.filter(
+        est_validee=True,
+        created_at__year=annee,
+    ).select_related("loyer__bail__bien", "loyer__bail__locataire")
+
+    depenses = Depense.objects.filter(
+        date_paiement__year=annee,
+    ).select_related("bien")
+
+    # 2. Préparation du fichier Excel
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename=Grand_Livre_{annee}.xlsx'
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f"Grand Livre {annee}"
+
+    # Styles
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="10B981", end_color="10B981", fill_type="solid")  # Emerald-500
+    center_align = Alignment(horizontal='center')
+    currency_fmt = '#,##0 "FCFA"'
+
+    # En-têtes
+    headers = ["Date", "Type", "Libellé / Tiers", "Bien concerné", "Recette (Crédit)", "Dépense (Débit)"]
+    ws.append(headers)
+
+    for cell in ws[1]:
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = center_align
+
+    # 3. Remplissage des données
+    row_num = 2
+
+    # Recettes
+    for r in recettes:
+        libelle = f"Loyer {r.loyer.periode_debut.strftime('%m/%Y')} - {r.loyer.bail.locataire.get_full_name()}"
+        ws.append([
+            r.created_at.date(),
+            "RECETTE",
+            libelle,
+            r.loyer.bail.bien.titre,
+            r.montant,
+            0
+        ])
+
+    # Dépenses
+    for d in depenses:
+        ws.append([
+            d.date_paiement,
+            "DEPENSE",
+            f"{d.get_type_depense_display()} : {d.libelle}",
+            d.bien.titre,
+            0,
+            d.montant
+        ])
+
+    # Tri par date (via Excel si on voulait, mais ici on append juste.
+    # Pour faire propre, on pourrait trier la liste combinée en Python avant d'écrire)
+
+    # Ajustement colonnes
+    column_widths = [15, 15, 40, 30, 20, 20]
+    for i, width in enumerate(column_widths):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i + 1)].width = width
+
+    wb.save(response)
+    return response
+
+
+@login_required
+def documents_list(request):
+    user = request.user
+
+    # Initialisation des listes
+    baux = []
+    quittances = []
+    edls = []  # États des lieux
+
+    if is_admin(user):
+        baux = (
+            Bail.objects
+            .select_related('bien', 'locataire')
+            .filter(fichier_contrat__isnull=False)
+            .exclude(fichier_contrat='')
+        )
+        quittances = (
+            Loyer.objects
+            .select_related('bail__locataire')
+            .filter(quittance__isnull=False)
+            .exclude(quittance='')
+        )
+        edls = (
+            EtatDesLieux.objects
+            .select_related('bail__bien')
+            .filter(pdf__isnull=False)
+            .exclude(pdf='')
+        )
+    elif is_bailleur(user):
+        biens_ids = Bien.objects.filter(proprietaire=user).values_list('id', flat=True)
+        baux = (
+            Bail.objects
+            .filter(bien_id__in=biens_ids)
+            .select_related('locataire', 'bien')
+            .filter(fichier_contrat__isnull=False)
+            .exclude(fichier_contrat='')
+        )
+        quittances = (
+            Loyer.objects
+            .filter(bail__bien_id__in=biens_ids)
+            .select_related('bail__locataire', 'bail__bien')
+            .filter(quittance__isnull=False)
+            .exclude(quittance='')
+        )
+        edls = (
+            EtatDesLieux.objects
+            .filter(bail__bien_id__in=biens_ids)
+            .select_related('bail__bien')
+            .filter(pdf__isnull=False)
+            .exclude(pdf='')
+        )
+
+    elif is_locataire(user):
+        baux = (
+            Bail.objects
+            .filter(locataire=user)
+            .select_related('bien')
+            .filter(fichier_contrat__isnull=False)
+            .exclude(fichier_contrat='')
+        )
+        quittances = (
+            Loyer.objects
+            .filter(bail__locataire=user)
+            .select_related('bail__bien')
+            .filter(quittance__isnull=False)
+            .exclude(quittance='')
+        )
+        edls = (
+            EtatDesLieux.objects
+            .filter(bail__locataire=user)
+            .select_related('bail__bien')
+            .filter(pdf__isnull=False)
+            .exclude(pdf='')
+        )
+    elif is_locataire(user):
+        # Locataire voit ses propres documents
+        baux = Bail.objects.filter(locataire=user).select_related('bien').exclude(fichier_contrat='')
+        quittances = Loyer.objects.filter(bail__locataire=user).select_related('bail__bien').exclude(quittance='')
+        edls = EtatDesLieux.objects.filter(bail__locataire=user).exclude(pdf='')
+
+    context = {
+        'baux': baux,
+        'quittances': quittances,
+        'edls': edls,
+    }
+    return render(request, 'documents/ged_list.html', context)

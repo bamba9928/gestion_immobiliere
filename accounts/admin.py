@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
+from django.urls import reverse
 
 from .models import CustomUser
 
@@ -57,10 +58,18 @@ class CustomUserAdmin(UserAdmin):
         )
 
     def piece_identite_link(self, obj: CustomUser) -> str:
-        """
-        Affiche un lien vers la pièce d'identité.
-        """
-        return self._file_link(obj.piece_identite, "📄 Pièce")
+        """Affiche un lien sécurisé vers la pièce d'identité."""
+        if not obj.piece_identite:
+            return "—"
+        url = reverse('download_kyc', args=[obj.id, 'cni'])
+        return format_html('<a href="{}" target="_blank" rel="noopener">📄 Pièce (Sécurisé)</a>', url)
+
+    def justificatif_domicile_link(self, obj: CustomUser) -> str:
+        """Affiche un lien sécurisé vers le justificatif de domicile."""
+        if not obj.justificatif_domicile:
+            return "—"
+        url = reverse('download_kyc', args=[obj.id, 'justificatif'])
+        return format_html('<a href="{}" target="_blank" rel="noopener">🏠 Justif. (Sécurisé)</a>', url)
 
     piece_identite_link.short_description = "Pièce ID"
 

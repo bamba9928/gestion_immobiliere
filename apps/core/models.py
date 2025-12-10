@@ -6,10 +6,42 @@ from django.db import models
 from django.utils import timezone
 
 
-# ================== QUERYSET PERSONNALISÉ ==================
+# ================== SOFT DELETE GLOBALE ==================
+
+class SoftDeleteManager(models.Manager):
+    def get_queryset(self):
+        # Par défaut, on ne montre pas les objets supprimés
+        return super().get_queryset().filter(deleted_at__isnull=True)
+
+    def all_with_deleted(self):
+        # Pour l'admin ou les archives, on veut tout voir
+        return super().get_queryset()
+
+
+class SoftDeleteModel(models.Model):
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    # Manager par défaut : ne retourne que les objets non supprimés
+    objects = SoftDeleteManager()
+    # Accès brut à tout (y compris supprimés)
+    all_objects = models.Manager()
+
+    class Meta:
+        abstract = True
+
+    def delete(self, using=None, keep_parents=False):
+        self.deleted_at = timezone.now()
+        self.save(update_fields=["deleted_at"])
+
+    def restore(self):
+        self.deleted_at = None
+        self.save(update_fields=["deleted_at"])
+
+
+# ================== QUERYSET & MANAGER BIEN ==================
 
 class BienQuerySet(models.QuerySet):
-    """Manager personnalisé avec méthodes métier."""
+    """QuerySet personnalisé avec méthodes métier."""
 
     def disponibles(self):
         """Retourne les biens disponibles à la location."""
@@ -38,9 +70,27 @@ class BienQuerySet(models.QuerySet):
         )
 
 
+class BienManager(SoftDeleteManager):
+    """
+    Manager qui combine :
+    - Soft delete (filtre deleted_at__isnull=True par défaut)
+    - Méthodes métier disponibles() / occupes() via BienQuerySet
+    """
+
+    def get_queryset(self):
+        # On part d'un BienQuerySet (pour garder les méthodes chainables)
+        return BienQuerySet(self.model, using=self._db).filter(deleted_at__isnull=True)
+
+    def disponibles(self):
+        return self.get_queryset().disponibles()
+
+    def occupes(self):
+        return self.get_queryset().occupes()
+
+
 # ===================== MODEL BIEN =====================
 
-class Bien(models.Model):
+class Bien(SoftDeleteModel):  # <--- héritage SoftDeleteModel
     TYPE_CHOICES = [
         ("APPARTEMENT", "Appartement"),
         ("MAISON", "Maison"),
@@ -102,8 +152,9 @@ class Bien(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # Manager personnalisé
-    objects = BienQuerySet.as_manager()
+    # Manager personnalisé = SoftDelete + logique métier
+    objects = BienManager()
+    # all_objects hérité de SoftDeleteModel (pour voir aussi les supprimés)
 
     class Meta:
         verbose_name = "Bien Immobilier"
@@ -147,7 +198,7 @@ class Bien(models.Model):
 
 # ===================== MODEL BAIL =====================
 
-class Bail(models.Model):
+class Bail(SoftDeleteModel):  # <--- héritage SoftDeleteModel
     """Contrat de location liant un bien et un locataire."""
 
     bien = models.ForeignKey(
@@ -278,7 +329,7 @@ class Loyer(models.Model):
         verbose_name_plural = "Loyers"
         unique_together = ("bail", "periode_debut")
 
-    def __str__(self) -> str:
+    def __str__(self):
         return f"{self.bail.locataire.username} - {self.periode_debut.strftime('%B %Y')}"
 
     @property
@@ -350,18 +401,13 @@ class Annonce(models.Model):
         verbose_name_plural = "Annonces"
         ordering = ["-date_publication"]
 
-    def __str__(self) -> str:
+    def __str__(self):
         return f"{self.bien} - {self.get_statut_display()}"
 
     @property
     def est_recente(self) -> bool:
-        """
-        Indique si l'annonce a été publiée il y a moins de 7 jours.
-        Utilisé pour afficher le badge "Nouveau" sur la page d'accueil.
-        """
         if not self.date_publication:
             return False
-
         limite = timezone.now() - timedelta(days=7)
         return self.date_publication >= limite
 
@@ -417,7 +463,7 @@ class Intervention(models.Model):
         verbose_name_plural = "Interventions"
         ordering = ["-created_at"]
 
-    def __str__(self) -> str:
+    def __str__(self):
         return f"{self.objet} - {self.get_statut_display()}"
 
 
@@ -553,7 +599,6 @@ class Depense(models.Model):
         related_name="depenses",
         verbose_name="Bien concerné",
     )
-    # Optionnel : lier à un bail spécifique si la dépense est imputable à un locataire
     bail = models.ForeignKey(
         Bail,
         on_delete=models.SET_NULL,
@@ -590,6 +635,8 @@ class Depense(models.Model):
 
     def __str__(self):
         return f"{self.libelle} - {self.montant} FCFA"
+
+
 # ===================== MODEL HISTORIQUE RELANCE =====================
 
 class HistoriqueRelance(models.Model):

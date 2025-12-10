@@ -47,6 +47,7 @@
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
+    <!-- Fil d'Ariane -->
     <div>
         <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors group">
             <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
@@ -54,6 +55,7 @@
         </a>
     </div>
 
+    <!-- En-tête du Bail -->
     <div class="relative overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800 p-8 shadow-2xl">
         <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
 
@@ -77,14 +79,16 @@
                     </div>
                 </div>
 
+                <!-- Actions Contrat -->
                 <div class="flex flex-wrap gap-4 pt-2">
                     {% if bail.fichier_contrat %}
-                        <a href="{{ bail.fichier_contrat.url }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-semibold transition-colors border border-neutral-700">
-                            <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                            Voir le contrat PDF
+                        <!-- Lien sécurisé via vue Django -->
+                        <a href="{% url 'download_contrat' bail.id %}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-semibold transition-colors border border-neutral-700">
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            Voir le contrat PDF (Sécurisé)
                         </a>
                     {% else %}
-                         <a href="{% url 'generate_lease_pdf' bail.id %}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-emerald-900/20">
+                        <a href="{% url 'generate_lease_pdf' bail.id %}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-emerald-900/20">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                             Générer le contrat
                         </a>
@@ -92,6 +96,7 @@
                 </div>
             </div>
 
+            <!-- Bloc Loyer -->
             <div class="lg:text-right bg-neutral-950/50 rounded-xl p-5 border border-neutral-800 min-w-[280px]">
                 <p class="text-xs text-neutral-500 uppercase font-bold tracking-wider mb-2">Loyer Mensuel Total</p>
                 <div class="flex items-baseline gap-1 lg:justify-end">
@@ -114,6 +119,7 @@
             </div>
         </div>
 
+        <!-- Informations complémentaires -->
         <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-neutral-800 pt-6">
             <div>
                 <p class="text-xs text-neutral-500 uppercase font-bold">Début du bail</p>
@@ -134,8 +140,10 @@
         </div>
     </div>
 
+    <!-- États des lieux -->
     <div class="grid md:grid-cols-2 gap-6">
 
+        <!-- État des lieux d'entrée -->
         <div class="relative group rounded-2xl border {% if edl_entree %}border-neutral-800 bg-neutral-900{% else %}border-dashed border-neutral-800 bg-neutral-900/30{% endif %} p-6 transition-all hover:border-neutral-700">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-3">
@@ -144,7 +152,7 @@
                     </div>
                     <h3 class="text-lg font-bold text-white">État des lieux d'entrée</h3>
                 </div>
-                {% if not edl_entree %}
+                {% if not edl_entree and user_role != 'LOCATAIRE' %}
                     <a href="{% url 'add_etat_des_lieux' bail.id 'ENTREE' %}" class="text-xs font-bold text-emerald-500 hover:text-emerald-400 uppercase tracking-wide">Créer +</a>
                 {% endif %}
             </div>
@@ -171,12 +179,15 @@
                 </div>
             {% else %}
                 <p class="text-sm text-neutral-500 mb-4">Document non réalisé.</p>
-                <a href="{% url 'add_etat_des_lieux' bail.id 'ENTREE' %}" class="flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-neutral-700 hover:border-emerald-500 hover:text-emerald-500 text-sm font-medium text-neutral-400 transition-colors">
-                    Commencer l'état des lieux
-                </a>
+                {% if user_role != 'LOCATAIRE' %}
+                    <a href="{% url 'add_etat_des_lieux' bail.id 'ENTREE' %}" class="flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-neutral-700 hover:border-emerald-500 hover:text-emerald-500 text-sm font-medium text-neutral-400 transition-colors">
+                        Commencer l'état des lieux
+                    </a>
+                {% endif %}
             {% endif %}
         </div>
 
+        <!-- État des lieux de sortie -->
         <div class="relative group rounded-2xl border {% if edl_sortie %}border-neutral-800 bg-neutral-900{% else %}border-dashed border-neutral-800 bg-neutral-900/30{% endif %} p-6 transition-all hover:border-neutral-700">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-3">
@@ -185,7 +196,7 @@
                     </div>
                     <h3 class="text-lg font-bold text-white">État des lieux de sortie</h3>
                 </div>
-                {% if not edl_sortie %}
+                {% if not edl_sortie and user_role != 'LOCATAIRE' %}
                     <a href="{% url 'add_etat_des_lieux' bail.id 'SORTIE' %}" class="text-xs font-bold text-amber-500 hover:text-amber-400 uppercase tracking-wide">Créer +</a>
                 {% endif %}
             </div>
@@ -205,13 +216,16 @@
                 </div>
             {% else %}
                 <p class="text-sm text-neutral-500 mb-4">En attente de fin de bail.</p>
-                <a href="{% url 'add_etat_des_lieux' bail.id 'SORTIE' %}" class="flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-neutral-700 hover:border-amber-500 hover:text-amber-500 text-sm font-medium text-neutral-400 transition-colors">
-                    Commencer l'état des lieux
-                </a>
+                {% if user_role != 'LOCATAIRE' %}
+                    <a href="{% url 'add_etat_des_lieux' bail.id 'SORTIE' %}" class="flex items-center justify-center gap-2 w-full py-2 rounded-lg border border-neutral-700 hover:border-amber-500 hover:text-amber-500 text-sm font-medium text-neutral-400 transition-colors">
+                        Commencer l'état des lieux
+                    </a>
+                {% endif %}
             {% endif %}
         </div>
     </div>
 
+    <!-- Historique des Paiements -->
     <div class="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-lg">
         <div class="p-6 border-b border-neutral-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h2 class="text-xl font-bold text-white">Historique des Paiements</h2>
