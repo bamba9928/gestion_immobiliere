@@ -1,78 +1,129 @@
 {% extends "base.html" %}
 {% load static %}
+{% load humanize %}
+{% load tailwind_tags %}
 
 {% block title %}Mes Documents | MADA IMMO{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
 
+    {# --- HEADER --- #}
     <div class="border-b border-neutral-800 pb-6">
         <h1 class="text-3xl font-black text-white tracking-tight">Espace Documents</h1>
-        <p class="text-neutral-400 mt-2">Retrouvez l'historique de tous vos documents contractuels et comptables.</p>
+        <p class="text-neutral-400 mt-2 text-sm md:text-base">
+            Retrouvez l'historique de tous vos documents contractuels et comptables numérisés.
+        </p>
     </div>
 
+    {# --- SECTION 1: CONTRATS --- #}
     <section>
-        <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            Contrats de Bail
-        </h2>
+        <div class="flex items-center gap-3 mb-6">
+            <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <h2 class="text-xl font-bold text-white">Contrats de Bail</h2>
+        </div>
+
         {% if baux %}
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for bail in baux %}
-                <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-4 hover:border-emerald-500/50 transition-all">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-xs font-bold text-neutral-500 uppercase">{{ bail.date_debut|date:"d/m/Y" }}</span>
-                        <span class="px-2 py-0.5 text-[10px] rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Actif</span>
+                <div class="group bg-neutral-900 border border-neutral-800 rounded-2xl p-5 hover:border-emerald-500/50 hover:bg-neutral-900/80 transition-all shadow-lg hover:shadow-emerald-900/10 flex flex-col h-full">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Date d'effet</span>
+                            <span class="text-sm font-medium text-white">{{ bail.date_debut|date:"d M Y" }}</span>
+                        </div>
+                        <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            Actif
+                        </span>
                     </div>
-                    <h3 class="font-bold text-white mb-1">{{ bail.bien.titre }}</h3>
-                    <p class="text-sm text-neutral-400 mb-4">Locataire : {{ bail.locataire.get_full_name }}</p>
-                    <a href="{{ bail.fichier_contrat.url }}" target="_blank" class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-sm font-medium text-white transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                        Télécharger PDF
-                    </a>
+
+                    <div class="mb-6 flex-1">
+                        <h3 class="text-lg font-bold text-white mb-1 line-clamp-1" title="{{ bail.bien.titre }}">
+                            {{ bail.bien.titre }}
+                        </h3>
+                        <p class="text-xs text-neutral-400 flex items-center gap-1.5">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            {{ bail.bien.adresse|truncatechars:30 }}
+                        </p>
+                    </div>
+
+                    {% if bail.fichier_contrat %}
+                        <a href="{{ bail.fichier_contrat.url }}" target="_blank" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-neutral-800 hover:bg-white hover:text-black text-sm font-bold text-neutral-300 transition-all group-hover:shadow-lg">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Télécharger PDF
+                        </a>
+                    {% else %}
+                        <button disabled class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-neutral-800/50 text-sm font-bold text-neutral-600 cursor-not-allowed border border-neutral-800">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            Non disponible
+                        </button>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="text-neutral-500 text-sm italic">Aucun contrat disponible.</p>
+            <div class="py-12 text-center border-2 border-dashed border-neutral-800 rounded-2xl bg-neutral-900/30">
+                <p class="text-neutral-500 text-sm">Aucun contrat de bail n'est associé à votre compte.</p>
+            </div>
         {% endif %}
     </section>
 
+    {# --- SECTION 2: QUITTANCES --- #}
     <section>
-        <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-            Quittances de Loyer
-        </h2>
+        <div class="flex items-center gap-3 mb-6">
+            <div class="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+            </div>
+            <h2 class="text-xl font-bold text-white">Quittances de Loyer</h2>
+        </div>
+
         {% if quittances %}
-            <div class="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-                <table class="w-full text-sm text-left text-neutral-300">
-                    <thead class="bg-neutral-950 text-neutral-500 text-xs uppercase font-bold">
-                        <tr>
-                            <th class="px-6 py-3">Période</th>
-                            <th class="px-6 py-3">Bien / Locataire</th>
-                            <th class="px-6 py-3 text-right">Montant</th>
-                            <th class="px-6 py-3 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-neutral-800">
-                        {% for q in quittances %}
-                        <tr class="hover:bg-neutral-800/50">
-                            <td class="px-6 py-3 font-medium text-white">{{ q.periode_debut|date:"F Y"|title }}</td>
-                            <td class="px-6 py-3">
-                                {{ q.bail.bien.titre }} <br>
-                                <span class="text-xs text-neutral-500">{{ q.bail.locataire.get_full_name }}</span>
-                            </td>
-                            <td class="px-6 py-3 text-right font-mono">{{ q.montant_verse }} FCFA</td>
-                            <td class="px-6 py-3 text-right">
-                                <a href="{% url 'download_quittance' q.id %}" class="text-blue-400 hover:text-blue-300 hover:underline">Télécharger</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden shadow-xl">
+                {# Ajout de overflow-x-auto pour le mobile #}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-neutral-300">
+                        <thead class="bg-neutral-950 text-neutral-500 text-xs uppercase font-bold border-b border-neutral-800">
+                            <tr>
+                                <th class="px-6 py-4 whitespace-nowrap">Période</th>
+                                <th class="px-6 py-4 whitespace-nowrap">Détails du Bien</th>
+                                <th class="px-6 py-4 text-right whitespace-nowrap">Montant Versé</th>
+                                <th class="px-6 py-4 text-center whitespace-nowrap">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-neutral-800">
+                            {% for q in quittances %}
+                            <tr class="hover:bg-neutral-800/50 transition-colors group">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-white">{{ q.periode_debut|date:"F Y"|title }}</span>
+                                        <span class="text-[10px] text-neutral-500">Du {{ q.periode_debut|date:"d" }} au {{ q.periode_fin|date:"d" }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="font-medium text-white line-clamp-1">{{ q.bail.bien.titre }}</div>
+                                    <div class="text-xs text-neutral-500 mt-0.5">Locataire : {{ q.bail.locataire.get_full_name|default:q.bail.locataire.username }}</div>
+                                </td>
+                                <td class="px-6 py-4 text-right font-mono font-medium text-emerald-400 whitespace-nowrap">
+                                    {{ q.montant_verse|intcomma }} FCFA
+                                </td>
+                                <td class="px-6 py-4 text-center whitespace-nowrap">
+                                    <a href="{% url 'download_quittance' q.id %}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-blue-600 text-xs font-bold text-blue-400 hover:text-white border border-neutral-700 hover:border-blue-500 transition-all">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                        PDF
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         {% else %}
-            <p class="text-neutral-500 text-sm italic">Aucune quittance disponible.</p>
+            <div class="py-12 text-center border-2 border-dashed border-neutral-800 rounded-2xl bg-neutral-900/30">
+                <p class="text-neutral-500 text-sm">Aucune quittance de loyer disponible pour le moment.</p>
+            </div>
         {% endif %}
     </section>
 
