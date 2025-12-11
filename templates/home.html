@@ -4,15 +4,17 @@
 {% load tailwind_tags %}
 
 {% block title %}Accueil | MADA IMMO{% endblock %}
-{% block meta_description %}Découvrez nos annonces immobilières exclusives : appartements, villas et studios de standing à louer.{% endblock %}
-
+{% block meta_description %}Découvrez nos annonces immobilières exclusives : appartements, villas et studios de standing à louer à Dakar et ses environs.{% endblock %}
+{% block banner %}
+    {% include "includes/_top_banner.html" %}
+{% endblock %}
 {% block extra_css %}
 <style>
     /* Hero Background animé */
     .hero-bg {
         background-color: #050505;
         background-image:
-            linear-gradient(rgba(5, 5, 5, 0.8), rgba(5, 5, 5, 0.9)),
+            linear-gradient(to bottom, rgba(5, 5, 5, 0.7), rgba(5, 5, 5, 0.95)),
             url('https://images.unsplash.com/photo-1600596542815-e32c53048057?q=80&w=2070&auto=format&fit=crop');
         background-size: cover;
         background-position: center;
@@ -30,7 +32,7 @@
 
     /* Effet Glassmorphism unifié */
     .glass-panel {
-        background: rgba(23, 23, 23, 0.6);
+        background: rgba(23, 23, 23, 0.7);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -51,18 +53,18 @@
 
     <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full">
 
-        <span class="inline-block py-1 px-3 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-6">
+        <span class="inline-block py-1 px-3 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-6 backdrop-blur-sm">
             Leader de l'immobilier digital
         </span>
 
-        <h1 class="text-4xl md:text-6xl font-black text-white tracking-tight mb-6">
+        <h1 class="text-4xl md:text-6xl font-black text-white tracking-tight mb-6 drop-shadow-lg">
             Habitez l'exception,<br>
             <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">
                 vivez l'expérience.
             </span>
         </h1>
 
-        <p class="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p class="text-lg md:text-xl text-neutral-300 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
             Accédez à une sélection exclusive de biens immobiliers vérifiés.
             Visites virtuelles, dossiers en ligne, emménagement simplifié.
         </p>
@@ -77,68 +79,71 @@
                            name="q"
                            value="{{ request.GET.q }}"
                            placeholder="Ville, quartier, résidence..."
+                           aria-label="Rechercher un bien"
                            class="w-full h-14 pl-11 pr-4 bg-transparent text-white placeholder-neutral-500 border-none focus:ring-0 text-base font-medium rounded-xl hover:bg-white/5 transition-colors">
                 </div>
                 <button type="submit" class="h-14 px-8 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base shadow-lg shadow-emerald-900/20 transition-all flex items-center justify-center gap-2">
-                    Rechercher
+                    <span>Rechercher</span>
                 </button>
             </form>
         </div>
     </div>
 </section>
 
-<div class="sticky top-16 z-30 bg-[#050505]/80 backdrop-blur-md border-b border-white/5">
+<div class="sticky top-0 md:top-16 z-30 bg-[#050505]/90 backdrop-blur-xl border-b border-white/5 shadow-lg">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-        <form method="get" action="{% url 'home' %}" id="filters-form" x-data @change="$el.submit()">
+        <form method="get" action="{% url 'home' %}" id="filters-form" data-auto-submit x-data @change="$el.submit()">
             <input type="hidden" name="q" value="{{ request.GET.q }}">
 
-            <div class="flex items-center gap-3 overflow-x-auto hide-scrollbar pb-1">
-                <div class="relative shrink-0">
-                    <select name="type" class="appearance-none pl-4 pr-10 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-sm text-neutral-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer">
+            {# CORRECTION : justify-start sur mobile pour éviter que le contenu ne soit coupé #}
+            <div class="flex items-center justify-start md:justify-center gap-3 overflow-x-auto hide-scrollbar pb-1 w-full">
+
+                <div class="relative shrink-0 min-w-[140px]">
+                    <select name="type" aria-label="Type de bien" class="w-full appearance-none pl-4 pr-10 py-2.5 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-lg text-sm text-neutral-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer transition-colors">
                         <option value="">Tous les biens</option>
                         {% for type_value, type_label in types_bien %}
                             <option value="{{ type_value }}" {% if request.GET.type == type_value %}selected{% endif %}>{{ type_label }}</option>
                         {% endfor %}
                     </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-500">
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </div>
                 </div>
 
-                <div class="relative shrink-0">
-                    <select name="ville" class="appearance-none pl-4 pr-10 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-sm text-neutral-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer">
+                <div class="relative shrink-0 min-w-[140px]">
+                    <select name="ville" aria-label="Ville" class="w-full appearance-none pl-4 pr-10 py-2.5 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-lg text-sm text-neutral-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer transition-colors">
                         <option value="">Toutes les villes</option>
                         {% for ville in villes %}
                             <option value="{{ ville }}" {% if request.GET.ville == ville %}selected{% endif %}>{{ ville }}</option>
                         {% endfor %}
                     </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-500">
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </div>
                 </div>
 
-                <div class="relative shrink-0">
-                    <select name="prix_max" class="appearance-none pl-4 pr-10 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-sm text-neutral-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer">
+                <div class="relative shrink-0 min-w-[150px]">
+                    <select name="prix_max" aria-label="Budget Maximum" class="w-full appearance-none pl-4 pr-10 py-2.5 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-lg text-sm text-neutral-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer transition-colors">
                         <option value="">Budget Max</option>
                         <option value="250000" {% if request.GET.prix_max == '250000' %}selected{% endif %}>250k FCFA</option>
                         <option value="500000" {% if request.GET.prix_max == '500000' %}selected{% endif %}>500k FCFA</option>
                         <option value="1000000" {% if request.GET.prix_max == '1000000' %}selected{% endif %}>1 Million FCFA</option>
                         <option value="2000000" {% if request.GET.prix_max == '2000000' %}selected{% endif %}>2 Millions FCFA</option>
                     </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-500">
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </div>
                 </div>
 
                 <div class="h-8 w-px bg-neutral-800 mx-2 shrink-0"></div>
 
-                <div class="relative shrink-0 ml-auto sm:ml-0">
-                    <select name="sort" class="appearance-none pl-4 pr-10 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-sm text-neutral-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer">
+                <div class="relative shrink-0 min-w-[160px]">
+                    <select name="sort" aria-label="Trier par" class="w-full appearance-none pl-4 pr-10 py-2.5 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-lg text-sm text-neutral-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer transition-colors">
                         <option value="-date_publication" {% if request.GET.sort == '-date_publication' %}selected{% endif %}>Nouveautés</option>
                         <option value="prix" {% if request.GET.sort == 'prix' %}selected{% endif %}>Prix croissant</option>
                         <option value="-prix" {% if request.GET.sort == '-prix' %}selected{% endif %}>Prix décroissant</option>
                     </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-500">
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>
                     </div>
                 </div>
@@ -154,7 +159,7 @@
             <h2 class="text-2xl font-bold text-white">Résultats de recherche</h2>
             <p class="text-neutral-500 text-sm mt-1">
                 {% if annonces_count > 0 %}
-                    {{ annonces_count }} bien{{ annonces_count|pluralize }} trouvé{{ annonces_count|pluralize }}
+                    <span class="text-emerald-500 font-semibold">{{ annonces_count }}</span> bien{{ annonces_count|pluralize }} trouvé{{ annonces_count|pluralize }}
                 {% else %}
                     Ajustez vos filtres pour voir des résultats
                 {% endif %}
@@ -165,46 +170,48 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {% for annonce in annonces %}
             {% with bien=annonce.bien %}
-            <article class="property-card group relative flex flex-col h-full bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all duration-300 hover:shadow-2xl hover:shadow-black/50">
+            <article class="property-card group relative flex flex-col h-full bg-[#0a0a0a] border border-neutral-800 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-900/10">
 
-                <div class="relative h-64 overflow-hidden">
-                    {% if bien.photo_principale %}
-                        <img src="{{ bien.photo_principale.url }}"
-                             alt="{{ bien.titre }}"
-                             class="property-image w-full h-full object-cover transition-transform duration-700 ease-in-out">
-                    {% else %}
-                        <div class="w-full h-full bg-neutral-800 flex items-center justify-center">
-                            <svg class="w-12 h-12 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        </div>
-                    {% endif %}
+                <div class="relative h-64 overflow-hidden bg-neutral-900">
+                    <a href="{% url 'annonce_detail' annonce.id %}" class="block h-full w-full">
+                        {% if bien.photo_principale %}
+                            <img src="{{ bien.photo_principale.url }}"
+                                 alt="{{ bien.titre }}"
+                                 loading="lazy"
+                                 class="property-image w-full h-full object-cover transition-transform duration-700 ease-in-out">
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center text-neutral-700">
+                                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                        {% endif %}
+                    </a>
 
                     <div class="absolute top-4 left-4 flex gap-2">
                         {% if annonce.est_recente %}
-                            <span class="px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider shadow-lg">Nouveau</span>
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider shadow-lg">Nouveau</span>
                         {% endif %}
                         <span class="px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider border border-white/10">
                             {{ bien.get_type_bien_display }}
                         </span>
                     </div>
 
-                    <div class="absolute bottom-4 left-4">
-                        <div class="px-4 py-2 rounded-xl bg-black/80 backdrop-blur-md border border-white/10 shadow-lg">
+                    <div class="absolute bottom-4 left-4 right-4">
+                        <div class="px-4 py-2 rounded-xl bg-black/80 backdrop-blur-md border border-white/10 shadow-lg inline-block">
                             <span class="block text-lg font-bold text-white">{{ annonce.prix|intcomma }} <span class="text-xs font-normal text-neutral-400">FCFA/mois</span></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex flex-col flex-1 p-5">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="text-lg font-bold text-white line-clamp-1 group-hover:text-emerald-400 transition-colors">
+                    <div class="mb-3">
+                        <h3 class="text-lg font-bold text-white line-clamp-1 group-hover:text-emerald-400 transition-colors" title="{{ bien.titre }}">
                             <a href="{% url 'annonce_detail' annonce.id %}">{{ bien.titre }}</a>
                         </h3>
+                        <p class="text-sm text-neutral-400 mt-1 flex items-center gap-1.5 truncate">
+                            <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span>{{ bien.ville }} <span class="text-neutral-700">•</span> {{ bien.adresse }}</span>
+                        </p>
                     </div>
-
-                    <p class="text-sm text-neutral-400 mb-4 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        {{ bien.ville }} <span class="text-neutral-700">•</span> {{ bien.adresse|truncatechars:25 }}
-                    </p>
 
                     <div class="grid grid-cols-2 gap-3 mb-6">
                         <div class="flex items-center gap-2 p-2 rounded-lg bg-neutral-800/50 border border-neutral-800">
@@ -230,12 +237,12 @@
             {% endwith %}
         {% empty %}
             <div class="col-span-full py-20 text-center">
-                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-neutral-900 border border-neutral-800 mb-6">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-neutral-900 border border-neutral-800 mb-6 animate-pulse">
                     <svg class="w-8 h-8 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
                 <h3 class="text-xl font-bold text-white">Aucun résultat trouvé</h3>
-                <p class="text-neutral-500 mt-2 max-w-md mx-auto">Nous n'avons pas trouvé de bien correspondant à vos critères actuels. Essayez d'élargir votre recherche.</p>
-                <a href="{% url 'home' %}" class="inline-block mt-6 px-6 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-medium transition-colors">
+                <p class="text-neutral-500 mt-2 max-w-md mx-auto">Nous n'avons pas trouvé de bien correspondant à vos critères actuels.</p>
+                <a href="{% url 'home' %}" class="inline-block mt-6 px-6 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors shadow-lg shadow-emerald-900/20">
                     Réinitialiser les filtres
                 </a>
             </div>
@@ -244,7 +251,7 @@
 
     {% if is_paginated %}
     <div class="mt-16 flex justify-center">
-        <nav class="inline-flex rounded-xl bg-neutral-900 p-1 border border-neutral-800">
+        <nav class="inline-flex rounded-xl bg-neutral-900 p-1 border border-neutral-800 shadow-xl">
             {% if page_obj.has_previous %}
                 <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">
                     &larr;
@@ -253,7 +260,7 @@
 
             {% for num in page_obj.paginator.page_range %}
                 {% if page_obj.number == num %}
-                    <span class="px-4 py-2 rounded-lg bg-neutral-800 text-white font-bold text-sm shadow-sm">{{ num }}</span>
+                    <span class="px-4 py-2 rounded-lg bg-emerald-600 text-white font-bold text-sm shadow-sm">{{ num }}</span>
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                     <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 text-sm font-medium transition-colors">
                         {{ num }}
@@ -271,65 +278,99 @@
     {% endif %}
 </section>
 
-<section class="border-t border-neutral-900 bg-[#080808]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+<section class="border-t border-neutral-900 bg-[#080808] relative overflow-hidden">
+    <div class="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-emerald-900/10 to-transparent pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-                <span class="text-emerald-500 font-bold uppercase tracking-widest text-xs mb-2 block">Espace Propriétaire</span>
-                <h2 class="text-3xl md:text-4xl font-black text-white mb-6">Gérez vos biens comme<br>un professionnel.</h2>
-                <p class="text-neutral-400 text-lg mb-8 leading-relaxed">
+            <div class="order-2 lg:order-1">
+                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-4">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Espace Propriétaire
+                </span>
+                <h2 class="text-3xl md:text-5xl font-black text-white mb-6 leading-tight">Gérez vos biens comme<br>un <span class="text-emerald-500">professionnel</span>.</h2>
+                <p class="text-neutral-400 text-lg mb-8 leading-relaxed max-w-lg">
                     Plus de fichiers Excel éparpillés. MADA IMMO centralise vos loyers, vos baux et vos documents dans une interface sécurisée et intuitive.
                 </p>
 
                 <div class="space-y-4 mb-8">
                     <div class="flex items-center gap-3">
-                        <div class="h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
-                        <span class="text-neutral-300">Suivi des paiements en temps réel</span>
+                        <div class="h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                        <span class="text-neutral-300 font-medium">Suivi des paiements en temps réel</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
-                        <span class="text-neutral-300">Génération automatique des quittances</span>
+                        <div class="h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                        <span class="text-neutral-300 font-medium">Génération automatique des quittances</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
-                        <span class="text-neutral-300">Gestion des incidents et interventions</span>
+                        <div class="h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>
+                        <span class="text-neutral-300 font-medium">Gestion des incidents et interventions</span>
                     </div>
                 </div>
 
-                <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black font-bold hover:bg-neutral-200 transition-colors">
+                <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white text-black font-bold hover:bg-neutral-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)]">
                     Accéder à mon espace
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
                 </a>
             </div>
 
-            <div class="relative">
-                <div class="absolute -inset-4 bg-gradient-to-r from-emerald-500 to-teal-600 opacity-20 blur-2xl rounded-full"></div>
-                <div class="relative bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl">
-                    <div class="flex items-center justify-between mb-8">
-                        <div class="h-8 w-32 bg-neutral-800 rounded-lg animate-pulse"></div>
-                        <div class="h-8 w-8 bg-neutral-800 rounded-full"></div>
+            <div class="relative order-1 lg:order-2">
+                <div class="absolute -inset-4 bg-gradient-to-r from-emerald-500 to-teal-600 opacity-20 blur-3xl rounded-full"></div>
+                <div class="relative bg-[#0F0F0F] border border-neutral-800 rounded-2xl p-6 shadow-2xl rotate-1 hover:rotate-0 transition-transform duration-500">
+                    <div class="flex items-center justify-between mb-8 border-b border-neutral-800 pb-4">
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
+                            <div class="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500/50"></div>
+                        </div>
+                        <div class="h-6 w-24 bg-neutral-800/50 rounded-md"></div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 mb-6">
-                        <div class="h-24 bg-neutral-800/50 rounded-xl border border-neutral-800 p-4">
-                            <div class="h-4 w-4 bg-emerald-500/20 rounded-full mb-2"></div>
-                            <div class="h-2 w-12 bg-neutral-700 rounded mb-2"></div>
-                            <div class="h-6 w-20 bg-neutral-700 rounded"></div>
+                        <div class="h-28 bg-neutral-800/20 rounded-xl border border-neutral-800/50 p-4 flex flex-col justify-between">
+                            <div class="h-8 w-8 bg-emerald-500/20 rounded-lg flex items-center justify-center text-emerald-500">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <div>
+                                <div class="h-2 w-12 bg-neutral-700 rounded mb-2"></div>
+                                <div class="h-6 w-20 bg-neutral-600 rounded"></div>
+                            </div>
                         </div>
-                        <div class="h-24 bg-neutral-800/50 rounded-xl border border-neutral-800 p-4">
-                            <div class="h-4 w-4 bg-blue-500/20 rounded-full mb-2"></div>
-                            <div class="h-2 w-12 bg-neutral-700 rounded mb-2"></div>
-                            <div class="h-6 w-20 bg-neutral-700 rounded"></div>
+                        <div class="h-28 bg-neutral-800/20 rounded-xl border border-neutral-800/50 p-4 flex flex-col justify-between">
+                            <div class="h-8 w-8 bg-blue-500/20 rounded-lg flex items-center justify-center text-blue-500">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                            </div>
+                            <div>
+                                <div class="h-2 w-12 bg-neutral-700 rounded mb-2"></div>
+                                <div class="h-6 w-16 bg-neutral-600 rounded"></div>
+                            </div>
                         </div>
                     </div>
                     <div class="space-y-3">
-                        <div class="h-12 w-full bg-neutral-800/30 rounded-lg"></div>
-                        <div class="h-12 w-full bg-neutral-800/30 rounded-lg"></div>
-                        <div class="h-12 w-full bg-neutral-800/30 rounded-lg"></div>
+                        <div class="h-10 w-full bg-neutral-800/30 rounded-lg border border-neutral-800/30"></div>
+                        <div class="h-10 w-full bg-neutral-800/30 rounded-lg border border-neutral-800/30"></div>
+                        <div class="h-10 w-full bg-neutral-800/30 rounded-lg border border-neutral-800/30"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sélectionner tous les formulaires qui ont l'attribut data-auto-submit
+        const forms = document.querySelectorAll('form[data-auto-submit]');
+
+        forms.forEach(form => {
+            const selects = form.querySelectorAll('select');
+            selects.forEach(select => {
+                select.addEventListener('change', () => {
+                    // Petit délai pour l'UX et éviter le spam
+                    setTimeout(() => form.submit(), 100);
+                });
+            });
+        });
+    });
+</script>
 
 {% endblock %}

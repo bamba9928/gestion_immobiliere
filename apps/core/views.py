@@ -1,8 +1,8 @@
 import logging
+import mimetypes
 from datetime import date
 from itertools import chain
 from django.contrib.auth import get_user_model
-import mimetypes
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -121,6 +121,7 @@ class AnnonceDetailView(FormMixin, DetailView):
     template_name = 'biens/annonce_detail.html'
     context_object_name = 'annonce'
     form_class = ContactAnnonceForm
+    query_pk_and_slug = False
 
     def get_queryset(self):
         return Annonce.objects.filter(
@@ -351,8 +352,54 @@ def add_bien(request):
         'form': form,
         'user_role': 'ADMIN' if is_admin(request.user) else 'BAILLEUR',
     })
+# apps/core/views.py
 
+from django.db.models import Sum
 
+@login_required
+def gestion_bien_detail(request, pk):
+    """
+    Vue tableau de bord pour un bien spécifique (Vue Propriétaire/Admin).
+    """
+    bien = get_object_or_404(Bien, pk=pk)
+
+    # Sécurité : Seul le propriétaire ou l'admin peut voir cette page
+    if not (is_admin(request.user) or bien.proprietaire == request.user):
+        raise PermissionDenied("Vous n'êtes pas propriétaire de ce bien.")
+
+    # 1. Récupérer le bail actif (s'il y en a un)
+    bail_actif = bien.baux.filter(date_fin__isnull=True).order_by('-date_debut').first()
+
+    # 2. Historique des interventions
+    interventions = bien.interventions.select_related('locataire').order_by('-created_at')[:5]
+
+    # 3. Calculs financiers pour CE bien
+    # Total des loyers encaissés (liés aux baux de ce bien)
+    total_recettes = Transaction.objects.filter(
+        loyer__bail__bien=bien,
+        est_validee=True
+    ).aggregate(Sum('montant'))['montant__sum'] or 0
+
+    # Total des dépenses liées à ce bien
+    total_depenses = Depense.objects.filter(
+        bien=bien
+    ).aggregate(Sum('montant'))['montant__sum'] or 0
+
+    cash_flow = total_recettes - total_depenses
+
+    # 4. Taux d'occupation (Calcul simple basé sur l'existence d'un bail actif)
+    est_loue = bail_actif is not None
+
+    context = {
+        'bien': bien,
+        'bail_actif': bail_actif,
+        'interventions': interventions,
+        'total_recettes': total_recettes,
+        'total_depenses': total_depenses,
+        'cash_flow': cash_flow,
+        'est_loue': est_loue,
+    }
+    return render(request, 'biens/gestion_detail.html', context)
 @login_required
 def add_bail(request):
     if not (is_admin(request.user) or is_bailleur(request.user)):
@@ -958,8 +1005,6 @@ def export_grand_livre_excel(request):
 
     wb.save(response)
     return response
-
-
 @login_required
 def documents_list(request):
     user = request.user
@@ -1012,6 +1057,7 @@ def documents_list(request):
             .exclude(pdf='')
         )
 
+    # CORRECTION : Un seul bloc pour le locataire
     elif is_locataire(user):
         baux = (
             Bail.objects
@@ -1034,11 +1080,6 @@ def documents_list(request):
             .filter(pdf__isnull=False)
             .exclude(pdf='')
         )
-    elif is_locataire(user):
-        # Locataire voit ses propres documents
-        baux = Bail.objects.filter(locataire=user).select_related('bien').exclude(fichier_contrat='')
-        quittances = Loyer.objects.filter(bail__locataire=user).select_related('bail__bien').exclude(quittance='')
-        edls = EtatDesLieux.objects.filter(bail__locataire=user).exclude(pdf='')
 
     context = {
         'baux': baux,

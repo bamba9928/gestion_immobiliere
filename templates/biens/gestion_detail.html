@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load static %}
+{% load tailwind_tags %}
+
+{% block title %}Gestion : {{ bien.titre }} | MADA IMMO{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    {# --- HEADER & ACTIONS --- #}
+    <div class="flex flex-col md:flex-row md:items-start justify-between gap-6 border-b border-neutral-800 pb-6">
+        <div>
+            <nav class="flex items-center text-sm font-medium text-neutral-500 mb-2">
+                <a href="{% url 'dashboard' %}" class="hover:text-emerald-400 transition-colors">Dashboard</a>
+                <svg class="h-4 w-4 mx-2 text-neutral-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <a href="{% url 'biens_list' %}" class="hover:text-emerald-400 transition-colors">Mes biens</a>
+                <svg class="h-4 w-4 mx-2 text-neutral-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <span class="text-neutral-200">Détails</span>
+            </nav>
+            <h1 class="text-3xl font-black text-white tracking-tight">{{ bien.titre }}</h1>
+            <div class="flex items-center gap-2 mt-2 text-neutral-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span>{{ bien.adresse }}, {{ bien.ville }}</span>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+            <a href="{% url 'edit_bien' bien.id %}" class="px-4 py-2.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-300 hover:text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Modifier
+            </a>
+            {% if not est_loue %}
+                <a href="{% url 'add_bail' %}?bien={{ bien.id }}" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-900/20 hover:shadow-emerald-900/40 hover:-translate-y-0.5 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Nouveau Bail
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        {# --- CARTE 1 : INFO BIEN --- #}
+        <div class="bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden flex flex-col shadow-lg">
+            <div class="h-56 w-full relative group">
+                {% if bien.photo_principale %}
+                    <img src="{{ bien.photo_principale.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                {% else %}
+                    <div class="w-full h-full bg-neutral-800 flex items-center justify-center text-neutral-600">
+                        <svg class="w-16 h-16 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                {% endif %}
+
+                <div class="absolute top-3 right-3">
+                    {% if est_loue %}
+                        <span class="px-3 py-1 bg-emerald-500/90 backdrop-blur-md text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-lg">Loué</span>
+                    {% else %}
+                        <span class="px-3 py-1 bg-neutral-500/90 backdrop-blur-md text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-lg">Vacant</span>
+                    {% endif %}
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-neutral-900 to-transparent"></div>
+            </div>
+
+            <div class="p-6 flex-1 -mt-4 relative z-10">
+                <div class="grid grid-cols-2 gap-y-4 gap-x-2 text-sm">
+                    <div class="space-y-1">
+                        <p class="text-neutral-500 text-xs uppercase font-bold">Type</p>
+                        <p class="text-white font-medium">{{ bien.get_type_bien_display }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-neutral-500 text-xs uppercase font-bold">Surface</p>
+                        <p class="text-white font-medium">{{ bien.surface }} m²</p>
+                    </div>
+                    <div class="space-y-1 col-span-2 pt-2 border-t border-neutral-800">
+                        <div class="flex justify-between items-center">
+                            <p class="text-neutral-500">Loyer de référence</p>
+                            <p class="text-emerald-400 font-bold text-lg">{{ bien.loyer_mensuel|intcomma }} <span class="text-xs text-neutral-500">FCFA</span></p>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p class="text-neutral-500">Charges</p>
+                            <p class="text-neutral-300 font-medium">{{ bien.charges_ref|default:"0"|intcomma }} <span class="text-xs text-neutral-500">FCFA</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# --- CARTE 2 : PERFORMANCE FINANCIÈRE --- #}
+        <div class="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 flex flex-col shadow-lg relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 {% if cash_flow >= 0 %}bg-emerald-500/5{% else %}bg-red-500/5{% endif %} rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+            <h3 class="text-white font-bold mb-6 flex items-center gap-2 relative z-10">
+                <div class="p-1.5 rounded-lg bg-neutral-800 text-emerald-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                Performance (Année)
+            </h3>
+
+            <div class="space-y-3 relative z-10">
+                <div class="flex justify-between items-center p-3 bg-neutral-950/50 rounded-xl border border-neutral-800/50">
+                    <span class="text-neutral-400 text-sm font-medium">Recettes</span>
+                    <span class="text-emerald-400 font-mono font-bold flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                        {{ total_recettes|intcomma }}
+                    </span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-neutral-950/50 rounded-xl border border-neutral-800/50">
+                    <span class="text-neutral-400 text-sm font-medium">Dépenses</span>
+                    <span class="text-red-400 font-mono font-bold flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                        {{ total_depenses|intcomma }}
+                    </span>
+                </div>
+
+                <div class="pt-4 border-t border-neutral-800 mt-2">
+                    <div class="flex justify-between items-end">
+                        <span class="text-neutral-200 font-bold text-sm">Cash Flow Net</span>
+                        <div class="text-right">
+                            <p class="font-mono font-black text-2xl {% if cash_flow >= 0 %}text-emerald-500{% else %}text-red-500{% endif %}">
+                                {{ cash_flow|intcomma }}
+                            </p>
+                            <p class="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">FCFA</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{% url 'add_depense' %}?bien={{ bien.id }}" class="mt-auto pt-6 w-full flex items-center justify-center gap-2 text-neutral-400 hover:text-white text-xs font-bold uppercase tracking-wider transition-colors group">
+                <span class="w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center group-hover:bg-neutral-700 group-hover:scale-110 transition-all">+</span>
+                Ajouter une dépense
+            </a>
+        </div>
+
+        {# --- CARTE 3 : LOCATAIRE --- #}
+        <div class="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 flex flex-col shadow-lg relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+
+            <h3 class="text-white font-bold mb-6 flex items-center gap-2 relative z-10">
+                <div class="p-1.5 rounded-lg bg-neutral-800 text-blue-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </div>
+                Locataire actuel
+            </h3>
+
+            {% if bail_actif %}
+                <div class="flex items-center gap-4 mb-6 relative z-10">
+                    <div class="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-blue-900/20">
+                        {{ bail_actif.locataire.first_name|first|default:bail_actif.locataire.username|first|upper }}
+                    </div>
+                    <div>
+                        <p class="text-white font-bold text-lg leading-tight">{{ bail_actif.locataire.get_full_name|default:bail_actif.locataire.username }}</p>
+                        <p class="text-neutral-500 text-xs mt-1 font-medium">Entrée : {{ bail_actif.date_debut|date:"d M Y" }}</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3 relative z-10 bg-neutral-950/50 rounded-xl p-4 border border-neutral-800/50">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-500">Téléphone</span>
+                        <a href="tel:{{ bail_actif.locataire.profile.telephone }}" class="text-white hover:text-blue-400 transition-colors">{{ bail_actif.locataire.profile.telephone|default:"Non renseigné" }}</a>
+                    </div>
+                    <div class="flex justify-between text-sm border-t border-neutral-800 pt-2 mt-2">
+                        <span class="text-neutral-500">Bail</span>
+                        <div class="flex gap-2">
+                            <a href="{% url 'bail_detail' bail_actif.id %}" class="text-white hover:text-blue-400 transition-colors">Détails</a>
+                            <span class="text-neutral-700">|</span>
+                            {% if bail_actif.fichier_contrat %}
+                                <a href="{% url 'download_contrat' bail_actif.id %}" target="_blank" class="text-blue-400 hover:text-blue-300 font-medium">PDF</a>
+                            {% else %}
+                                <span class="text-neutral-600 italic">Non signé</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <a href="{% url 'bail_detail' bail_actif.id %}" class="mt-auto pt-6 w-full block text-center px-4 py-3 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 hover:text-blue-300 border border-blue-500/20 rounded-xl text-sm font-bold transition-all">
+                    Gérer le dossier locataire
+                </a>
+            {% else %}
+                <div class="h-full flex flex-col items-center justify-center text-center py-6 relative z-10">
+                    <div class="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mb-4 text-neutral-600">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                    </div>
+                    <p class="text-neutral-300 font-bold mb-1">Aucun locataire</p>
+                    <p class="text-neutral-500 text-xs mb-6 max-w-[200px]">Ce bien est vacant. Ajoutez un locataire pour démarrer la gestion.</p>
+                    <a href="{% url 'add_bail' %}?bien={{ bien.id }}" class="px-6 py-2.5 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 transition-colors text-sm shadow-lg shadow-white/10">
+                        Créer un bail
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    {# --- SECTION: DERNIÈRES INTERVENTIONS --- #}
+    <div class="bg-neutral-900/50 border border-neutral-800 rounded-2xl overflow-hidden shadow-lg">
+        <div class="px-6 py-4 border-b border-neutral-800 flex justify-between items-center bg-neutral-900/80">
+            <h3 class="text-white font-bold text-sm uppercase tracking-wider">Derniers Incidents / Interventions</h3>
+            <a href="{% url 'interventions_list' %}" class="text-xs font-bold text-emerald-500 hover:text-emerald-400 transition-colors">Tout voir</a>
+        </div>
+
+        {% if interventions %}
+            <div class="divide-y divide-neutral-800">
+                {% for inter in interventions|slice:":5" %}
+                <div class="p-4 hover:bg-neutral-800/50 transition-colors flex items-center justify-between group relative">
+                    <div class="absolute left-0 top-0 bottom-0 w-1
+                        {% if inter.statut == 'RESOLU' %}bg-emerald-500
+                        {% elif inter.statut == 'EN_COURS' %}bg-amber-500
+                        {% else %}bg-blue-500{% endif %}"></div>
+
+                    <div class="flex items-center gap-4 pl-4">
+                        <div class="flex flex-col">
+                            <span class="text-white text-sm font-bold group-hover:text-emerald-400 transition-colors">{{ inter.objet }}</span>
+                            <span class="text-neutral-500 text-xs mt-0.5">
+                                {{ inter.created_at|date:"d M Y" }} • Signalé par <span class="text-neutral-300">{{ inter.locataire.get_full_name|default:inter.locataire.username }}</span>
+                            </span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider border
+                        {% if inter.statut == 'RESOLU' %}bg-emerald-500/10 text-emerald-400 border-emerald-500/20
+                        {% elif inter.statut == 'EN_COURS' %}bg-amber-500/10 text-amber-400 border-amber-500/20
+                        {% else %}bg-blue-500/10 text-blue-400 border-blue-500/20{% endif %}">
+                        {{ inter.get_statut_display }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="flex flex-col items-center justify-center py-12 text-center">
+                <div class="w-12 h-12 bg-neutral-800/50 rounded-full flex items-center justify-center mb-3 text-neutral-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <p class="text-neutral-400 text-sm font-medium">Tout est en ordre.</p>
+                <p class="text-neutral-600 text-xs">Aucune intervention signalée récemment.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

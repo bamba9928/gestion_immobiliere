@@ -36,6 +36,10 @@ urlpatterns = [
 
     # Gestion des biens
     path("gestion/biens/add/", views.add_bien, name="add_bien"),
+    path('annonces/<int:pk>-<str:slug>/', views.AnnonceDetailView.as_view(), name='annonce_detail'),
+
+    # AJOUTER CETTE LIGNE (Dashboard Privé)
+    path('dashboard/biens/<int:pk>/', views.gestion_bien_detail, name='gestion_bien_detail'),
 
     # Gestion des baux
     path("gestion/baux/add/", views.add_bail, name="add_bail"),

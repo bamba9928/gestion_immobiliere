@@ -1,15 +1,59 @@
 {% extends "base.html" %}
 {% load static %}
+{% load tailwind_tags %}
 
 {% block title %}Connexion | MADA IMMO{% endblock %}
 
+
 {% block extra_css %}
 <style>
+    /* --- Variables & Animations de fond --- */
     :root {
-        --particle-1: rgba(255, 255, 255, 0.02);
-        --particle-2: rgba(255, 255, 255, 0.015);
+        --particle-1: rgba(255, 255, 255, 0.03);
+        --particle-2: rgba(255, 255, 255, 0.02);
     }
 
+    /* Effet Glassmorphism manquant dans le code original */
+    .glass {
+        background: rgba(10, 10, 10, 0.6);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 1.5rem; /* rounded-2xl */
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Texte gradient */
+    .text-gradient {
+        background: linear-gradient(to right, #ffffff, #a3a3a3);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Spinner pour le bouton (utilisé par le JS) */
+    .spinner {
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        border-left-color: #000;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* Alert Error Style */
+    .alert-error {
+        background-color: rgba(220, 38, 38, 0.1); /* red-600/10 */
+        border: 1px solid rgba(220, 38, 38, 0.2);
+        color: #fca5a5; /* red-300 */
+        padding: 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    /* --- Animations existantes --- */
     @keyframes float {
         0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
         33% { transform: translateY(-30px) scale(1.05); opacity: 0.9; }
@@ -24,97 +68,59 @@
         pointer-events: none;
     }
 
-    .particle:nth-child(1) {
-        width: 200px; height: 200px;
-        top: 10%; left: 5%;
-        animation-delay: 0s;
-    }
-
-    .particle:nth-child(2) {
-        width: 150px; height: 150px;
-        top: 70%; right: 10%;
-        animation-delay: 5s;
-        background: var(--particle-2);
-    }
-
-    .particle:nth-child(3) {
-        width: 100px; height: 100px;
-        bottom: 10%; left: 20%;
-        animation-delay: 10s;
-    }
+    .particle:nth-child(1) { width: 200px; height: 200px; top: 10%; left: 5%; animation-delay: 0s; }
+    .particle:nth-child(2) { width: 150px; height: 150px; top: 70%; right: 10%; animation-delay: 5s; background: var(--particle-2); }
+    .particle:nth-child(3) { width: 100px; height: 100px; bottom: 10%; left: 20%; animation-delay: 10s; }
 
     @keyframes fadeInScale {
-        from {
-            opacity: 0;
-            transform: scale(0.92) translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
+        from { opacity: 0; transform: scale(0.95) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
     }
-
-    .fade-in-scale {
-        animation: fadeInScale 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    .fade-in-scale { animation: fadeInScale 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
 
     @keyframes shake {
         0%, 100% { transform: translateX(0); }
-        10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
-        20%, 40%, 60%, 80% { transform: translateX(6px); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+        20%, 40%, 60%, 80% { transform: translateX(4px); }
     }
+    .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
 
-    .shake {
-        animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-    }
-
-    @keyframes shimmer {
-        0% { left: -100%; }
-        100% { left: 100%; }
-    }
-
+    @keyframes shimmer { 0% { left: -100%; } 100% { left: 100%; } }
     .btn-shimmer::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
+        content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
         background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
         animation: shimmer 2s infinite;
     }
 
+    /* Floating Labels Logic */
     .input-floating-label {
-        position: absolute;
-        left: 3rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: rgb(115 115 115);
-        font-size: 0.95rem;
-        pointer-events: none;
+        position: absolute; left: 3rem; top: 50%; transform: translateY(-50%);
+        color: rgb(115 115 115); font-size: 0.95rem; pointer-events: none;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
     .input-field:focus ~ .input-floating-label,
     .input-field:not(:placeholder-shown) ~ .input-floating-label {
-        top: -0.5rem;
-        left: 0.75rem;
-        font-size: 0.75rem;
-        color: rgb(255 255 255);
-        background: rgb(10 10 10);
-        padding: 0 0.5rem;
+        top: -0.5rem; left: 0.75rem; font-size: 0.75rem;
+        color: rgb(255 255 255); background: #0a0a0a; padding: 0 0.5rem;
+    }
+    /* Fix pour le fond de l'input lors de l'autofill par le navigateur */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px #0a0a0a inset !important;
+        -webkit-text-fill-color: white !important;
+        transition: background-color 5000s ease-in-out 0s;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="min-h-screen h-full flex items-center justify-center p-4 overflow-hidden">
+<div class="min-h-screen h-full flex items-center justify-center p-4 overflow-hidden relative">
 
-    <!-- Background avec gradient et particules -->
-    <div class="fixed inset-0 -z-10">
-        <div class="absolute inset-0 bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(30,30,30,0.3)_0%,transparent_20%)]"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_90%_80%,rgba(40,40,40,0.2)_0%,transparent_25%)]"></div>
+    <div class="fixed inset-0 -z-10 bg-[#050505]">
+        <div class="absolute inset-0 bg-gradient-to-br from-black via-neutral-900 to-black"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.03)_0%,transparent_50%)]"></div>
 
         <div class="absolute inset-0 overflow-hidden">
             <div class="particle"></div>
@@ -123,44 +129,39 @@
         </div>
     </div>
 
-    <!-- Card de connexion -->
-    <main class="w-full max-w-md fade-in-scale">
-        <div class="glass card-dark card-hover p-10">
+    <main class="w-full max-w-md fade-in-scale relative z-10">
+        <div class="glass p-8 md:p-10">
 
-            <!-- Logo et titre -->
             <div class="text-center mb-8">
-                <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-white to-neutral-400 rounded-2xl flex items-center justify-center">
-                    <svg class="w-8 h-8 text-neutral-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-white to-neutral-400 rounded-2xl flex items-center justify-center shadow-lg shadow-white/10">
+                    <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                     </svg>
                 </div>
-
-                <h1 class="text-4xl font-bold mb-2">
+                <h1 class="text-3xl font-bold mb-2 tracking-tight text-white">
+                    Bienvenue sur <br>
                     <span class="text-gradient">MADA IMMO</span>
                 </h1>
-                <p class="text-neutral-400 text-sm">Plateforme de gestion immobilière</p>
+                <p class="text-neutral-500 text-sm">Votre espace de gestion sécurisé</p>
             </div>
 
             {% if form.errors %}
-            <div class="alert alert-error mb-6 animate-slide-up">
-                <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <div>
-                        <strong class="font-semibold">Identifiants incorrects</strong>
-                        <p class="text-xs mt-1 opacity-90">Veuillez vérifier vos informations et réessayer.</p>
-                    </div>
+            <div class="alert-error mb-6 animate-slide-up flex items-start gap-3">
+                <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                <div>
+                    <strong class="font-semibold block text-red-200">Erreur de connexion</strong>
+                    <p class="text-xs mt-1 opacity-90">Identifiant ou mot de passe incorrect.</p>
                 </div>
             </div>
             {% endif %}
 
-            <form method="post" action="{% url 'login' %}" id="loginForm" novalidate class="space-y-5">
+            <form method="post" action="{% url 'login' %}" id="loginForm" novalidate class="space-y-6">
                 {% csrf_token %}
 
-                <!-- Username -->
-                <div class="relative">
-                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none">
+                <div class="relative group">
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-white transition-colors pointer-events-none">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
@@ -173,14 +174,13 @@
                         autocomplete="username"
                         placeholder=" "
                         autofocus
-                        class="input-field w-full pl-10 pr-4 py-3 bg-black/50 border border-neutral-700/80 rounded-xl text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 focus:bg-black/70 transition-all"
+                        class="input-field w-full pl-10 pr-4 py-3.5 bg-[#0a0a0a] border border-neutral-800 rounded-xl text-white text-sm placeholder:text-transparent focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all"
                     >
                     <label for="username" class="input-floating-label">Nom d'utilisateur</label>
                 </div>
 
-                <!-- Password -->
-                <div class="relative">
-                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none">
+                <div class="relative group">
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-white transition-colors pointer-events-none">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                         </svg>
@@ -192,12 +192,12 @@
                         required
                         autocomplete="current-password"
                         placeholder=" "
-                        class="input-field w-full pl-10 pr-12 py-3 bg-black/50 border border-neutral-700/80 rounded-xl text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 focus:bg-black/70 transition-all"
+                        class="input-field w-full pl-10 pr-12 py-3.5 bg-[#0a0a0a] border border-neutral-800 rounded-xl text-white text-sm placeholder:text-transparent focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/40 transition-all"
                     >
                     <button
                         type="button"
                         id="togglePassword"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors p-1"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-neutral-800"
                         aria-label="Afficher le mot de passe"
                     >
                         <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,18 +208,13 @@
                     <label for="password" class="input-floating-label">Mot de passe</label>
                 </div>
 
-                <div class="flex items-center justify-between text-sm">
-                    <label class="flex items-center gap-2 cursor-pointer text-neutral-400 hover:text-white transition-colors">
-                        <input
-                            type="checkbox"
-                            name="remember"
-                            checked
-                            class="w-4 h-4 rounded border-neutral-700 bg-black/40 text-white focus:ring-2 focus:ring-white/20 focus:ring-offset-0 transition-all"
-                        >
-                        <span>Se souvenir de moi</span>
+                <div class="flex items-center justify-between text-xs sm:text-sm">
+                    <label class="flex items-center gap-2 cursor-pointer text-neutral-400 hover:text-white transition-colors group">
+                        <input type="checkbox" name="remember" checked class="w-4 h-4 rounded border-neutral-700 bg-neutral-900 text-white focus:ring-1 focus:ring-white focus:ring-offset-0 transition-all cursor-pointer">
+                        <span class="group-hover:underline decoration-neutral-700 underline-offset-2">Se souvenir de moi</span>
                     </label>
 
-                    <a href="{% url 'password_reset' %}" class="text-neutral-400 hover:text-white transition-colors font-medium">
+                    <a href="{% url 'password_reset' %}" class="text-neutral-400 hover:text-white transition-colors font-medium hover:underline underline-offset-4 decoration-neutral-700">
                         Mot de passe oublié ?
                     </a>
                 </div>
@@ -227,23 +222,24 @@
                 <button
                     type="submit"
                     id="submitBtn"
-                    class="relative w-full py-3 px-4 bg-gradient-to-r from-white to-neutral-300 text-neutral-950 font-semibold text-sm rounded-xl overflow-hidden transition-all hover:shadow-lg hover:shadow-white/25 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-neutral-950"
+                    class="group relative w-full py-3.5 px-4 bg-white text-black font-bold text-sm rounded-xl overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-black shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)]"
                 >
-                    <span class="relative z-10" id="btnText">Se connecter</span>
-                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    <span class="relative z-10 flex items-center justify-center gap-2" id="btnText">
+                        Se connecter
+                        <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </span>
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-black/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                 </button>
             </form>
 
-            <div class="divider my-6"></div>
+            <div class="my-8 h-px bg-gradient-to-r from-transparent via-neutral-800 to-transparent"></div>
 
-            <footer class="text-center text-neutral-500 text-xs space-y-1">
-                <p>&copy; 2025 MADA IMMO. Tous droits réservés.</p>
-                <p class="flex items-center justify-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                    </svg>
-                    Protégé par une authentification sécurisée
-                </p>
+            <footer class="text-center space-y-2">
+                <p class="text-neutral-500 text-xs">&copy; 2025 MADA IMMO. Tous droits réservés.</p>
+                <div class="flex items-center justify-center gap-1.5 text-[10px] text-neutral-600 uppercase tracking-widest font-medium">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    Connexion sécurisée SSL
+                </div>
             </footer>
         </div>
     </main>
@@ -255,66 +251,67 @@
     const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('password');
     const eyeIcon = document.getElementById('eyeIcon');
-
-    togglePassword.addEventListener('click', () => {
-        const isPassword = passwordInput.type === 'password';
-        passwordInput.type = isPassword ? 'text' : 'password';
-
-        eyeIcon.innerHTML = isPassword
-            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>'
-            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
-    });
-
     const loginForm = document.getElementById('loginForm');
     const submitBtn = document.getElementById('submitBtn');
     const btnText = document.getElementById('btnText');
     const usernameInput = document.getElementById('username');
     const errorAlert = document.querySelector('.alert-error');
 
+    // Toggle Password Visibility
+    togglePassword.addEventListener('click', () => {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+
+        // Icônes mises à jour pour plus de clarté
+        eyeIcon.innerHTML = isPassword
+            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>'
+            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+    });
+
+    // Form Submit Handler
     loginForm.addEventListener('submit', (e) => {
         const username = usernameInput.value.trim();
         const password = passwordInput.value.trim();
 
         if (!username || !password) {
             e.preventDefault();
-
-            if (!username) {
-                usernameInput.classList.add('shake');
-                setTimeout(() => usernameInput.classList.remove('shake'), 400);
-            }
-            if (!password) {
-                passwordInput.classList.add('shake');
-                setTimeout(() => passwordInput.classList.remove('shake'), 400);
-            }
+            // Animation shake sur les champs vides
+            if (!username) triggerShake(usernameInput);
+            if (!password) triggerShake(passwordInput);
             return;
         }
 
+        // Etat de chargement
         submitBtn.disabled = true;
         submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
+        // Remplacement du texte par le spinner défini en CSS
         btnText.innerHTML = `
-            <span class="flex items-center justify-center gap-2">
-                <span class="spinner"></span>
-                Connexion en cours...
-            </span>
+            <span class="spinner"></span>
+            Connexion...
         `;
     });
 
+    function triggerShake(element) {
+        element.classList.add('shake');
+        // On retire la classe après l'animation pour pouvoir la rejouer si nécessaire
+        setTimeout(() => element.classList.remove('shake'), 400);
+    }
+
+    // Suppression du message d'erreur quand l'utilisateur tape
     [usernameInput, passwordInput].forEach(input => {
         input.addEventListener('input', () => {
             if (errorAlert) {
                 errorAlert.style.opacity = '0';
                 errorAlert.style.transform = 'translateY(-10px)';
+                errorAlert.style.transition = 'all 0.3s ease';
                 setTimeout(() => errorAlert.remove(), 300);
             }
         });
     });
 
-    window.addEventListener('load', () => {
-        usernameInput.focus();
-    });
-
+    // Raccourci clavier Alt+V pour voir le mot de passe
     document.addEventListener('keydown', (e) => {
-        if (e.altKey && e.key === 'v') {
+        if (e.altKey && e.key.toLowerCase() === 'v') {
             e.preventDefault();
             togglePassword.click();
         }

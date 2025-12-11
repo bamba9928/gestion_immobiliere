@@ -4,6 +4,8 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.utils.text import slugify
+from django.urls import reverse
 
 
 # ================== SOFT DELETE GLOBALE ==================
@@ -162,6 +164,11 @@ class Bien(SoftDeleteModel):  # <--- héritage SoftDeleteModel
         indexes = [
             models.Index(fields=["est_actif", "created_at"]),
         ]
+
+    def get_absolute_url(self):
+        # Génère une URL type: /biens/12-titre-du-bien/
+        slug = slugify(self.titre)
+        return reverse('bien_detail', kwargs={'pk': self.pk, 'slug': slug})
 
     def __str__(self) -> str:
         return f"{self.get_type_bien_display()} - {self.titre}"

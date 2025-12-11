@@ -3,8 +3,28 @@
 {% load tailwind_tags %}
 {% load humanize %}
 
-{% block title %}{{ annonce.titre }} | MADA IMMO{% endblock %}
-{% block meta_description %}{{ annonce.description|truncatewords:30 }}{% endblock %}
+{# --- DÉBUT SEO OPTIMISÉ --- #}
+{% block title %}
+    {{ annonce.titre }} à {{ annonce.bien.ville }} - {{ annonce.prix|intcomma }} FCFA | MADA IMMO
+{% endblock %}
+
+{% block meta_description %}
+    {{ annonce.bien.get_type_bien_display }} à louer à {{ annonce.bien.ville }}.
+    Surface : {{ annonce.bien.surface }}m², {{ annonce.bien.nb_pieces }} pièces.
+    Loyer : {{ annonce.prix|intcomma }} FCFA/mois. {{ annonce.description|truncatewords:20 }}
+{% endblock %}
+
+{# Pour les réseaux sociaux (WhatsApp, Facebook, LinkedIn) #}
+{% block og_title %}{{ annonce.titre }} - {{ annonce.prix|intcomma }} FCFA{% endblock %}
+{% block og_description %}{{ annonce.bien.get_type_bien_display }} à {{ annonce.bien.ville }} - {{ annonce.bien.surface }}m²{% endblock %}
+{% block og_image %}
+    {% if annonce.bien.photo_principale %}
+        {{ request.scheme }}://{{ request.get_host }}{{ annonce.bien.photo_principale.url }}
+    {% else %}
+        https://madagroupe.com/static/img/og-default.jpg
+    {% endif %}
+{% endblock %}
+{# --- FIN SEO OPTIMISÉ --- #}
 
 {% block extra_css %}
 <style>
@@ -48,7 +68,7 @@
                     <button class="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:text-red-500 hover:bg-black/60 transition-all" title="Ajouter aux favoris">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                     </button>
-                    <button class="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:text-emerald-500 hover:bg-black/60 transition-all" title="Partager">
+                    <button @click="if (navigator.share) { navigator.share({ title: '{{ annonce.titre|escapejs }}', text: 'Regarde ce bien sur Mada Immo', url: window.location.href }); } else { alert('Lien copié !'); navigator.clipboard.writeText(window.location.href); }" class="p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:text-emerald-500 hover:bg-black/60 transition-all" title="Partager">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                     </button>
                 </div>
@@ -59,7 +79,7 @@
             <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div class="space-y-2">
                     <div class="flex flex-wrap gap-2 mb-3">
-                        {% if annonce.date_publication|timesince:"days" <= "7 days" %}
+                        {% if annonce.created_at|timesince:"days" <= "7 days" %}
                             <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">Nouveau</span>
                         {% endif %}
                         <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-white/20 backdrop-blur-md text-white border border-white/10">
@@ -113,8 +133,10 @@
                         <div class="mb-2 p-2 rounded-full bg-neutral-800 text-neutral-400 group-hover:text-white transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         </div>
-                        <span class="text-xl font-bold text-white">Dispo</span>
-                        <span class="text-xs text-neutral-500 uppercase tracking-wider mt-1">Immédiate</span>
+                        <span class="text-xl font-bold text-white">
+                            {% if annonce.bien.is_disponible %}Oui{% else %}Non{% endif %}
+                        </span>
+                        <span class="text-xs text-neutral-500 uppercase tracking-wider mt-1">Disponible</span>
                     </div>
                 </div>
 
@@ -139,9 +161,9 @@
                             <div class="bg-neutral-900/80 backdrop-blur-md px-6 py-4 rounded-xl border border-neutral-700 text-center">
                                 <p class="text-white font-bold">{{ annonce.bien.ville }}</p>
                                 <p class="text-sm text-neutral-400 mt-1">{{ annonce.bien.adresse }}</p>
-                                <button class="mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors">
-                                    Voir sur la carte
-                                </button>
+                                <a href="https://www.google.com/maps/search/?api=1&query={{ annonce.bien.adresse }} {{ annonce.bien.ville }}" target="_blank" class="inline-block mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors">
+                                    Voir sur Google Maps
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -263,4 +285,40 @@
     </div>
 
 </div>
+
+{# --- SCRIPT GOOGLE RICH SNIPPETS (JSON-LD) --- #}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Accommodation",
+  "name": "{{ annonce.titre|escapejs }}",
+  "description": "{{ annonce.description|striptags|escapejs }}",
+  "image": [
+    "{% if annonce.bien.photo_principale %}{{ request.scheme }}://{{ request.get_host }}{{ annonce.bien.photo_principale.url }}{% endif %}"
+  ],
+  "datePublished": "{{ annonce.created_at|date:'Y-m-d' }}",
+  "url": "{{ request.build_absolute_uri }}",
+  "priceCurrency": "XOF",
+  "price": "{{ annonce.prix }}",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "{{ annonce.bien.ville|escapejs }}",
+    "streetAddress": "{{ annonce.bien.adresse|escapejs }}",
+    "addressCountry": "SN"
+  },
+  "numberOfRooms": {{ annonce.bien.nb_pieces|default:1 }},
+  "floorSize": {
+    "@type": "QuantitativeValue",
+    "value": {{ annonce.bien.surface|default:0 }},
+    "unitCode": "MTK"
+  },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "XOF",
+    "price": "{{ annonce.prix }}",
+    "availability": "{% if annonce.bien.is_disponible %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "url": "{{ request.build_absolute_uri }}"
+  }
+}
+</script>
 {% endblock %}
