@@ -7,45 +7,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 
-    {# ========================= SEO de base ========================= #}
-    <title>{% block meta_title %}MADA IMMO - Gestion immobilière digitale au Sénégal{% endblock %}</title>
-
-    <meta name="description" content="{% block meta_description %}Plateforme de gestion locative et d'annonces immobilières au Sénégal : loyers, quittances, baux, interventions et paiements digitalisés.{% endblock %}">
-    <meta name="robots" content="{% block meta_robots %}index,follow{% endblock %}">
-    <meta name="theme-color" content="#0a0a0a">
-
-    {# ========================= Open Graph (Social) ========================= #}
-    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-    <meta property="og:site_name" content="MADA IMMO">
-    <meta property="og:title" content="{% block og_title %}MADA IMMO - Gestion immobilière simplifiée au Sénégal{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}Plateforme de gestion locative et d'annonces immobilières au Sénégal. Simplifiez vos loyers, quittances et paiements en ligne.{% endblock %}">
-    <meta property="og:image" content="{% block og_image %}{% static 'img/og-default.jpg' %}{% endblock %}">
-    <meta property="og:url" content="{{ request.build_absolute_uri|default_if_none:'' }}">
-
-    {# ========================= Twitter Card ========================= #}
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{% block twitter_title %}MADA IMMO - Gestion immobilière simplifiée{% endblock %}">
-    <meta name="twitter:description" content="{% block twitter_description %}Plateforme de gestion locative et d'annonces immobilières au Sénégal.{% endblock %}">
-    <meta name="twitter:image" content="{% block twitter_image %}{% static 'img/og-default.jpg' %}{% endblock %}">
-
-    {# ========================= Canonical ========================= #}
-    <link rel="canonical" href="{{ request.build_absolute_uri|default_if_none:'' }}">
-
-    {# ========================= Favicon ========================= #}
-    <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
-    <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}">
-
-    {# ========================= Fonts ========================= #}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-    {# ========================= CSS ========================= #}
-    {# Utilisez soit le CDN pour le dev rapide, soit tailwind_css pour la prod #}
-    <script src="https://cdn.tailwindcss.com"></script>
-    {% tailwind_css %}
-
-    {# ========================= Alpine.js ========================= #}
+    {# ========================= Alpine.js & Plugins ========================= #}
+    {# 1. Plugin Collapse (Indispensable pour le menu mobile) #}
+    <script src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js" defer></script>
+    {# 2. Alpine Core #}
     <script src="//unpkg.com/alpinejs" defer></script>
 
     <style>
@@ -107,6 +72,49 @@
         body.mobile-menu-open { overflow: hidden; }
     </style>
 
+    {# ========================= SEO de base ========================= #}
+    <title>{% block meta_title %}MADA IMMO - Gestion immobilière digitale au Sénégal{% endblock %}</title>
+
+    <meta name="description" content="{% block meta_description %}Plateforme de gestion locative et d'annonces immobilières au Sénégal : loyers, quittances, baux, interventions et paiements digitalisés.{% endblock %}">
+    <meta name="robots" content="{% block meta_robots %}index,follow{% endblock %}">
+    <meta name="theme-color" content="#0a0a0a">
+
+    {# ========================= Open Graph (Social) ========================= #}
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="MADA IMMO">
+    <meta property="og:title" content="{% block og_title %}MADA IMMO - Gestion immobilière simplifiée au Sénégal{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Plateforme de gestion locative et d'annonces immobilières au Sénégal. Simplifiez vos loyers, quittances et paiements en ligne.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{% static 'img/og-default.jpg' %}{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri|default_if_none:'' }}">
+
+    {# ========================= Twitter Card ========================= #}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}MADA IMMO - Gestion immobilière simplifiée{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Plateforme de gestion locative et d'annonces immobilières au Sénégal.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{% static 'img/og-default.jpg' %}{% endblock %}">
+
+    {# ========================= Canonical ========================= #}
+    <link rel="canonical" href="{{ request.build_absolute_uri|default_if_none:'' }}">
+
+    {# ========================= Favicon ========================= #}
+    <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+    <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon/favicon-16x16.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="48x48" href="{% static 'images/favicon/favicon-48x48.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/favicon/apple-touch-icon-180x180.png' %}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'images/favicon/android-chrome-192x192.png' %}">
+    <link rel="icon" type="image/png" sizes="512x512" href="{% static 'images/favicon/android-chrome-512x512.png' %}">
+
+    {# ========================= Fonts ========================= #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    {# ========================= CSS ========================= #}
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% tailwind_css %}
+
     {% block extra_css %}{% endblock %}
     {% block extra_head %}{% endblock %}
 </head>
@@ -115,6 +123,20 @@
       x-data="{ mobileMenuOpen: false, theme: localStorage.getItem('theme') || 'dark' }"
       x-init="$watch('mobileMenuOpen', val => document.body.classList.toggle('mobile-menu-open', val))"
       @keydown.escape="mobileMenuOpen = false">
+
+    {# ============================= BOUTON RETOUR DASHBOARD (Flottant) ============================= #}
+    {% if request.resolver_match.url_name != 'dashboard' %}
+        <a href="{% url 'dashboard' %}"
+           class="fixed bottom-6 right-6 z-50 p-4 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-2xl shadow-emerald-900/50 hover:-translate-y-1 transition-all duration-300 flex items-center justify-center group"
+           title="Retour au Tableau de bord">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            <span class="absolute right-full mr-3 bg-neutral-900 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-neutral-700 pointer-events-none">
+                Dashboard
+            </span>
+        </a>
+    {% endif %}
 
     {# ============================= Overlay Mobile ============================= #}
     <div x-show="mobileMenuOpen"
@@ -219,7 +241,7 @@
              x-transition:enter-start="opacity-0 -translate-y-2"
              x-transition:enter-end="opacity-100 translate-y-0"
              x-cloak
-             class="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-black/95 backdrop-blur-md border-b border-neutral-800 overflow-y-auto z-50">
+             class="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-black/95 backdrop-blur-md border-b border-neutral-800 overflow-y-auto z-[60]">
 
             <div class="px-5 py-6 space-y-2">
                 {% with request.resolver_match.url_name|default:"" as url_name %}

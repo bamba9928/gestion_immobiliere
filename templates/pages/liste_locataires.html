@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Locataires | MADA IMMO{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    {# --- HEADER --- #}
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-neutral-800 pb-6">
+        <div>
+            <h1 class="text-3xl font-black text-white tracking-tight">Gestion des Locataires</h1>
+            <p class="text-neutral-400 mt-1">Suivez les dossiers, les statuts KYC et les coordonnées.</p>
+        </div>
+
+        <a href="{% url 'add_locataire' %}" class="group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold text-sm shadow-lg shadow-blue-900/20 hover:shadow-blue-900/40 transform hover:-translate-y-0.5 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            Nouveau Locataire
+        </a>
+    </div>
+
+    {# --- BARRE DE RECHERCHE --- #}
+    <div class="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-4">
+        <form method="get" class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-neutral-500 group-focus-within:text-emerald-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <input type="text" name="q"
+                   class="block w-full pl-11 pr-4 py-3 bg-neutral-950 border border-neutral-700 rounded-xl text-sm text-white placeholder-neutral-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all"
+                   placeholder="Rechercher un locataire par nom, email ou téléphone..."
+                   value="{{ request.GET.q }}">
+            <div class="absolute inset-y-0 right-0 flex items-center pr-2">
+                <button type="submit" class="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors">
+                    <span class="sr-only">Rechercher</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {# --- TABLEAU --- #}
+    <div class="bg-neutral-900/50 backdrop-blur-xl border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-neutral-400">
+                <thead class="bg-neutral-950 text-neutral-500 uppercase font-bold text-[10px] tracking-wider sticky top-0 z-10 border-b border-neutral-800">
+                    <tr>
+                        <th class="px-6 py-4">Identité</th>
+                        <th class="px-6 py-4">Contact</th>
+                        <th class="px-6 py-4 text-center">Statut KYC</th>
+                        <th class="px-6 py-4 text-right">Documents</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-800">
+                    {% for locataire in locataires %}
+                    <tr class="hover:bg-neutral-800/50 transition-colors group">
+
+                        {# Colonne Identité #}
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-4">
+                                <div class="h-10 w-10 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0 group-hover:border-blue-500/50 transition-colors">
+                                    <span class="text-sm font-bold text-neutral-300 group-hover:text-blue-400">
+                                        {{ locataire.first_name|first|upper }}{{ locataire.last_name|first|upper|default:locataire.username|first|upper }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <div class="text-white font-bold text-sm">
+                                        {{ locataire.get_full_name|default:locataire.username }}
+                                    </div>
+                                    <div class="text-[11px] text-neutral-500 font-mono mt-0.5">
+                                        Inscrit le {{ locataire.date_joined|date:"d/m/Y" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        {# Colonne Contact #}
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center gap-2 text-neutral-300">
+                                    <svg class="w-3.5 h-3.5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                    {{ locataire.email }}
+                                </div>
+                                <div class="flex items-center gap-2 text-neutral-400">
+                                    <svg class="w-3.5 h-3.5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                                    {{ locataire.profile.telephone|default:locataire.phone_number|default:"Non renseigné" }}
+                                </div>
+                            </div>
+                        </td>
+
+                        {# Colonne Statut KYC #}
+                        <td class="px-6 py-4 text-center">
+                            {% with status=locataire.kyc_status_display %}
+                                {% if "Vérifié" in status or "Verified" in status %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        Vérifié
+                                    </span>
+                                {% elif "En cours" in status or "Pending" in status %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        En cours
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-500 border border-red-500/20">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        {{ status|default:"Non initié" }}
+                                    </span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+
+                        {# Colonne Actions #}
+                        <td class="px-6 py-4 text-right">
+                            {% if locataire.kyc_verified %}
+                                <a href="{% url 'download_kyc' locataire.id 'cni' %}" target="_blank"
+                                   class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-neutral-700 hover:border-blue-500/50 bg-neutral-800 hover:bg-neutral-700 text-xs font-bold text-neutral-300 hover:text-white transition-all">
+                                    <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    CNI
+                                </a>
+                            {% else %}
+                                <span class="text-neutral-600 text-xs italic">Aucun doc</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-24 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                                <div class="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mb-4 text-neutral-600">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                </div>
+                                <h3 class="text-white font-bold text-lg">Aucun locataire trouvé</h3>
+                                <p class="text-neutral-500 text-sm mt-1 max-w-sm">
+                                    {% if request.GET.q %}
+                                        Aucun résultat pour "{{ request.GET.q }}". Essayez une autre recherche.
+                                    {% else %}
+                                        Votre base de données est vide. Ajoutez votre premier locataire.
+                                    {% endif %}
+                                </p>
+                                {% if not request.GET.q %}
+                                    <a href="{% url 'add_locataire' %}" class="mt-4 text-blue-500 hover:text-blue-400 text-sm font-bold hover:underline">
+                                        + Ajouter un locataire
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Footer simple du tableau #}
+        {% if locataires %}
+        <div class="bg-neutral-950 px-6 py-3 border-t border-neutral-800 flex justify-between items-center">
+            <p class="text-[10px] uppercase font-bold text-neutral-600 tracking-widest">
+                {{ locataires|length }} Locataires affichés
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

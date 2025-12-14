@@ -4,7 +4,7 @@ from django.apps import AppConfig
 class CoreConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.core"
-    verbose_name = "Gestion immobilière"  # optionnel, pour l’admin
+    verbose_name = "Gestion immobilière"  # optionnel, pour l’gestionadmin
 
     def ready(self):
         # Import des signaux pour connecter les handlers

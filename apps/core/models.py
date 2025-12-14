@@ -16,7 +16,7 @@ class SoftDeleteManager(models.Manager):
         return super().get_queryset().filter(deleted_at__isnull=True)
 
     def all_with_deleted(self):
-        # Pour l'admin ou les archives, on veut tout voir
+        # Pour l'gestionadmin ou les archives, on veut tout voir
         return super().get_queryset()
 
 

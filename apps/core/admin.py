@@ -3,7 +3,7 @@ from django.utils.html import format_html
 
 from .models import Bien, Bail, Loyer, HistoriqueRelance
 
-# Configuration de l'interface admin
+# Configuration de l'interface gestionadmin
 admin.site.site_header = "MADA IMMO Administration"
 admin.site.site_title = "MADA IMMO"
 admin.site.index_title = "Pilotage de l'agence"

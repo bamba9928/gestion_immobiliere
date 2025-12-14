@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+
+{% block title %}Gestion des Baux | MADA IMMO{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    {# --- HEADER --- #}
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-neutral-800 pb-6">
+        <div>
+            <h1 class="text-3xl font-black text-white tracking-tight">Gestion des Baux</h1>
+            <p class="text-neutral-400 mt-1">Contrats de location, suivis des échéances et quittances.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            {# Filtre Actif #}
+            <a href="?statut=actif" class="px-4 py-3 rounded-xl border border-neutral-700 bg-neutral-900 text-neutral-400 text-sm font-bold hover:text-white hover:border-purple-500/50 transition-all flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                Voir actifs
+            </a>
+
+            {# Bouton Ajouter #}
+            <a href="{% url 'add_bail' %}" class="group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-bold text-sm shadow-lg shadow-purple-900/20 hover:shadow-purple-900/40 transform hover:-translate-y-0.5 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Nouveau Bail
+            </a>
+        </div>
+    </div>
+
+    {# --- TABLEAU --- #}
+    <div class="bg-neutral-900/50 backdrop-blur-xl border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-neutral-400">
+                <thead class="bg-neutral-950 text-neutral-500 uppercase font-bold text-[10px] tracking-wider sticky top-0 z-10 border-b border-neutral-800">
+                    <tr>
+                        <th class="px-6 py-4">Bien Loué</th>
+                        <th class="px-6 py-4">Locataire</th>
+                        <th class="px-6 py-4">Période & Durée</th>
+                        <th class="px-6 py-4 text-right">Loyer Mensuel</th>
+                        <th class="px-6 py-4 text-center">État</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-neutral-800">
+                    {% for bail in baux %}
+                    <tr class="hover:bg-neutral-800/50 transition-colors group">
+
+                        {# Colonne Bien #}
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="h-8 w-8 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center shrink-0 group-hover:border-purple-500/50 transition-colors">
+                                    <svg class="w-4 h-4 text-neutral-500 group-hover:text-purple-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                </div>
+                                <div class="max-w-[180px]">
+                                    <div class="text-white font-bold text-sm truncate" title="{{ bail.bien.titre }}">
+                                        {{ bail.bien.titre }}
+                                    </div>
+                                    <div class="text-[11px] text-neutral-500 truncate">
+                                        {{ bail.bien.ville }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        {# Colonne Locataire #}
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                <div class="h-6 w-6 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-bold text-neutral-400 border border-neutral-700">
+                                    {{ bail.locataire.username|first|upper }}
+                                </div>
+                                <span class="text-neutral-300 text-sm">
+                                    {{ bail.locataire.get_full_name|default:bail.locataire.username }}
+                                </span>
+                            </div>
+                        </td>
+
+                        {# Colonne Période #}
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col text-xs">
+                                <span class="text-neutral-300">Du <span class="font-mono text-white">{{ bail.date_debut|date:"d/m/Y" }}</span></span>
+                                <span class="text-neutral-500">Au <span class="font-mono">{{ bail.date_fin|date:"d/m/Y" }}</span></span>
+                            </div>
+                        </td>
+
+                        {# Colonne Loyer #}
+                        <td class="px-6 py-4 text-right">
+                            <span class="text-emerald-400 font-bold font-mono">
+                                {{ bail.montant_loyer|intcomma }} <span class="text-[10px] text-emerald-500/70">FCFA</span>
+                            </span>
+                        </td>
+
+                        {# Colonne État #}
+                        <td class="px-6 py-4 text-center">
+                            {% if bail.est_signe %}
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Signé
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-neutral-700/50 text-neutral-400 border border-neutral-600">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    Brouillon
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        {# Colonne Actions #}
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="{% url 'bail_detail' bail.id %}"
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-700 hover:border-purple-500/50 bg-neutral-800 hover:bg-neutral-700 text-xs font-bold text-neutral-300 hover:text-purple-400 transition-all">
+                                    Détails
+                                </a>
+
+                                {% if bail.fichier_contrat %}
+                                    <a href="{% url 'download_contrat' bail.id %}"
+                                       class="p-1.5 rounded-lg border border-neutral-700 hover:border-neutral-600 bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-all"
+                                       title="Télécharger le contrat PDF">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-24 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                                <div class="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mb-4 text-neutral-600">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                </div>
+                                <h3 class="text-white font-bold text-lg">Aucun bail trouvé</h3>
+                                <p class="text-neutral-500 text-sm mt-1 max-w-sm">
+                                    Créez des baux pour lier vos locataires à vos biens et générer automatiquement les loyers.
+                                </p>
+                                <a href="{% url 'add_bail' %}" class="mt-4 text-purple-500 hover:text-purple-400 text-sm font-bold hover:underline">
+                                    + Créer un nouveau bail
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Footer simple du tableau #}
+        {% if baux %}
+        <div class="bg-neutral-950 px-6 py-3 border-t border-neutral-800 flex justify-between items-center">
+            <p class="text-[10px] uppercase font-bold text-neutral-600 tracking-widest">
+                {{ baux|length }} Contrats de bail
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

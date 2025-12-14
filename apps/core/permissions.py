@@ -1,4 +1,3 @@
-# permissions.py
 from datetime import date
 
 from .models import Bail  # importe ton modèle
