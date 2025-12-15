@@ -323,23 +323,31 @@
     </main>
 
     {# ============================= Footer ============================= #}
-    <footer class="border-t border-neutral-900 bg-neutral-950/50 backdrop-blur-sm mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-                <div class="flex items-center gap-2 justify-center sm:justify-start">
-                    <span class="text-lg font-black text-neutral-700">M</span>
-                    <p class="text-sm text-neutral-500">
-                        &copy; {% now "Y" %} Mada Immo. Tous droits réservés.
-                    </p>
-                </div>
-                <div class="flex justify-center gap-6 text-sm font-medium text-neutral-500">
-                    <a href="#" class="hover:text-emerald-500 transition-colors">Mentions légales</a>
-                    <a href="#" class="hover:text-emerald-500 transition-colors">Confidentialité</a>
-                    <a href="#" class="hover:text-emerald-500 transition-colors">Support</a>
-                </div>
-            </div>
-        </div>
-    </footer>
+<footer class="mt-auto border-t border-neutral-800 bg-neutral-950/80 backdrop-blur supports-[backdrop-filter]:bg-neutral-950/60">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+
+      <div class="flex items-center justify-center gap-3 sm:justify-start">
+        <a href="{% url 'home' %}" class="group inline-flex items-center gap-3">
+          <span class="flex items-center justify-center w-9 h-9 rounded-lg bg-neutral-900 border border-neutral-800">
+            <span class="text-lg font-black text-primary-green">M</span>
+          </span>
+          <span class="text-sm text-neutral-400">
+            &copy; {% now "Y" %} Mada Immo. Tous droits réservés.
+          </span>
+        </a>
+      </div>
+
+      <nav class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-neutral-400">
+        <a href="{% url 'legal' %}" class="hover:text-primary-green transition-colors duration-200">Mentions légales</a>
+        <a href="{% url 'privacy' %}" class="hover:text-primary-green transition-colors duration-200">Confidentialité</a>
+        <a href="{% url 'support' %}" class="hover:text-primary-green transition-colors duration-200">Support</a>
+      </nav>
+
+    </div>
+  </div>
+</footer>
+
 
     {% block extra_js %}{% endblock %}
 </body>
