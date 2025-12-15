@@ -1,16 +1,18 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
-from django import forms
-
-# On récupère le modèle utilisateur actif (CustomUser) au lieu du User par défaut
-User = get_user_model()
 
 from .models import (
-    ContactMessage, Bien, Bail, Loyer,
-    Annonce, Intervention, EtatDesLieux, Depense
+ContactMessage,
+    Bien,
+    Bail,
+    Loyer,
+    Annonce,
+    Intervention,
+    EtatDesLieux,
+    Depense,
 )
-
+User = get_user_model()
 # ============================================================================
 # STYLES COMMUNS (TAILWIND PREMIUM DARK)
 # ============================================================================
