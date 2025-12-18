@@ -100,8 +100,8 @@
                         </h3>
                     </header>
                     <div class="flex flex-wrap items-center justify-center gap-3">
-                        <a href="{% url 'add_locataire' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-700 text-[11px] font-semibold text-neutral-200 hover:bg-neutral-800 hover:border-blue-500 hover:text-blue-400 transition-all"><span>Locataire</span></a>
-                        <a href="{% url 'add_bailleur' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-700 text-[11px] font-semibold text-neutral-200 hover:bg-neutral-800 hover:border-sky-500 hover:text-sky-400 transition-all"><span>Bailleur</span></a>
+                        <a href="{% url 'add_locataire' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-700 text-[11px] font-semibold text-neutral-200 hover:bg-neutral-800 hover:border-blue-500 hover:text-blue-400 transition-all"><span>Add Locataire</span></a>
+                        <a href="{% url 'add_bailleur' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-700 text-[11px] font-semibold text-neutral-200 hover:bg-neutral-800 hover:border-sky-500 hover:text-sky-400 transition-all"><span>Add Bailleur</span></a>
                     </div>
                 </div>
                 {% endif %}
@@ -116,8 +116,8 @@
                         </h3>
                     </header>
                     <div class="flex flex-wrap items-center justify-center gap-3">
-                        <a href="{% url 'interventions_list' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-700 text-[11px] font-semibold text-neutral-200 hover:bg-neutral-800 hover:border-amber-500 hover:text-amber-400 transition-all"><span>Gérer</span></a>
-                        <a href="{% url 'add_agent' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-700 text-[11px] font-semibold text-neutral-200 hover:bg-neutral-800 hover:border-indigo-500 hover:text-indigo-400 transition-all"><span>Agent</span></a>
+                        <a href="{% url 'interventions_list' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-700 text-[11px] font-semibold text-neutral-200 hover:bg-neutral-800 hover:border-amber-500 hover:text-amber-400 transition-all"><span>Gérer Incident</span></a>
+                        <a href="{% url 'add_agent' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-700 text-[11px] font-semibold text-neutral-200 hover:bg-neutral-800 hover:border-indigo-500 hover:text-indigo-400 transition-all"><span>Add Agent</span></a>
                     </div>
                 </div>
                 {% endif %}
@@ -134,7 +134,7 @@
                         {% if user_role == "ADMIN" %}
                         <a href="{% url 'loyers_list' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-700 text-[11px] font-semibold text-neutral-200 hover:bg-neutral-800 hover:border-red-500 hover:text-red-400 transition-all"><span>Loyers</span></a>
                         {% endif %}
-                        <a href="{% url 'add_depense' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-700 text-[11px] font-semibold text-neutral-200 hover:bg-neutral-800 hover:border-orange-500 hover:text-orange-400 transition-all"><span>Dépense</span></a>
+                        <a href="{% url 'add_depense' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-700 text-[11px] font-semibold text-neutral-200 hover:bg-neutral-800 hover:border-orange-500 hover:text-orange-400 transition-all"><span>Add Dépense</span></a>
                     </div>
                 </div>
             </div>
