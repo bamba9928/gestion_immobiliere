@@ -4,6 +4,7 @@ from datetime import date
 from itertools import chain
 
 import openpyxl
+from django.db import transaction
 from openpyxl.styles import Font, PatternFill, Alignment
 from django.conf import settings
 from django.contrib import messages
@@ -21,7 +22,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, FormView
 from django.views.generic.edit import FormMixin
-
+from django.core.exceptions import ValidationError
 from .forms import (
     BienForm,
     InterventionForm,
@@ -30,7 +31,7 @@ from .forms import (
     BailForm,
     EtatDesLieuxForm,
     LocataireCreationForm,
-    DepenseForm,
+    DepenseForm, UnifiedCreationForm,
 )
 from .models import (
     Bien,
@@ -407,7 +408,11 @@ def gestion_bien_detail(request, pk):
 
     # Bail actif = date_fin NULL ou date_fin >= aujourd’hui
     bail_actif = (
-        bien.baux.filter(Q(date_fin__isnull=True) | Q(date_fin__gte=date.today()))
+        bien.baux.filter(
+            est_signe=True,
+            date_debut__lte=date.today(),
+            date_fin__gte=date.today(),
+        )
         .order_by("-date_debut")
         .first()
     )
@@ -650,9 +655,14 @@ def mark_loyer_paid(request, loyer_id):
 
 @login_required
 def download_quittance(request, loyer_id):
-    loyer = get_object_or_404(Loyer.objects.select_related("bail__locataire"), id=loyer_id)
+    loyer = get_object_or_404(
+        Loyer.objects.select_related("bail__locataire", "bail__bien__proprietaire"),
+        id=loyer_id
+    )
 
-    if not is_admin(request.user) and loyer.bail.locataire != request.user:
+    is_owner = (loyer.bail.bien.proprietaire == request.user)
+
+    if not (is_admin(request.user) or is_owner or loyer.bail.locataire == request.user):
         raise PermissionDenied("Accès non autorisé à cette quittance.")
 
     if loyer.statut != "PAYE":
@@ -957,8 +967,6 @@ class AdminBienListView(AdminRequiredMixin, ListView):
         if q:
             qs = qs.filter(Q(titre__icontains=q) | Q(ville__icontains=q) | Q(proprietaire__username__icontains=q))
         return qs
-
-
 class AdminBailListView(AdminRequiredMixin, ListView):
     model = Bail
     template_name = "pages/liste_baux.html"
@@ -970,10 +978,12 @@ class AdminBailListView(AdminRequiredMixin, ListView):
         qs = Bail.objects.select_related("bien", "locataire").all()
         statut = self.request.GET.get("statut")
         if statut == "actif":
-            qs = qs.filter(Q(date_fin__isnull=True) | Q(date_fin__gte=date.today()))
+            qs = qs.filter(
+                est_signe=True,
+                date_debut__lte=date.today(),
+                date_fin__gte=date.today()
+            )
         return qs
-
-
 class AdminLocataireListView(AdminRequiredMixin, ListView):
     model = User
     template_name = "pages/liste_locataires.html"
@@ -1002,3 +1012,112 @@ class AdminBailleurListView(AdminRequiredMixin, ListView):
             .distinct()
             .order_by("last_name")
         )
+
+@login_required
+@transaction.atomic
+def unified_creation_view(request):
+    """
+    Vue unifiée pour créer un locataire, un bien et un bail en une seule étape.
+    Garantit qu'en cas d'erreur sur le bail, le bien et le locataire ne sont pas créés.
+    """
+    # Vérification des permissions
+    if not (is_admin(request.user) or is_bailleur(request.user)):
+        raise PermissionDenied("Accès réservé aux administrateurs et bailleurs.")
+
+    if request.method == "POST":
+        # Initialisation du formulaire avec les données POST et fichiers
+        form = UnifiedCreationForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            cd = form.cleaned_data
+            email = cd["email"]
+
+            try:
+                # 1) Gestion du Locataire
+                # Recherche d'un utilisateur existant par email ou nom d'utilisateur
+                locataire = User.objects.filter(Q(email__iexact=email) | Q(username__iexact=email)).first()
+                created_locataire = False
+
+                if not locataire:
+                    temp_password = User.objects.make_random_password(length=10)
+                    locataire = User.objects.create_user(
+                        username=email,
+                        email=email,
+                        first_name=cd["first_name"],
+                        last_name=cd["last_name"],
+                        password=temp_password,
+                    )
+                    created_locataire = True
+
+                # Attribution du groupe LOCATAIRE
+                g_loc, _ = Group.objects.get_or_create(name="LOCATAIRE")
+                locataire.groups.add(g_loc)
+
+                # Mise à jour du profil (téléphone et CNI)
+                profile = getattr(locataire, "profile", None)
+                if profile:
+                    profile.telephone = cd.get("phone_number")
+                    profile.cni_numero = cd.get("cni_numero", "")
+                    profile.save(update_fields=["telephone", "cni_numero"])
+
+                # 2) Détermination du Propriétaire
+                # Un admin peut assigner un propriétaire, un bailleur est propriétaire par défaut
+                if is_admin(request.user) and cd.get("proprietaire"):
+                    proprietaire = cd["proprietaire"]
+                else:
+                    proprietaire = request.user
+
+                # 3) Création du Bien Immobilier
+                # Utilisation des champs réels du modèle : loyer_ref et charges_ref
+                bien = Bien.objects.create(
+                    proprietaire=proprietaire,
+                    titre=cd["titre_bien"],
+                    type_bien=cd["type_bien"],
+                    adresse=cd["adresse"],
+                    ville=cd.get("ville", "Dakar"),
+                    surface=cd["surface"],
+                    nb_pieces=cd.get("nb_pieces") or 1,
+                    loyer_ref=cd["montant_loyer"],
+                    charges_ref=cd.get("montant_charges") or 0,
+                    est_actif=True,
+                )
+
+                # 4) Création du Bail
+                # Les validations de chevauchement du modèle Bail sont exécutées ici
+                bail = Bail.objects.create(
+                    bien=bien,
+                    locataire=locataire,
+                    date_debut=cd["date_debut"],
+                    date_fin=cd["date_fin"],
+                    montant_loyer=cd["montant_loyer"],
+                    montant_charges=cd.get("montant_charges") or 0,
+                    depot_garantie=cd["depot_garantie"],
+                    jour_paiement=cd.get("jour_paiement") or 5,
+                    est_signe=True,
+                )
+
+                # Optionnel : Génération automatique du contrat PDF si le service existe
+                try:
+                    from apps.core.services.contrat import sauvegarder_contrat
+                    sauvegarder_contrat(bail)
+                except ImportError:
+                    logger.warning("Service de contrat non trouvé.")
+                except Exception as e:
+                    logger.error(f"Erreur PDF pour le bail {bail.id}: {e}")
+
+                messages.success(request, "Installation rapide terminée avec succès.")
+                return redirect("dashboard")
+
+            except ValidationError as e:
+                # Capture des erreurs de validation (ex: chevauchement de dates)
+                form.add_error(None, e)
+                messages.error(request, "Erreur de validation des données du bail.")
+            except Exception as e:
+                logger.error(f"Erreur lors de l'installation rapide : {e}")
+                messages.error(request, f"Une erreur imprévue est survenue : {e}")
+        else:
+            messages.error(request, "Veuillez corriger les erreurs dans le formulaire.")
+    else:
+        form = UnifiedCreationForm()
+
+    return render(request, "utilisateurs/add_unified.html", {"form": form})

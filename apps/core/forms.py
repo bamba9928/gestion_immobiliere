@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
+from django.db.models import Q
+
 
 from .models import (
 ContactMessage,
@@ -262,3 +264,54 @@ class DepenseForm(forms.ModelForm):
             'est_recuperable': forms.CheckboxInput(attrs={'class': STYLE_CHECKBOX}),
             'justificatif': forms.ClearableFileInput(attrs={'class': STYLE_FILE}),
         }
+class UnifiedCreationForm(forms.Form):
+    # LOCATAIRE (profil)
+    first_name = forms.CharField(label="Prénom", max_length=150, widget=forms.TextInput(attrs={"class": STYLE_INPUT}))
+    last_name = forms.CharField(label="Nom", max_length=150, widget=forms.TextInput(attrs={"class": STYLE_INPUT}))
+    email = forms.EmailField(label="Email / Identifiant", widget=forms.EmailInput(attrs={"class": STYLE_INPUT}))
+    telephone = forms.CharField(label="Téléphone", max_length=30, widget=forms.TextInput(attrs={"class": STYLE_INPUT}))
+    cni_numero = forms.CharField(label="Numéro CNI / Passeport", max_length=60, widget=forms.TextInput(attrs={"class": STYLE_INPUT}))
+
+    # BIEN
+    titre_bien = forms.CharField(label="Nom du Bien", widget=forms.TextInput(attrs={"class": STYLE_INPUT}))
+    type_bien = forms.ChoiceField(choices=Bien.TYPE_CHOICES, label="Type de bien", widget=forms.Select(attrs={"class": STYLE_INPUT}))
+    adresse = forms.CharField(label="Adresse précise", widget=forms.Textarea(attrs={"class": STYLE_INPUT, "rows": 2}))
+    ville = forms.CharField(label="Ville", max_length=100, initial="Dakar", widget=forms.TextInput(attrs={"class": STYLE_INPUT}))
+    surface = forms.IntegerField(label="Surface (m²)", widget=forms.NumberInput(attrs={"class": STYLE_INPUT, "min": 1}))
+    nb_pieces = forms.IntegerField(label="Nombre de pièces", required=False, widget=forms.NumberInput(attrs={"class": STYLE_INPUT, "min": 1}))
+
+    # BAIL
+    date_debut = forms.DateField(label="Début du bail", widget=forms.DateInput(attrs={"class": STYLE_INPUT, "type": "date"}))
+    date_fin = forms.DateField(label="Fin du bail", widget=forms.DateInput(attrs={"class": STYLE_INPUT, "type": "date"}))  # obligatoire (model)
+    montant_loyer = forms.DecimalField(max_digits=10, decimal_places=0, label="Loyer mensuel", widget=forms.NumberInput(attrs={"class": STYLE_INPUT, "min": 0}))
+    montant_charges = forms.DecimalField(max_digits=10, decimal_places=0, label="Charges", initial=0, required=False, widget=forms.NumberInput(attrs={"class": STYLE_INPUT, "min": 0}))
+    depot_garantie = forms.DecimalField(max_digits=10, decimal_places=0, label="Dépôt de garantie", widget=forms.NumberInput(attrs={"class": STYLE_INPUT, "min": 0}))
+    jour_paiement = forms.IntegerField(label="Jour limite de paiement", initial=5, required=False, widget=forms.NumberInput(attrs={"class": STYLE_INPUT, "min": 1, "max": 31}))
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request_user = user
+
+        # ADMIN : choisir le propriétaire du bien (bailleur)
+        if user and getattr(user, "groups", None) and user.groups.filter(name="ADMIN").exists():
+            qs = User.objects.filter(
+                Q(groups__name="BAILLEUR") | Q(id=user.id)  # bailleurs + admin lui-même si besoin
+            ).distinct().order_by("last_name", "first_name")
+
+            self.fields["proprietaire"] = forms.ModelChoiceField(
+                label="Propriétaire (Bailleur)",
+                queryset=qs,
+                widget=forms.Select(attrs={"class": STYLE_INPUT}),
+                required=True,
+            )
+            self.fields["proprietaire"].label_from_instance = lambda u: f"{u.get_full_name() or u.username} ({u.email})"
+
+    def clean_email(self):
+        return (self.cleaned_data["email"] or "").strip().lower()
+
+    def clean(self):
+        cleaned = super().clean()
+        d1, d2 = cleaned.get("date_debut"), cleaned.get("date_fin")
+        if d1 and d2 and d2 <= d1:
+            raise forms.ValidationError("La date de fin doit être postérieure à la date de début.")
+        return cleaned

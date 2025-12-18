@@ -45,6 +45,7 @@ urlpatterns = [
     # Si tu as ces vues, décommente:
     path("gestion/biens/", views.biens_list, name="biens_list"),
     path("gestion/biens/<int:pk>/edit/", views.edit_bien, name="edit_bien"),
+    path('nouveau-locataire/', views.unified_creation_view, name='unified_creation'),
 
     # ============================================
     # GESTION BAUX
