@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% load widget_tweaks %}
 
-{% block meta_title %}Ajout D'un Nouveau Locataire | MADA IMMO{% endblock %}
+{% block meta_title %}Installation Rapide Locataire | MADA IMMO{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto py-12 px-4">
-    <div class="mb-10 border-b border-neutral-800 pb-6">
-        <h1 class="text-3xl font-black text-white text-center tracking-tight">Ajout D'un Nouveau Locataire</h1>
-        <p class="text-neutral-400 text-center mt-2 font-medium">
-            Création simultanée du locataire, du bien et du bail de location.
+    <div class="mb-10 border-b border-neutral-800 pb-6 text-center">
+        <h1 class="text-3xl font-black text-white tracking-tight">Ajout d'un Nouveau Locataire</h1>
+        <p class="text-neutral-400 mt-2 font-medium">
+            Création simultanée du compte utilisateur, du bien immobilier et du contrat de bail.
         </p>
     </div>
 
-    {# erreurs globales #}
+    {# Erreurs globales #}
     {% if form.non_field_errors %}
         <div class="mb-8 rounded-2xl border border-red-500/30 bg-red-900/10 p-4 text-red-300 text-sm">
             {{ form.non_field_errors }}
@@ -26,7 +26,7 @@
         {% if form.proprietaire %}
         <section class="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 md:p-8 hover:border-neutral-700 transition-colors duration-300">
             <div class="flex items-center justify-center gap-3 mb-8 border-b border-neutral-700 pb-5">
-                <div class="p-2.5 bg-sky-500/10 text-sky-400 rounded-xl transition-transform duration-300 group-hover:scale-110">
+                <div class="p-2.5 bg-sky-500/10 text-sky-400 rounded-xl">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
@@ -36,18 +36,16 @@
 
             <div class="space-y-2">
                 <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.proprietaire.label }}</label>
-                {% render_field form.proprietaire class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all outline-none hover:border-neutral-600" %}
-                {% for err in form.proprietaire.errors %}
-                    <p class="text-red-400 text-xs">{{ err }}</p>
-                {% endfor %}
+                {% render_field form.proprietaire class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all outline-none" %}
+                {% for err in form.proprietaire.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
             </div>
         </section>
         {% endif %}
 
-        {# SECTION 1 : LOCATAIRE #}
+        {# SECTION 1 : LOCATAIRE & SÉCURITÉ #}
         <section class="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 md:p-8 hover:border-neutral-700 transition-colors duration-300">
             <div class="flex items-center justify-center gap-3 mb-8 border-b border-neutral-700 pb-5">
-                <div class="p-2.5 bg-blue-500/10 text-blue-400 rounded-xl transition-transform duration-300 group-hover:scale-110">
+                <div class="p-2.5 bg-blue-500/10 text-blue-400 rounded-xl">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
@@ -58,32 +56,43 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.first_name.label }}</label>
-                    {% render_field form.first_name class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none hover:border-neutral-600" placeholder="Prénom" %}
+                    {% render_field form.first_name class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Prénom" %}
                     {% for err in form.first_name.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.last_name.label }}</label>
-                    {% render_field form.last_name class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none hover:border-neutral-600" placeholder="Nom" %}
+                    {% render_field form.last_name class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="Nom" %}
                     {% for err in form.last_name.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.email.label }}</label>
-                    {% render_field form.email class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none hover:border-neutral-600" placeholder="ex: locataire@email.com" %}
+                    {% render_field form.email class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="email@exemple.com" %}
                     {% for err in form.email.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.telephone.label }}</label>
-                    {% render_field form.telephone class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none hover:border-neutral-600" placeholder="+221..." %}
+                    {% render_field form.telephone class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="+221..." %}
                     {% for err in form.telephone.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
                 </div>
-
                 <div class="md:col-span-2 space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.cni_numero.label }}</label>
-                    {% render_field form.cni_numero class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all outline-none hover:border-neutral-600" placeholder="Numéro CNI / Passeport" %}
+                    {% render_field form.cni_numero class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" %}
                     {% for err in form.cni_numero.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                </div>
+
+                {# CHAMPS MOT DE PASSE (OBLIGATOIRES) #}
+                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 pt-6 border-t border-neutral-800">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.password.label }}*</label>
+                        {% render_field form.password class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="••••••••" %}
+                        <p class="text-neutral-500 text-[10px] italic">{{ form.password.help_text }}</p>
+                        {% for err in form.password.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.password_confirm.label }}*</label>
+                        {% render_field form.password_confirm class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="••••••••" %}
+                        {% for err in form.password_confirm.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                    </div>
                 </div>
             </div>
         </section>
@@ -91,7 +100,7 @@
         {# SECTION 2 : BIEN #}
         <section class="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 md:p-8 hover:border-neutral-700 transition-colors duration-300">
             <div class="flex items-center justify-center gap-3 mb-8 border-b border-neutral-700 pb-5">
-                <div class="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl transition-transform duration-300 group-hover:scale-110">
+                <div class="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                     </svg>
@@ -102,38 +111,27 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="md:col-span-2 space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.titre_bien.label }}</label>
-                    {% render_field form.titre_bien class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none hover:border-neutral-600" placeholder="ex: Appartement T3 - Plateau" %}
-                    {% for err in form.titre_bien.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                    {% render_field form.titre_bien class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none" placeholder="ex: Studio Moderne - Almadies" %}
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.type_bien.label }}</label>
-                    {% render_field form.type_bien class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none transition-all hover:border-neutral-600" %}
-                    {% for err in form.type_bien.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                    {% render_field form.type_bien class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none" %}
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.ville.label }}</label>
-                    {% render_field form.ville class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none hover:border-neutral-600" placeholder="Dakar" %}
-                    {% for err in form.ville.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                    {% render_field form.ville class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none" %}
                 </div>
-
                 <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.surface.label }}</label>
-                    {% render_field form.surface class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none hover:border-neutral-600" %}
-                    {% for err in form.surface.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                    <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.surface.label }} (m²)</label>
+                    {% render_field form.surface class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none" %}
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.nb_pieces.label }}</label>
-                    {% render_field form.nb_pieces class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none hover:border-neutral-600" placeholder="1" %}
-                    {% for err in form.nb_pieces.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                    {% render_field form.nb_pieces class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none" %}
                 </div>
-
                 <div class="md:col-span-2 space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.adresse.label }}</label>
-                    {% render_field form.adresse rows="2" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all outline-none hover:border-neutral-600" placeholder="Adresse complète..." %}
-                    {% for err in form.adresse.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                    {% render_field form.adresse class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none" rows="2" %}
                 </div>
             </div>
         </section>
@@ -141,7 +139,7 @@
         {# SECTION 3 : BAIL #}
         <section class="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6 md:p-8 hover:border-neutral-700 transition-colors duration-300">
             <div class="flex items-center justify-center gap-3 mb-8 border-b border-neutral-700 pb-5">
-                <div class="p-2.5 bg-purple-500/10 text-purple-400 rounded-xl transition-transform duration-300 group-hover:scale-110">
+                <div class="p-2.5 bg-purple-500/10 text-purple-400 rounded-xl">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
@@ -152,77 +150,36 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.date_debut.label }}</label>
-                    {% render_field form.date_debut type="date" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-all hover:border-neutral-600" %}
-                    {% for err in form.date_debut.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                    {% render_field form.date_debut class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none" %}
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.date_fin.label }}</label>
-                    {% render_field form.date_fin type="date" class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none transition-all hover:border-neutral-600" %}
-                    {% for err in form.date_fin.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                    {% render_field form.date_fin class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none" %}
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.montant_loyer.label }} (FCFA)</label>
-                    {% render_field form.montant_loyer class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all outline-none hover:border-neutral-600" %}
-                    {% for err in form.montant_loyer.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                    {% render_field form.montant_loyer class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none" %}
                 </div>
-
-                <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.montant_charges.label }} (FCFA)</label>
-                    {% render_field form.montant_charges class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all outline-none hover:border-neutral-600" %}
-                    {% for err in form.montant_charges.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
-                </div>
-
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.depot_garantie.label }} (FCFA)</label>
-                    {% render_field form.depot_garantie class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all outline-none hover:border-neutral-600" %}
-                    {% for err in form.depot_garantie.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                    {% render_field form.depot_garantie class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none" %}
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.jour_paiement.label }}</label>
-                    {% render_field form.jour_paiement class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all outline-none hover:border-neutral-600" %}
-                    {% for err in form.jour_paiement.errors %}<p class="text-red-400 text-xs">{{ err }}</p>{% endfor %}
+                    {% render_field form.jour_paiement class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-purple-500 outline-none" %}
                 </div>
             </div>
         </section>
 
+        {# BOUTONS #}
         <div class="flex flex-col md:flex-row items-center gap-6 pt-6">
-            <!-- Bouton VALIDER -->
             <button type="submit"
-                class="w-full md:w-auto px-12 py-4 bg-gradient-to-r from-emerald-600 to-emerald-500
-                       hover:from-emerald-500 hover:to-emerald-400
-                       text-white font-bold text-lg uppercase tracking-widest
-                       rounded-2xl shadow-xl shadow-emerald-900/30
-                       transition-all duration-300 ease-out
-                       hover:-translate-y-1 hover:shadow-2xl active:translate-y-0
-                       focus:outline-none focus:ring-4 focus:ring-emerald-400/50
-                       relative overflow-hidden group min-w-[12rem]">
-                <span class="relative z-10 flex items-center justify-center gap-3">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    VALIDER
-                </span>
-                <span class="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-500"></span>
+                class="w-full md:w-auto px-12 py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-lg uppercase tracking-widest rounded-2xl shadow-xl transition-all duration-300 hover:-translate-y-1">
+                Valider
             </button>
-
-            <!-- Bouton ANNULER -->
             <a href="{% url 'dashboard' %}"
-                class="w-full md:w-auto px-12 py-4 bg-neutral-800/50 hover:bg-neutral-700/50
-                       text-neutral-300 hover:text-white font-semibold
-                       rounded-2xl border border-neutral-600/30 hover:border-neutral-500/50
-                       backdrop-blur-sm transition-all duration-300
-                       hover:-translate-y-0.5 active:translate-y-0
-                       focus:outline-none focus:ring-4 focus:ring-neutral-400/20
-                       min-w-[12rem] text-center group">
-                <span class="inline-flex items-center justify-center gap-3">
-                    <svg class="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                    Annuler
-                </span>
+                class="w-full md:w-auto px-12 py-4 bg-neutral-800/50 text-neutral-300 font-semibold rounded-2xl border border-neutral-600/30 text-center hover:bg-neutral-700">
+                Annuler
             </a>
         </div>
     </form>

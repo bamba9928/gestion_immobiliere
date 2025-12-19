@@ -2,8 +2,6 @@ import logging
 import mimetypes
 from datetime import date
 from itertools import chain
-import secrets
-import string
 
 import openpyxl
 from django.db import transaction
@@ -1020,60 +1018,59 @@ class AdminBailleurListView(AdminRequiredMixin, ListView):
 def unified_creation_view(request):
     """
     Vue unifiée pour créer un locataire, un bien et un bail en une seule étape.
-    Garantit qu'en cas d'erreur sur le bail, le bien et le locataire ne sont pas créés.
     """
-    # Vérification des permissions
     if not (is_admin(request.user) or is_bailleur(request.user)):
         raise PermissionDenied("Accès réservé aux administrateurs et bailleurs.")
 
     if request.method == "POST":
-        # Initialisation du formulaire avec les données POST et fichiers
         form = UnifiedCreationForm(request.POST, request.FILES)
 
         if form.is_valid():
             cd = form.cleaned_data
             email = cd["email"]
 
+            # ✅ Récupération du mot de passe saisi (si présent dans le formulaire)
+            user_password = cd.get("password")
+
             try:
                 # 1) Gestion du Locataire
-                # Recherche d'un utilisateur existant par email ou nom d'utilisateur
-                locataire = User.objects.filter(Q(email__iexact=email) | Q(username__iexact=email)).first()
-                created_locataire = False
+                locataire = User.objects.filter(
+                    Q(email__iexact=email) | Q(username__iexact=email)
+                ).first()
 
+                created_locataire = False
                 if not locataire:
-                    # Génère un mot de passe aléatoire de 12 caractères
-                    alphabet = string.ascii_letters + string.digits
-                    temp_password = ''.join(secrets.choice(alphabet) for i in range(12))
+                    # ✅ Si l’admin n’a pas saisi de mot de passe, on en génère un
+                    if not user_password:
+                        import secrets, string
+                        alphabet = string.ascii_letters + string.digits
+                        user_password = "".join(secrets.choice(alphabet) for _ in range(12))
 
                     locataire = User.objects.create_user(
                         username=email,
                         email=email,
                         first_name=cd["first_name"],
                         last_name=cd["last_name"],
-                        password=temp_password,
+                        password=user_password,  # ✅ mot de passe choisi (ou généré si vide)
                     )
                     created_locataire = True
 
-                # Attribution du groupe LOCATAIRE
                 g_loc, _ = Group.objects.get_or_create(name="LOCATAIRE")
                 locataire.groups.add(g_loc)
 
-                # Mise à jour du profil (téléphone et CNI)
                 profile = getattr(locataire, "profile", None)
                 if profile:
                     profile.telephone = cd.get("phone_number")
                     profile.cni_numero = cd.get("cni_numero", "")
                     profile.save(update_fields=["telephone", "cni_numero"])
 
-                # 2) Détermination du Propriétaire
-                # Un admin peut assigner un propriétaire, un bailleur est propriétaire par défaut
+                # 2) Propriétaire
                 if is_admin(request.user) and cd.get("proprietaire"):
                     proprietaire = cd["proprietaire"]
                 else:
                     proprietaire = request.user
 
-                # 3) Création du Bien Immobilier
-                # Utilisation des champs réels du modèle : loyer_ref et charges_ref
+                # 3) Bien Immobilier
                 bien = Bien.objects.create(
                     proprietaire=proprietaire,
                     titre=cd["titre_bien"],
@@ -1088,7 +1085,6 @@ def unified_creation_view(request):
                 )
 
                 # 4) Création du Bail
-                # Les validations de chevauchement du modèle Bail sont exécutées ici
                 bail = Bail.objects.create(
                     bien=bien,
                     locataire=locataire,
@@ -1101,28 +1097,33 @@ def unified_creation_view(request):
                     est_signe=True,
                 )
 
-                # Optionnel : Génération automatique du contrat PDF si le service existe
+                # Génération du contrat
                 try:
                     from apps.core.services.contrat import sauvegarder_contrat
                     sauvegarder_contrat(bail)
-                except ImportError:
-                    logger.warning("Service de contrat non trouvé.")
                 except Exception as e:
-                    logger.error(f"Erreur PDF pour le bail {bail.id}: {e}")
+                    logger.error(f"Erreur PDF : {e}")
 
-                messages.success(request, "Ajout d'un nouveau locataire terminé avec succès.")
-                return redirect("dashboard")
+                # ✅ Message de succès avec mot de passe UNIQUEMENT si user créé maintenant
+                if created_locataire:
+                    messages.success(
+                        request,
+                        f"Locataire créé. Identifiant : {locataire.email} | Mot de passe : {user_password}"
+                    )
+                else:
+                    messages.success(request, "Ajout du bail réussi (locataire existant).")
+
+                return redirect("bail_detail", pk=bail.pk)
 
             except ValidationError as e:
-                # Capture des erreurs de validation (ex: chevauchement de dates)
                 form.add_error(None, e)
-                messages.error(request, "Erreur de validation des données du bail.")
+                messages.error(request, "Erreur de validation.")
             except Exception as e:
-                logger.error(f"Erreur lors de l'installation rapide : {e}")
-                messages.error(request, f"Une erreur imprévue est survenue : {e}")
-        else:
-            messages.error(request, "Veuillez corriger les erreurs dans le formulaire.")
+                logger.error(f"Erreur : {e}")
+                messages.error(request, f"Une erreur est survenue : {e}")
+
     else:
         form = UnifiedCreationForm()
 
     return render(request, "utilisateurs/add_unified.html", {"form": form})
+
