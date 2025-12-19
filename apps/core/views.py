@@ -2,6 +2,8 @@ import logging
 import mimetypes
 from datetime import date
 from itertools import chain
+import secrets
+import string
 
 import openpyxl
 from django.db import transaction
@@ -1039,7 +1041,10 @@ def unified_creation_view(request):
                 created_locataire = False
 
                 if not locataire:
-                    temp_password = User.objects.make_random_password(length=10)
+                    # Génère un mot de passe aléatoire de 12 caractères
+                    alphabet = string.ascii_letters + string.digits
+                    temp_password = ''.join(secrets.choice(alphabet) for i in range(12))
+
                     locataire = User.objects.create_user(
                         username=email,
                         email=email,
@@ -1105,7 +1110,7 @@ def unified_creation_view(request):
                 except Exception as e:
                     logger.error(f"Erreur PDF pour le bail {bail.id}: {e}")
 
-                messages.success(request, "Installation rapide terminée avec succès.")
+                messages.success(request, "Ajout d'un nouveau locataire terminé avec succès.")
                 return redirect("dashboard")
 
             except ValidationError as e:
