@@ -500,6 +500,34 @@
                 </div>
             </div>
         </div>
+    {# CARTE : MON CONTRAT DE BAIL (plein largeur sur desktop) #}
+    {% if has_active_bail %}
+      <div class="lg:col-span-2">
+        <div class="bg-neutral-900 border border-neutral-800 rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-white font-bold">Mon Contrat de Bail</h3>
+            <span class="px-3 py-1 bg-emerald-500/10 text-emerald-500 text-xs rounded-full font-medium">
+              Actif
+            </span>
+          </div>
+
+          <p class="text-neutral-400 text-sm mb-6">
+            Retrouvez votre contrat signé, incluant les conditions générales et le règlement intérieur.
+          </p>
+
+          <a href="{% url 'telecharger_contrat' bail.id %}"
+             target="_blank"
+             rel="noopener"
+             class="flex items-center justify-center gap-2 w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+            </svg>
+            Télécharger mon contrat (PDF)
+          </a>
+        </div>
+      </div>
+    {% endif %}
 
     {% else %}
         <div class="flex flex-col items-center justify-center py-20 text-neutral-500">

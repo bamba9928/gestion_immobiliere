@@ -1,4 +1,3 @@
-# apps/core/services/contrat.py
 import logging
 
 from django.conf import settings
@@ -6,28 +5,26 @@ from django.core.files.base import ContentFile
 from django.template.loader import render_to_string
 from django.utils import timezone
 from weasyprint import HTML
+import os
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-
 def generer_contrat_bail_pdf(bail):
-    """Génère le contenu PDF du contrat de bail."""
+    # Récupération du chemin absolu du logo
+    logo_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'mada.png')
+
     context = {
         'bail': bail,
         'date_generation': timezone.now(),
+        'logo_path': 'file://' + logo_path,  # Format requis pour WeasyPrint
     }
 
     html_string = render_to_string('documents/contrat_bail.html', context)
-
-    # Base URL nécessaire pour charger les images/css si présents
     pdf_bytes = HTML(string=html_string, base_url=str(settings.BASE_DIR)).write_pdf()
 
-    # Nom de fichier propre : Bail_ID_NOM.pdf
-    nom_fichier = f"Bail_{bail.id}_{bail.locataire.username}.pdf".replace(" ", "_")
-
+    nom_fichier = f"Bail_{bail.id}.pdf"
     return pdf_bytes, nom_fichier
-
-
 def sauvegarder_contrat(bail):
     """Génère le PDF et l'attache à l'instance de Bail."""
     try:

@@ -1,10 +1,24 @@
 {
   "name": "MADA IMMO",
   "short_name": "MADA IMMO",
+  "description": "Console de gestion immobilière premium.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#000000",
+  "orientation": "portrait",
+  "background_color": "#050505",
   "theme_color": "#000000",
-  "description": "Console de gestion immobilière dark mode.",
-  "icons": []
+  "icons": [
+    {
+      "src": "/static/img/mada.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/img/mada.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }

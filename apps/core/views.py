@@ -1012,63 +1012,54 @@ class AdminBailleurListView(AdminRequiredMixin, ListView):
             .distinct()
             .order_by("last_name")
         )
-
 @login_required
 @transaction.atomic
 def unified_creation_view(request):
-    """
-    Vue unifiée pour créer un locataire, un bien et un bail en une seule étape.
-    """
     if not (is_admin(request.user) or is_bailleur(request.user)):
-        raise PermissionDenied("Accès réservé aux administrateurs et bailleurs.")
+        raise PermissionDenied("Accès réservé.")
 
     if request.method == "POST":
-        form = UnifiedCreationForm(request.POST, request.FILES)
+        # Note: Passer l'utilisateur au formulaire pour le champ 'proprietaire'
+        form = UnifiedCreationForm(request.POST, request.FILES, user=request.user)
 
         if form.is_valid():
             cd = form.cleaned_data
             email = cd["email"]
-
-            # ✅ Récupération du mot de passe saisi (si présent dans le formulaire)
             user_password = cd.get("password")
 
             try:
                 # 1) Gestion du Locataire
-                locataire = User.objects.filter(
-                    Q(email__iexact=email) | Q(username__iexact=email)
-                ).first()
-
+                locataire = User.objects.filter(Q(email__iexact=email) | Q(username__iexact=email)).first()
                 created_locataire = False
+
                 if not locataire:
-                    # ✅ Si l’admin n’a pas saisi de mot de passe, on en génère un
+                    # Génération si vide (sécurité supplémentaire)
                     if not user_password:
                         import secrets, string
-                        alphabet = string.ascii_letters + string.digits
-                        user_password = "".join(secrets.choice(alphabet) for _ in range(12))
+                        user_password = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
 
                     locataire = User.objects.create_user(
                         username=email,
                         email=email,
                         first_name=cd["first_name"],
                         last_name=cd["last_name"],
-                        password=user_password,  # ✅ mot de passe choisi (ou généré si vide)
+                        password=user_password,
                     )
                     created_locataire = True
 
+                # Attribution du groupe
                 g_loc, _ = Group.objects.get_or_create(name="LOCATAIRE")
                 locataire.groups.add(g_loc)
 
+                # Mise à jour du profil (Correction des noms de champs ici)
                 profile = getattr(locataire, "profile", None)
                 if profile:
-                    profile.telephone = cd.get("phone_number")
-                    profile.cni_numero = cd.get("cni_numero", "")
-                    profile.save(update_fields=["telephone", "cni_numero"])
+                    profile.telephone = cd.get("telephone") # Correction de phone_number
+                    profile.cni_numero = cd.get("cni_numero")
+                    profile.save()
 
-                # 2) Propriétaire
-                if is_admin(request.user) and cd.get("proprietaire"):
-                    proprietaire = cd["proprietaire"]
-                else:
-                    proprietaire = request.user
+                # 2) Détermination du Propriétaire
+                proprietaire = cd.get("proprietaire") if (is_admin(request.user) and cd.get("proprietaire")) else request.user
 
                 # 3) Bien Immobilier
                 bien = Bien.objects.create(
@@ -1097,33 +1088,51 @@ def unified_creation_view(request):
                     est_signe=True,
                 )
 
-                # Génération du contrat
+                # Génération du contrat PDF
                 try:
                     from apps.core.services.contrat import sauvegarder_contrat
                     sauvegarder_contrat(bail)
                 except Exception as e:
                     logger.error(f"Erreur PDF : {e}")
 
-                # ✅ Message de succès avec mot de passe UNIQUEMENT si user créé maintenant
                 if created_locataire:
-                    messages.success(
-                        request,
-                        f"Locataire créé. Identifiant : {locataire.email} | Mot de passe : {user_password}"
-                    )
+                    messages.success(request, f"Locataire créé. ID : {locataire.email} | Pass : {user_password}")
                 else:
-                    messages.success(request, "Ajout du bail réussi (locataire existant).")
+                    messages.success(request, "Bail créé avec succès pour un locataire existant.")
 
                 return redirect("bail_detail", pk=bail.pk)
 
-            except ValidationError as e:
-                form.add_error(None, e)
-                messages.error(request, "Erreur de validation.")
             except Exception as e:
-                logger.error(f"Erreur : {e}")
+                logger.error(f"Erreur Unified View : {e}")
                 messages.error(request, f"Une erreur est survenue : {e}")
-
     else:
-        form = UnifiedCreationForm()
+        # Important : passer l'user ici aussi pour le champ proprietaire
+        form = UnifiedCreationForm(user=request.user)
 
     return render(request, "utilisateurs/add_unified.html", {"form": form})
+@login_required
+def telecharger_contrat_bail(request, bail_id):
+    # On récupère le bail en vérifiant que l'utilisateur est soit le locataire, soit le proprio, soit admin
+    bail = get_object_or_404(Bail, id=bail_id)
 
+    is_owner = (bail.bien.proprietaire == request.user)
+    is_tenant = (bail.locataire == request.user)
+
+    if not (request.user.is_staff or is_owner or is_tenant):
+        raise PermissionDenied("Vous n'avez pas l'autorisation de consulter ce document.")
+
+    if not bail.fichier_contrat:
+        messages.error(request, "Le fichier du contrat n'est pas encore généré.")
+        return redirect('dashboard')
+
+    # Ouverture du fichier en mode binaire
+    try:
+        response = FileResponse(
+            bail.fichier_contrat.open('rb'),
+            content_type='application/pdf'
+        )
+        # 'inline' pour ouvrir dans le navigateur, 'attachment' pour forcer le téléchargement
+        response['Content-Disposition'] = f'inline; filename="Contrat_Bail_MADA_{bail.id}.pdf"'
+        return response
+    except FileNotFoundError:
+        raise Http404("Le fichier physique est introuvable sur le serveur.")
