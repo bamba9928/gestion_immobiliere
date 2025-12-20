@@ -205,7 +205,7 @@
                         <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse-glow"></span>
                         Action requise
                         {% if user_role == "ADMIN" %}
-                        <a href="{% url 'loyers_list' %}" class="text-[11px] font-semibold text-red-300 underline-offset-2 hover:underline">Voir les retards</a>
+                        <a href="{% url 'loyers_list' %}?statut=RETARD" class="text-[11px] font-semibold text-red-300 underline-offset-2 hover:underline">Voir les retards</a>
                         {% endif %}
                     </p>
                 </div>

@@ -779,6 +779,11 @@ def interventions_list(request):
 # ============================================================================
 # ACTIONS ADMIN
 # ============================================================================
+import threading
+from django.core.management import call_command
+
+
+# ... vos autres imports
 
 @login_required
 def trigger_rent_generation(request):
@@ -786,19 +791,29 @@ def trigger_rent_generation(request):
         raise PermissionDenied("Seul un administrateur peut générer les loyers.")
 
     if request.method != "POST":
-        messages.warning(request, "Méthode non autorisée. Utilisez le bouton du tableau de bord.")
+        messages.warning(request, "Méthode non autorisée.")
         return redirect("dashboard")
 
+    # Fonction locale pour exécuter la commande dans un thread séparé
+    def run_command():
+        try:
+            call_command("generer_loyers")
+            logger.info("Génération asynchrone des loyers terminée avec succès.")
+        except Exception as e:
+            logger.error(f"Erreur lors de la génération asynchrone : {e}")
+
+    # Lancement du thread
     try:
-        call_command("generer_loyers")
-        messages.success(request, "✅ Génération des loyers effectuée avec succès.")
+        thread = threading.Thread(target=run_command)
+        thread.start()
+
+        messages.info(request,
+                      "⚙️ La génération des loyers a démarré en arrière-plan. Cela peut prendre quelques instants.")
     except Exception as e:
-        logger.error("Erreur génération loyers: %s", e)
-        messages.error(request, "Une erreur est survenue. Contactez l'administrateur.")
+        logger.error(f"Impossible de lancer le thread : {e}")
+        messages.error(request, "Une erreur est survenue lors du lancement de l'opération.")
 
     return redirect("dashboard")
-
-
 # ============================================================================
 # UTILISATEURS
 # ============================================================================
