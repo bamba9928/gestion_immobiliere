@@ -91,7 +91,7 @@ urlpatterns = [
     # ============================================
     path("paiement/initier/<int:loyer_id>/", views.initier_paiement, name="initier_paiement"),
     path("paiement/simulation/<int:transaction_id>/", views.simulation_paiement_gateway, name="simulation_paiement_gateway"),
-    path('bail/telecharger/<int:bail_id>/', views.telecharger_contrat_bail, name='telecharger_contrat'),
+
     # ============================================
     # LISTES BACKOFFICE (évite /admin/*)
     # ============================================

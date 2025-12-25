@@ -7,6 +7,7 @@ from weasyprint import HTML
 
 def generer_quittance_pdf(loyer):
     """Retourne le contenu PDF de la quittance ainsi que le nom de fichier."""
+    # Le contexte 'loyer' est passé ici, c'est ce que le template HTML utilise
     html_string = render_to_string(
         'documents/quittance.html',
         {
@@ -15,7 +16,9 @@ def generer_quittance_pdf(loyer):
         },
     )
 
+    # Base URL est important pour charger les images statiques (logo)
     pdf_bytes = HTML(string=html_string, base_url=str(settings.BASE_DIR)).write_pdf()
+
     filename = (
         f"Quittance_{loyer.periode_debut.strftime('%Y-%m')}"
         f"_{loyer.bail.locataire.username}.pdf"
@@ -26,6 +29,7 @@ def generer_quittance_pdf(loyer):
 def attacher_quittance(loyer):
     """Génère et sauvegarde la quittance PDF sur l'objet Loyer fourni."""
     pdf_content, filename = generer_quittance_pdf(loyer)
+    # save=False évite une double sauvegarde inutile
     loyer.quittance.save(filename, ContentFile(pdf_content), save=False)
     loyer.save(update_fields=["quittance"])
     return filename
