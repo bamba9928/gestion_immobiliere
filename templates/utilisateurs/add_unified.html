@@ -112,6 +112,7 @@
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.titre_bien.label }}</label>
                     {% render_field form.titre_bien class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none" placeholder="ex: Studio Moderne" %}
                 </div>
+
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.type_bien.label }}</label>
                     {% render_field form.type_bien class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none" %}
@@ -120,6 +121,7 @@
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.ville.label }}</label>
                     {% render_field form.ville class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none" %}
                 </div>
+
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.surface.label }} (m²)</label>
                     {% render_field form.surface class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none" %}
@@ -128,9 +130,15 @@
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.nb_pieces.label }}</label>
                     {% render_field form.nb_pieces class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none" %}
                 </div>
+
                 <div class="md:col-span-2 space-y-2">
                     <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.adresse.label }}</label>
                     {% render_field form.adresse class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none" rows="2" %}
+                </div>
+
+                <div class="md:col-span-2 space-y-2">
+                    <label class="text-xs font-bold uppercase tracking-widest text-neutral-500">{{ form.description.label }}</label>
+                    {% render_field form.description class="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none" rows="4" placeholder="Description détaillée du bien..." %}
                 </div>
             </div>
         </section>

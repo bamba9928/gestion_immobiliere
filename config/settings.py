@@ -16,9 +16,9 @@ from celery.schedules import crontab
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+
 
 def get_env_variable(var_name, default=None):
     """Récupère une variable d'environnement ou lève une erreur si critique."""
@@ -35,15 +35,12 @@ SECRET_KEY = get_env_variable("SECRET_KEY")
 # IMPORTANT : S'assurer que ceci renvoie bien un booléen
 DEBUG = get_env_variable("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = get_env_variable(
-    "ALLOWED_HOSTS",
-    "localhost,127.0.0.1",
-).split(",")
+def env_list(name: str, default: str = "") -> list[str]:
+    return [x.strip() for x in get_env_variable(name, default).split(",") if x.strip()]
 
-CSRF_TRUSTED_ORIGINS = get_env_variable(
-    "CSRF_TRUSTED_ORIGINS",
-    "http://localhost:8000",
-).split(",")
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", "http://localhost:8000")
+
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -57,6 +54,7 @@ DJANGO_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
+    'django.contrib.sitemaps'
 ]
 
 THIRD_PARTY_APPS = [
@@ -64,7 +62,6 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "tailwind",
     "theme",
-    "whitenoise",
 ]
 
 LOCAL_APPS = [
@@ -107,43 +104,12 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # ===================== DATABASE ========================
-if DEBUG:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": get_env_variable("DB_NAME"),
-            "USER": get_env_variable("DB_USER"),
-            "PASSWORD": get_env_variable("DB_PASSWORD"),
-            "HOST": get_env_variable("DB_HOST", "localhost"),
-            "PORT": get_env_variable("DB_PORT", "5432"),
-        }
-    }
-# ===================== SÉCURITÉ HTTPS (AJOUTÉ) ========================
-if not DEBUG:
-    # Rediriger tout le trafic HTTP vers HTTPS
-    SECURE_SSL_REDIRECT = True
-    # Éviter que le cookie de session soit volé via HTTP
-    SESSION_COOKIE_SECURE = True
-    # Éviter que le cookie CSRF soit volé via HTTP
-    CSRF_COOKIE_SECURE = True
-    # Protection stricte contre le sniffing
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    # Protection XSS
-    SECURE_BROWSER_XSS_FILTER = True
-    # HTTP Strict Transport Security (HSTS)
-    SECURE_HSTS_SECONDS = 31536000  # 1 an
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    # Indique à Django qu'il est derrière un proxy (Nginx/Traefik) qui gère le SSL
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
+}
 # ====================================================================
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -173,28 +139,21 @@ LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
 
 # ===================== EMAIL ========================
-DEFAULT_FROM_EMAIL = "MADA IMMO <no-reply@mada-immo.com>"
-CONTACT_EMAIL = get_env_variable("CONTACT_EMAIL", DEFAULT_FROM_EMAIL)
 
-if DEBUG:
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-else:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = get_env_variable("EMAIL_HOST", "smtp.gmail.com")
-    EMAIL_PORT = int(get_env_variable("EMAIL_PORT", 587))
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = get_env_variable("EMAIL_HOST_USER")
-    EMAIL_HOST_PASSWORD = get_env_variable("EMAIL_HOST_PASSWORD")
 
 # ===================== CELERY ========================
-CELERY_BROKER_URL = get_env_variable("CELERY_BROKER_URL", "redis://localhost:6379/0")
-CELERY_RESULT_BACKEND = get_env_variable("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 CELERY_BEAT_SCHEDULE = {
     "generer-loyers-mensuel": {
         "task": "apps.core.tasks.generer_loyers_task",
         "schedule": crontab(hour=6, minute=0, day_of_month=1),
     },
+    "relances-quotidiennes": {
+        "task": "apps.core.tasks.envoyer_relances_paiement",
+        "schedule": crontab(hour=7, minute=0),
+    },
 }
-
 TAILWIND_APP_NAME = "theme"

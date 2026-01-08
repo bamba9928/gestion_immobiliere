@@ -297,7 +297,11 @@ class UnifiedCreationForm(forms.Form):
     surface = forms.IntegerField(label="Surface (m²)", widget=forms.NumberInput(attrs={"class": STYLE_INPUT, "min": 1}))
     nb_pieces = forms.IntegerField(label="Nombre de pièces", required=False,
                                    widget=forms.NumberInput(attrs={"class": STYLE_INPUT, "min": 1}))
-
+    description = forms.CharField(
+        label="Description",
+        required=False,
+        widget=forms.Textarea(attrs={"class": STYLE_INPUT, "rows": 4})
+    )
     # BAIL
     date_debut = forms.DateField(label="Début du bail",
                                  widget=forms.DateInput(attrs={"class": STYLE_INPUT, "type": "date"}))
