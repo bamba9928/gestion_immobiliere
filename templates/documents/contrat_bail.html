@@ -102,7 +102,7 @@
     <p><strong>ET :</strong></p>
 
     <p>
-        <strong class="variable">Monsieur/Madame {{ bail.locataire.get_full_name }}</strong><br>
+        <strong class="variable">{{ bail.locataire.get_full_name }}</strong><br>
         CNI / Passeport N° : <span class="variable">{{ bail.locataire.profile.cni_numero|default:"Non renseigné" }}</span><br>
         Téléphone : {{ bail.locataire.phone_number|default:bail.locataire.profile.telephone }}<br>
         Ci-après dénommé(e) <strong>« LE LOCATAIRE »</strong>, d'autre part.
