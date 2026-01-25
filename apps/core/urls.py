@@ -1,8 +1,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
-
 from . import views
-from .views import ContactView, add_locataire, add_bailleur, add_agent
+from .views import ContactView, add_locataire, add_bailleur, add_agent, admin_process_cash_payment
 
 urlpatterns = [
     # ============================================
@@ -59,7 +58,7 @@ urlpatterns = [
     # GESTION LOYERS (ADMIN)
     # ============================================
     path("gestion/loyers/", views.loyers_list, name="loyers_list"),
-    path("gestion/loyers/<int:loyer_id>/payer/", views.mark_loyer_paid, name="mark_loyer_paid"),
+
 
     # ============================================
     # COMPTABILITÉ
@@ -89,9 +88,9 @@ urlpatterns = [
     # ============================================
     # PAIEMENTS
     # ============================================
-    path("paiement/initier/<int:loyer_id>/", views.initier_paiement, name="initier_paiement"),
-    path("paiement/simulation/<int:transaction_id>/", views.simulation_paiement_gateway, name="simulation_paiement_gateway"),
+    path('loyers/<int:loyer_id>/payer-cash/', admin_process_cash_payment, name='admin_cash_payment'),
     path('bail/telecharger/<int:bail_id>/', views.telecharger_contrat_bail, name='telecharger_contrat'),
+
     # ============================================
     # LISTES BACKOFFICE (évite /admin/*)
     # ============================================

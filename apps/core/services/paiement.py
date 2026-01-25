@@ -1,76 +1,35 @@
-import logging
-
+import uuid
+from django.db import transaction
+from django.utils import timezone
 from ..models import Transaction
 
-logger = logging.getLogger(__name__)
-
 
 class PaymentService:
-    def initier_paiement(self, loyer, provider, telephone):
+    def enregistrer_paiement_especes(self, loyer, montant, auteur_admin=None):
         """
-        Simule l'appel à l'API Wave ou Orange Money.
+        Enregistre un paiement manuel en CASH :
+        1. Crée une Transaction validée (pour la comptabilité).
+        2. Met à jour le Loyer (montant versé, statut, quittance).
         """
-        # Créer une transaction en attente
-        transaction = Transaction.objects.create(
-            loyer=loyer,
-            montant=loyer.reste_a_payer,
-            provider=provider
-        )
+        if montant <= 0:
+            raise ValueError("Le montant doit être positif.")
 
-        # ICI : Code pour appeler l'API réelle (ex: requests.post...)
-        logger.info(f"Demande de paiement envoyée à {provider} pour {telephone}")
+        if montant > loyer.reste_a_payer:
+            raise ValueError(f"Le montant ({montant}) dépasse le reste à payer ({loyer.reste_a_payer}).")
 
-        # Pour le prototype, on simule une URL de redirection
-        return transaction, "https://wave.com/checkout/simule"
+        with transaction.atomic():
+            # 1. Création de la trace comptable (Transaction)
+            # Génération d'une référence unique interne
+            ref = f"CASH-{timezone.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:4].upper()}"
 
-    def confirmer_paiement(self, transaction_id, reference_externe):
-        """
-        Webhook ou callback pour valider le paiement
-        """
-        try:
-            tx = Transaction.objects.get(id=transaction_id)
-            tx.est_validee = True
-            tx.reference_externe = reference_externe
-            tx.save()
+            Transaction.objects.create(
+                loyer=loyer,
+                montant=montant,
+                provider="CASH",  # On force le type CASH
+                type_flux="LOYER",
+                est_validee=True,  # Validé d'office car reçu en main propre
+                reference_externe=ref
+            )
 
-            # Mettre à jour le loyer
-            tx.loyer.enregistrer_paiement(tx.montant)
-            return True
-        except Transaction.DoesNotExist:
-            return False
-
-class PaymentService:
-    def creer_transaction(self, loyer, provider):
-        """
-        Crée une transaction initiale en attente.
-        """
-        transaction = Transaction.objects.create(
-            loyer=loyer,
-            montant=loyer.reste_a_payer,
-            provider=provider,
-            est_validee=False
-        )
-        return transaction
-
-    def valider_transaction(self, transaction_id):
-        """
-        Valide la transaction et met à jour le loyer.
-        Simule le callback (webhook) de l'opérateur.
-        """
-        try:
-            tx = Transaction.objects.get(id=transaction_id)
-            if tx.est_validee:
-                return False  # Déjà validée
-
-            # 1. Marquer la transaction comme validée
-            tx.est_validee = True
-            # Générer une fausse référence opérateur (ex: WAV-12345...)
-            tx.reference_externe = f"{tx.provider}-{str(uuid.uuid4())[:8].upper()}"
-            tx.save()
-
-            # 2. Mettre à jour le loyer (déclenche la génération de quittance via le modèle Loyer)
-            tx.loyer.enregistrer_paiement(tx.montant)
-
-            return True
-        except Transaction.DoesNotExist:
-            return False
+            # 2. Mise à jour du loyer (Ceci déclenche la logique métier et la quittance)
+            loyer.enregistrer_paiement(montant)

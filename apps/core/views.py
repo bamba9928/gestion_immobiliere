@@ -23,6 +23,9 @@ from django.utils import timezone
 from django.views.generic import ListView, DetailView, FormView
 from django.views.generic.edit import FormMixin
 from django.core.exceptions import ValidationError
+from .services.paiement import PaymentService
+from .forms import CashPaymentForm
+
 from .forms import (
     BienForm,
     InterventionForm,
@@ -49,7 +52,6 @@ from .permissions import (
     is_locataire,
     get_active_bail,
 )
-from .services.paiement import PaymentService
 from .services.stats import DashboardService
 
 logger = logging.getLogger(__name__)
@@ -634,25 +636,49 @@ def loyers_list(request):
 
 
 @login_required
-def mark_loyer_paid(request, loyer_id):
+def admin_process_cash_payment(request, loyer_id):
+    """
+    Encaissement manuel (CASH) par l'admin.
+    Crée une transaction comptable et met à jour le loyer.
+    """
     if not is_admin(request.user):
-        raise PermissionDenied("Accès réservé aux administrateurs.")
-
-    if request.method != "POST":
-        messages.warning(request, "Méthode non autorisée.")
-        return redirect("loyers_list")
+        raise PermissionDenied("Seul un administrateur peut encaisser des espèces.")
 
     loyer = get_object_or_404(Loyer, id=loyer_id)
-    try:
-        loyer.enregistrer_paiement(loyer.reste_a_payer)
-        messages.success(request, f"Loyer de {loyer.bail.locataire} marqué comme payé et quittance attachée.")
-    except Exception as e:
-        logger.error("Erreur marquage loyer %s: %s", loyer_id, e)
-        messages.error(request, "Erreur lors du traitement du paiement.")
 
-    return redirect("loyers_list")
+    if loyer.statut == "PAYE":
+        messages.info(request, "Ce loyer est déjà intégralement payé.")
+        return redirect("loyers_list")
 
+    if request.method == "POST":
+        form = CashPaymentForm(request.POST, loyer=loyer)
+        if form.is_valid():
+            montant = form.cleaned_data['montant']
+            try:
+                service = PaymentService()
+                service.enregistrer_paiement_especes(
+                    loyer=loyer,
+                    montant=montant,
+                    auteur_admin=request.user
+                )
 
+                messages.success(request, f"Paiement de {montant} FCFA enregistré (Espèces).")
+
+                if loyer.statut == "PAYE":
+                    messages.success(request, "Le loyer est soldé. La quittance a été générée.")
+
+                return redirect("loyers_list")
+
+            except Exception as e:
+                logger.error(f"Erreur paiement cash : {e}")
+                messages.error(request, f"Erreur : {e}")
+    else:
+        form = CashPaymentForm(loyer=loyer)
+
+    return render(request, "paiements/admin_cash_form.html", {
+        "form": form,
+        "loyer": loyer
+    })
 @login_required
 def download_quittance(request, loyer_id):
     loyer = get_object_or_404(
@@ -688,38 +714,6 @@ def download_quittance(request, loyer_id):
         filename=loyer.quittance.name.split("/")[-1],
         as_attachment=False,
     )
-
-
-@login_required
-def initier_paiement(request, loyer_id):
-    if request.method != "POST":
-        messages.warning(request, "Méthode non autorisée.")
-        return redirect("dashboard")
-
-    loyer = get_object_or_404(Loyer, id=loyer_id, bail__locataire=request.user)
-
-    if loyer.statut == "PAYE":
-        messages.info(request, "Ce loyer est déjà payé.")
-        return redirect("dashboard")
-
-    provider = request.POST.get("provider", "WAVE")
-    transaction = PaymentService().creer_transaction(loyer, provider)
-    return redirect("simulation_paiement_gateway", transaction_id=transaction.id)
-
-
-@login_required
-def simulation_paiement_gateway(request, transaction_id):
-    transaction = get_object_or_404(Transaction, id=transaction_id, loyer__bail__locataire=request.user)
-
-    if request.method == "POST":
-        succes = PaymentService().valider_transaction(transaction.id)
-        if succes:
-            messages.success(request, f"Paiement de {transaction.montant} FCFA validé avec succès !")
-        else:
-            messages.error(request, "Erreur lors de la validation du paiement.")
-        return redirect("dashboard")
-
-    return render(request, "paiements/simulation_gateway.html", {"transaction": transaction})
 
 
 # ============================================================================

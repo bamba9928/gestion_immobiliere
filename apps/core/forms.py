@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+from .models import Loyer
 
 
 from .models import (
@@ -358,3 +359,30 @@ class UnifiedCreationForm(forms.Form):
                 self.add_error('password', "Le mot de passe doit contenir au moins 8 caractères.")
 
         return cleaned_data
+
+class CashPaymentForm(forms.Form):
+    montant = forms.DecimalField(
+        max_digits=10,
+        decimal_places=0,
+        label="Montant reçu (FCFA)",
+        min_value=1
+    )
+    envoyer_recu = forms.BooleanField(
+        required=False,
+        initial=True,
+        label="Envoyer une confirmation par email au locataire"
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.loyer = kwargs.pop('loyer', None)
+        super().__init__(*args, **kwargs)
+        if self.loyer:
+            # On propose par défaut le reste à payer
+            self.fields['montant'].initial = self.loyer.reste_a_payer
+            self.fields['montant'].help_text = f"Reste à payer actuel : {self.loyer.reste_a_payer} FCFA"
+
+    def clean_montant(self):
+        montant = self.cleaned_data['montant']
+        if self.loyer and montant > self.loyer.reste_a_payer:
+            raise forms.ValidationError("Le montant ne peut pas être supérieur au reste à payer.")
+        return montant

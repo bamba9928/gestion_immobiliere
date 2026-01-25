@@ -315,26 +315,21 @@
                                         </a>
                                     {% else %}
                                         <!-- Marquer payé -->
-                                        <form action="{% url 'mark_loyer_paid' loyer.id %}" method="post"
-                                              onsubmit="return confirm('Confirmer le paiement total de ce loyer ?');"
-                                              class="flex">
-                                            {% csrf_token %}
-                                            <button type="submit"
-                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-neutral-900 hover:bg-neutral-200 border border-white text-xs font-bold transition-colors shadow-lg shadow-white/10">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                                </svg>
-                                                Marquer payé
-                                            </button>
-                                        </form>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        {% if loyer.statut != 'PAYE' %}
+                                            <a href="{% url 'admin_cash_payment' loyer.id %}"
+                                               class="text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded-md text-sm">
+                                               <i class="fas fa-money-bill-wave"></i> Encaisser
+                                            </a>
+                                        {% else %}
+                                            <span class="text-gray-400">Soldé</span>
+                                            {% if loyer.quittance %}
+                                                <a href="{% url 'download_quittance' loyer.id %}" class="text-blue-600 hover:text-blue-900 ml-2" title="Télécharger Quittance">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
         {% else %}
             <!-- ÉTAT VIDE -->
             <div class="flex flex-col items-center justify-center py-20 text-center">
