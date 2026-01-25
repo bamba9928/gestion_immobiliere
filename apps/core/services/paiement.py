@@ -28,7 +28,8 @@ class PaymentService:
                 provider="CASH",  # On force le type CASH
                 type_flux="LOYER",
                 est_validee=True,  # Validé d'office car reçu en main propre
-                reference_externe=ref
+                reference_externe=ref,
+                auteur = auteur_admin
             )
 
             # 2. Mise à jour du loyer (Ceci déclenche la logique métier et la quittance)

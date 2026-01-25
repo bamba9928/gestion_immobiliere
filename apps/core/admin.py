@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-
+from .models import Transaction
 from .models import Bien, Bail, Loyer, HistoriqueRelance
 
 # Configuration de l'interface gestionadmin
@@ -186,3 +186,36 @@ class HistoriqueRelanceAdmin(admin.ModelAdmin):
     list_display = ("loyer", "date_envoi", "canal", "succes")
     list_filter = ("canal", "succes", "date_envoi")
     search_fields = ("loyer__bail__locataire__username", "loyer__bail__locataire__last_name")
+
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = (
+        'date_fmt',
+        'montant_fmt',
+        'provider',
+        'auteur',
+        'locataire_info',
+        'est_validee'
+    )
+    list_filter = (
+        'provider',           # Filtre CASH / WAVE
+        'created_at',         # Filtre par date
+        'auteur',             # Filtre par Admin (Traçabilité)
+    )
+    search_fields = (
+        'reference_externe',
+        'loyer__bail__locataire__last_name'
+    )
+    date_hierarchy = 'created_at'
+
+    @admin.display(description="Date")
+    def date_fmt(self, obj):
+        return obj.created_at.strftime("%d/%m/%Y %H:%M")
+
+    @admin.display(description="Montant")
+    def montant_fmt(self, obj):
+        return f"{obj.montant} FCFA"
+
+    @admin.display(description="Locataire")
+    def locataire_info(self, obj):
+        return obj.loyer.bail.locataire.get_full_name()

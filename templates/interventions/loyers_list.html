@@ -8,13 +8,8 @@
 {% block extra_css %}
 <style>
     /* Masquer la scrollbar pour les filtres horizontaux */
-    .hide-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-    .hide-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 {% endblock %}
 
@@ -59,6 +54,109 @@
                 </span>
             </div>
         </div>
+    </div>
+
+    <!-- ✅ CARTES STATISTIQUES (AJOUTÉES ICI, AVANT FILTRES) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <!-- Carte 1 : Mois en cours -->
+        <div class="rounded-2xl p-5 border border-neutral-800 bg-neutral-900/60">
+            <p class="text-[11px] font-bold text-neutral-400 uppercase tracking-wider mb-2">
+                Mois en cours ({{ current_mois }}/{{ current_annee }})
+            </p>
+
+            <div class="flex items-end justify-between gap-4">
+                <div class="min-w-0">
+                    <p class="text-2xl font-black text-white">
+                        {{ stats_mois.total_percu|default_if_none:"0"|intcomma }}
+                        <span class="text-sm text-neutral-400">FCFA</span>
+                    </p>
+                    <p class="text-xs text-neutral-500">
+                        Perçu sur {{ stats_mois.total_attendu|default_if_none:"0"|intcomma }} attendu
+                    </p>
+                </div>
+
+                <div class="h-10 w-10 rounded-full
+                    {% if taux_recouvrement >= 80 %}bg-emerald-500/15 text-emerald-400 border border-emerald-500/20
+                    {% elif taux_recouvrement >= 50 %}bg-amber-500/15 text-amber-400 border border-amber-500/20
+                    {% else %}bg-red-500/15 text-red-400 border border-red-500/20{% endif %}
+                    flex items-center justify-center font-black text-xs shrink-0">
+                    {{ taux_recouvrement }}%
+                </div>
+            </div>
+
+            <div class="w-full bg-neutral-800 h-1.5 rounded-full mt-4 overflow-hidden">
+                <div class="h-full
+                    {% if taux_recouvrement >= 80 %}bg-emerald-500
+                    {% elif taux_recouvrement >= 50 %}bg-amber-500
+                    {% else %}bg-red-500{% endif %}"
+                    style="width: {{ taux_recouvrement }}%">
+                </div>
+            </div>
+        </div>
+
+        <!-- Carte 2 : Retards -->
+        <div class="rounded-2xl p-5 border border-neutral-800 bg-neutral-900/60">
+            <p class="text-[11px] font-bold text-red-400 uppercase tracking-wider mb-2">
+                Alertes & Retards
+            </p>
+
+            <div class="mt-1">
+                <p class="text-2xl font-black text-red-400">
+                    {{ stats_mois.nb_retards|default_if_none:"0" }}
+                    <span class="text-base font-medium text-neutral-300">Locataires en retard</span>
+                </p>
+
+                <p class="text-sm text-neutral-500 mt-3">Reste à recouvrer ce mois :</p>
+                <p class="font-black text-white">
+                    {{ stats_mois.montant_impaye|default_if_none:"0"|intcomma }} FCFA
+                </p>
+            </div>
+        </div>
+
+        <!-- Carte 3 : Bilan Année -->
+        <div class="rounded-2xl p-5 border border-neutral-800 bg-gradient-to-br from-neutral-900/80 to-neutral-900/40">
+            <p class="text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-2">
+                Bilan Année {{ current_annee }}
+            </p>
+
+            <div class="mt-1 space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-neutral-400">Total Facturé :</span>
+                    <span class="font-black text-white">
+                        {{ stats_annee.total_attendu_an|default_if_none:"0"|intcomma }}
+                    </span>
+                </div>
+
+                <div class="flex justify-between text-sm">
+                    <span class="text-neutral-400">Total Encaissé :</span>
+                    <span class="font-black text-emerald-400">
+                        {{ stats_annee.total_percu_an|default_if_none:"0"|intcomma }}
+                    </span>
+                </div>
+
+                <div class="border-t border-neutral-800 pt-3 mt-3">
+                    <p class="text-xs text-neutral-500">
+                        Chiffre d'affaires cumulé sur l'année.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carte 4 : Print -->
+        <div class="rounded-2xl p-5 border border-neutral-800 bg-neutral-950 flex flex-col justify-center items-center text-center">
+            <p class="text-white text-sm font-black mb-3">Besoin d'un rapport ?</p>
+
+            <button onclick="window.print()"
+                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black w-full transition-colors flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                </svg>
+                Imprimer l'état des lieux
+            </button>
+        </div>
+
     </div>
 
     <!-- FILTRES STATUT (CHIPS) -->
@@ -107,7 +205,6 @@
     <div class="bg-neutral-900/60 border border-neutral-800 rounded-2xl px-4 sm:px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <form method="get" class="flex flex-col sm:flex-row gap-3 sm:items-center flex-1">
             {% if current_statut %}
-                <!-- On garde le filtre statut si déjà appliqué -->
                 <input type="hidden" name="statut" value="{{ current_statut }}">
             {% endif %}
 
@@ -117,6 +214,7 @@
                 </label>
                 <input type="text"
                        name="q"
+                       value="{{ current_q|default:'' }}"
                        placeholder="Rechercher un locataire, un bien, une ville..."
                        class="w-full rounded-xl border border-neutral-700 bg-neutral-950/60 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/60">
             </div>
@@ -129,18 +227,18 @@
                     <select name="mois"
                             class="rounded-xl border border-neutral-700 bg-neutral-950/60 px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/60">
                         <option value="">Tous</option>
-                        <option value="1">Janvier</option>
-                        <option value="2">Février</option>
-                        <option value="3">Mars</option>
-                        <option value="4">Avril</option>
-                        <option value="5">Mai</option>
-                        <option value="6">Juin</option>
-                        <option value="7">Juillet</option>
-                        <option value="8">Août</option>
-                        <option value="9">Septembre</option>
-                        <option value="10">Octobre</option>
-                        <option value="11">Novembre</option>
-                        <option value="12">Décembre</option>
+                        <option value="1" {% if current_mois == 1 %}selected{% endif %}>Janvier</option>
+                        <option value="2" {% if current_mois == 2 %}selected{% endif %}>Février</option>
+                        <option value="3" {% if current_mois == 3 %}selected{% endif %}>Mars</option>
+                        <option value="4" {% if current_mois == 4 %}selected{% endif %}>Avril</option>
+                        <option value="5" {% if current_mois == 5 %}selected{% endif %}>Mai</option>
+                        <option value="6" {% if current_mois == 6 %}selected{% endif %}>Juin</option>
+                        <option value="7" {% if current_mois == 7 %}selected{% endif %}>Juillet</option>
+                        <option value="8" {% if current_mois == 8 %}selected{% endif %}>Août</option>
+                        <option value="9" {% if current_mois == 9 %}selected{% endif %}>Septembre</option>
+                        <option value="10" {% if current_mois == 10 %}selected{% endif %}>Octobre</option>
+                        <option value="11" {% if current_mois == 11 %}selected{% endif %}>Novembre</option>
+                        <option value="12" {% if current_mois == 12 %}selected{% endif %}>Décembre</option>
                     </select>
                 </div>
 
@@ -150,6 +248,7 @@
                     </label>
                     <input type="number"
                            name="annee"
+                           value="{{ current_annee|default:'' }}"
                            placeholder="2025"
                            class="w-24 rounded-xl border border-neutral-700 bg-neutral-950/60 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/60">
                 </div>
@@ -170,7 +269,6 @@
                 </a>
             </div>
         </form>
-
     </div>
 
     <!-- MESSAGES DJANGO -->
@@ -295,7 +393,6 @@
                             <!-- ACTIONS -->
                             <td class="px-6 py-4 text-right whitespace-nowrap">
                                 <div class="flex items-center justify-end gap-2">
-                                    <!-- Voir le bail -->
                                     <a href="{% url 'bail_detail' loyer.bail.id %}"
                                        class="p-2 rounded-lg bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors border border-neutral-700"
                                        title="Voir le bail">
@@ -305,7 +402,6 @@
                                     </a>
 
                                     {% if loyer.statut == 'PAYE' %}
-                                        <!-- Télécharger quittance -->
                                         <a href="{% url 'download_quittance' loyer.id %}"
                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 text-xs font-bold transition-colors">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,28 +410,28 @@
                                             Quittance
                                         </a>
                                     {% else %}
-                                        <!-- Marquer payé -->
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        {% if loyer.statut != 'PAYE' %}
-                                            <a href="{% url 'admin_cash_payment' loyer.id %}"
-                                               class="text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded-md text-sm">
-                                               <i class="fas fa-money-bill-wave"></i> Encaisser
-                                            </a>
-                                        {% else %}
-                                            <span class="text-gray-400">Soldé</span>
-                                            {% if loyer.quittance %}
-                                                <a href="{% url 'download_quittance' loyer.id %}" class="text-blue-600 hover:text-blue-900 ml-2" title="Télécharger Quittance">
-                                                    <i class="fas fa-file-pdf"></i>
-                                                </a>
-                                            {% endif %}
-                                        {% endif %}
-                                    </td>
+                                        <a href="{% url 'admin_cash_payment' loyer.id %}"
+                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 border border-emerald-500 text-xs font-bold transition-colors shadow-lg shadow-emerald-900/20">
+                                           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                     d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                           </svg>
+                                           Encaisser
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         {% else %}
-            <!-- ÉTAT VIDE -->
             <div class="flex flex-col items-center justify-center py-20 text-center">
                 <div class="w-20 h-20 bg-neutral-800 rounded-full flex items-center justify-center mb-6 shadow-inner">
                     <svg class="w-10 h-10 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                 </div>
                 <h3 class="text-xl font-bold text-white mb-2">Aucun loyer trouvé</h3>

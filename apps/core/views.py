@@ -15,7 +15,7 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.core.management import call_command
-from django.db.models import Q, Sum
+from django.db.models import Sum, Count, Q, F
 from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -615,26 +615,81 @@ def download_contrat(request, bail_id):
 # ============================================================================
 # LOYERS / PAIEMENTS
 # ============================================================================
-
 @login_required
 def loyers_list(request):
     if not is_admin(request.user):
         raise PermissionDenied("Accès réservé aux administrateurs.")
 
+    # 1. Paramètres de filtrage
     statut = request.GET.get("statut")
-    base_qs = Loyer.objects.select_related("bail__locataire", "bail__bien")
-    loyers = base_qs.order_by("-date_echeance")
-    if statut:
-        loyers = loyers.filter(statut=statut)
+    q = request.GET.get("q")
 
-    stats = {
-        "total_retard": base_qs.filter(statut="RETARD").count(),
-        "total_attente": base_qs.filter(statut="A_PAYER").count(),
+    now = timezone.now()
+    mois = request.GET.get("mois", now.month)
+    annee = request.GET.get("annee", now.year)
+
+    try:
+        mois = int(mois)
+        annee = int(annee)
+    except ValueError:
+        mois = now.month
+        annee = now.year
+
+    # 2. Requête de base
+    loyers_qs = Loyer.objects.filter(
+        periode_debut__month=mois,
+        periode_debut__year=annee
+    ).select_related("bail__locataire", "bail__bien")
+
+    # Recherche
+    if q:
+        loyers_qs = loyers_qs.filter(
+            Q(bail__locataire__last_name__icontains=q) |
+            Q(bail__locataire__first_name__icontains=q) |
+            Q(bail__bien__titre__icontains=q)
+        )
+
+    if statut:
+        loyers_qs = loyers_qs.filter(statut=statut)
+
+    # 3. CALCUL DES STATISTIQUES (KPIs) AVEC LES BONS NOMS DE CHAMPS
+
+    # A. Stats du MOIS
+    stats_mois = Loyer.objects.filter(periode_debut__month=mois, periode_debut__year=annee).aggregate(
+        total_attendu=Sum('montant_du'),  # CORRIGÉ (était 'montant')
+        total_percu=Sum('montant_verse'),  # CORRIGÉ (était 'montant_paye')
+        nb_retards=Count('id', filter=Q(statut='RETARD')),
+        # CORRIGÉ : On calcule l'impayé via une expression F() car reste_a_payer n'est pas en base
+        montant_impaye=Sum(F('montant_du') - F('montant_verse'))
+    )
+
+    # B. Stats de l'ANNÉE
+    stats_annee = Loyer.objects.filter(periode_debut__year=annee).aggregate(
+        total_attendu_an=Sum('montant_du'),  # CORRIGÉ
+        total_percu_an=Sum('montant_verse'),  # CORRIGÉ
+        montant_impaye_an=Sum(F('montant_du') - F('montant_verse'))  # CORRIGÉ
+    )
+
+    # C. Calcul Taux Recouvrement
+    attendu = stats_mois['total_attendu'] or 0
+    percu = stats_mois['total_percu'] or 0
+    taux_recouvrement = (percu / attendu * 100) if attendu > 0 else 0
+
+    # 4. Tri et Rendu
+    loyers = loyers_qs.order_by("-date_echeance")
+
+    context = {
+        "loyers": loyers,
+        "current_statut": statut,
+        "current_mois": mois,
+        "current_annee": annee,
+        "current_q": q,
+        "stats_mois": stats_mois,
+        "stats_annee": stats_annee,
+        "taux_recouvrement": round(taux_recouvrement, 1),
     }
 
-    return render(request, "interventions/loyers_list.html", {"loyers": loyers, "current_statut": statut, "stats": stats})
-
-
+    return render(request, "interventions/loyers_list.html", context)
 @login_required
 def admin_process_cash_payment(request, loyer_id):
     """
