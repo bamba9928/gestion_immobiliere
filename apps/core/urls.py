@@ -74,6 +74,12 @@ urlpatterns = [
     path("document/quittance/<int:loyer_id>/", views.download_quittance, name="download_quittance"),
     path("document/bail/<int:bail_id>/", views.download_contrat, name="download_contrat"),
     path("document/kyc/<int:user_id>/<str:doc_type>/", views.download_kyc, name="download_kyc"),
+    path("document/edl/<int:edl_id>/", views.download_edl, name="download_edl"),
+    path(
+        "document/depense/<int:depense_id>/",
+        views.download_depense_justificatif,
+        name="download_depense_justificatif",
+    ),
 
     # ============================================
     # INTERVENTIONS
