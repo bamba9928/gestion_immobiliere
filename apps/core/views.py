@@ -1009,6 +1009,52 @@ def download_kyc(request, user_id, doc_type):
     return FileResponse(file_obj.open("rb"), content_type=content_type, filename=file_obj.name.split("/")[-1])
 
 
+@login_required
+def download_edl(request, edl_id):
+    edl = get_object_or_404(
+        EtatDesLieux.objects.select_related("bail__locataire", "bail__bien__proprietaire"),
+        pk=edl_id,
+    )
+
+    is_proprio = edl.bail.bien.proprietaire == request.user
+    is_loc = edl.bail.locataire == request.user
+
+    if not (is_admin(request.user) or is_proprio or is_loc):
+        raise PermissionDenied("Vous n'avez pas l'autorisation de consulter cet état des lieux.")
+
+    if not edl.pdf:
+        raise Http404("Aucun état des lieux signé n'est disponible pour ce bail.")
+
+    return FileResponse(
+        edl.pdf.open("rb"),
+        content_type="application/pdf",
+        filename=f"EDL_{edl.type_edl}_{edl.bail_id}.pdf",
+    )
+
+
+@login_required
+def download_depense_justificatif(request, depense_id):
+    depense = get_object_or_404(
+        Depense.objects.select_related("bien__proprietaire"),
+        pk=depense_id,
+    )
+
+    if not (is_admin(request.user) or depense.bien.proprietaire == request.user):
+        raise PermissionDenied("Accès non autorisé à ce justificatif.")
+
+    if not depense.justificatif:
+        raise Http404("Aucun justificatif n'est attaché à cette dépense.")
+
+    content_type, _ = mimetypes.guess_type(depense.justificatif.name)
+    content_type = content_type or "application/octet-stream"
+
+    return FileResponse(
+        depense.justificatif.open("rb"),
+        content_type=content_type,
+        filename=depense.justificatif.name.split("/")[-1],
+    )
+
+
 # ============================================================================
 # BACKOFFICE LISTES (ADMIN)
 # ============================================================================
