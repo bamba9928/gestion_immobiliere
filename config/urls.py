@@ -6,10 +6,10 @@ from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from django.views.generic import TemplateView
 
-from apps.core.sitemaps import BienSitemap, StaticViewSitemap
+from apps.core.sitemaps import AnnonceSitemap, StaticViewSitemap
 
 sitemaps = {
-    "biens": BienSitemap,
+    "annonces": AnnonceSitemap,
     "static": StaticViewSitemap,
 }
 
