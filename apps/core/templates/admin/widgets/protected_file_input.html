@@ -1,0 +1,9 @@
+{% comment %}
+Copie du gabarit admin/widgets/clearable_file_input.html de Django, avec un seul changement : le lien vers le fichier
+actuel passe par la vue protégée (widget.protected_url), car /media/ n'est pas servi publiquement en production.
+{% endcomment %}{% if widget.is_initial %}<p class="file-upload">{{ widget.initial_text }}: {% if widget.protected_url %}<a href="{{ widget.protected_url }}" target="_blank" rel="noopener">{{ widget.value }}</a>{% else %}{{ widget.value }}{% endif %}{% if not widget.required %}
+<span class="clearable-file-input">
+<input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}"{% if widget.attrs.disabled %} disabled{% endif %}{% if widget.attrs.checked %} checked{% endif %}>
+<label for="{{ widget.checkbox_id }}">{{ widget.clear_checkbox_label }}</label></span>{% endif %}<br>
+{{ widget.input_text }}:{% endif %}
+<input type="{{ widget.type }}" name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>{% if widget.is_initial %}</p>{% endif %}

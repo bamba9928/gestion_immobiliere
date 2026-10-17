@@ -1033,6 +1033,34 @@ def download_edl(request, edl_id):
 
 
 @login_required
+def download_intervention_photo(request, intervention_id, phase):
+    """Photo jointe à une intervention (« avant » ou « apres »), réservée à l'admin, au bailleur du bien et au locataire auteur."""
+    intervention = get_object_or_404(
+        Intervention.objects.select_related("bien"),
+        pk=intervention_id,
+    )
+
+    if not (
+        is_admin(request.user)
+        or intervention.bien.proprietaire == request.user
+        or intervention.locataire == request.user
+    ):
+        raise PermissionDenied("Accès non autorisé à cette photo.")
+
+    photo = {"avant": intervention.photo_avant, "apres": intervention.photo_apres}.get(phase)
+    if not photo:
+        raise Http404("Aucune photo n'est attachée à cette intervention.")
+
+    content_type, _ = mimetypes.guess_type(photo.name)
+
+    return FileResponse(
+        photo.open("rb"),
+        content_type=content_type or "application/octet-stream",
+        filename=photo.name.split("/")[-1],
+    )
+
+
+@login_required
 def download_depense_justificatif(request, depense_id):
     depense = get_object_or_404(
         Depense.objects.select_related("bien__proprietaire"),
