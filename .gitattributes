@@ -1,0 +1,2 @@
+# Les scripts shell tournent sur le VPS : toujours en LF, même depuis Windows.
+*.sh text eol=lf
