@@ -1,0 +1,119 @@
+name: CI/CD
+
+# - Pull request / push sur main : tests Django (check, migrations, tests)
+# - Push sur main uniquement   : déploiement sur le VPS si les tests passent
+#   et si les secrets de déploiement sont définis (sinon l'étape est sautée)
+#
+# Secrets à définir (Settings → Secrets and variables → Actions) :
+#   DEPLOY_SSH_KEY      clé privée dédiée, restreinte côté serveur à
+#                       /home/mada/deploy_madagroupe.sh (authorized_keys :
+#                       restrict,command=...)
+#   DEPLOY_KNOWN_HOSTS  empreinte du serveur (ssh-keyscan -p <port> <hôte>,
+#                       vérifiée à la main une fois)
+#   DEPLOY_HOST, DEPLOY_PORT, DEPLOY_USER
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # DEBUG=True bascule sur SQLite (config/settings.py) : aucun secret réel.
+    env:
+      SECRET_KEY: ci-only-secret-key-not-used-in-production
+      DEBUG: "True"
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Même version que le venv de production.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Dépendances Python
+        run: pip install -r requirements.txt
+
+      - name: Vérification Django
+        run: python manage.py check
+
+      # Le schéma fait partie du code : un modèle modifié sans migration
+      # commitée casserait la prod au déploiement.
+      - name: Migrations à jour
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Tests
+        run: python manage.py test --verbosity 2
+
+  deploy:
+    name: Déploiement
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+
+    # Jamais deux déploiements en parallèle ; on laisse finir celui en cours.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+
+    steps:
+      - name: Secrets de déploiement présents ?
+        id: secrets
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          if [ -n "$DEPLOY_SSH_KEY" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::DEPLOY_SSH_KEY absent : déploiement sauté (voir l'en-tête de ci.yml)."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Préparer la clé SSH
+        if: steps.secrets.outputs.ok == 'true'
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Empreinte du serveur figée dans un secret : pas de ssh-keyscan,
+          # donc pas de confiance aveugle au premier contact.
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      # La clé ne peut lancer que /home/mada/deploy_madagroupe.sh (hors dépôt),
+      # qui met le code à jour puis exécute deploy.sh.
+      - name: Déployer sur le VPS
+        if: steps.secrets.outputs.ok == 'true'
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" \
+            -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 \
+            "$DEPLOY_USER@$DEPLOY_HOST"
+
+      - name: Vérifier le site en production
+        if: steps.secrets.outputs.ok == 'true'
+        run: |
+          for path in / /accounts/login/ /robots.txt; do
+            curl --fail --silent --show-error --output /dev/null \
+              --retry 5 --retry-delay 5 --retry-all-errors --max-time 30 \
+              "https://madagroupe.com${path}"
+            echo "OK ${path}"
+          done
