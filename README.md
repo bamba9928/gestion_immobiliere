@@ -71,3 +71,16 @@ mada_immo/
    │  ├─ loyers/
    │  └─ interventions/
    └─ static/
+
+## Vérification des secrets avant commit
+
+Le hook `.githooks/pre-commit` lance Gitleaks sur les modifications indexées et
+bloque le commit s'il y trouve un secret (clé, jeton, mot de passe). À activer
+une fois par clone, Gitleaks étant installé (`winget install gitleaks` sous
+Windows) :
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Faux positif vérifié : ajouter l'empreinte affichée dans `.gitleaksignore`.

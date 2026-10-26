@@ -1,0 +1,17 @@
+#!/bin/sh
+# Bloque le commit si Gitleaks trouve un secret (clé, jeton, mot de passe) dans
+# les modifications indexées : le secret ne quitte jamais le poste. Le workflow
+# Sécurité refait la vérification sur GitHub, mais seulement après le push.
+#
+# Activation, une fois par clone :  git config core.hooksPath .githooks
+# Faux positif vérifié : ajouter l'empreinte affichée dans .gitleaksignore.
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo "pre-commit : gitleaks est introuvable, commit bloqué." >&2
+    echo "  Installer : winget install gitleaks (Windows), ou" >&2
+    echo "  https://github.com/gitleaks/gitleaks/releases (Linux, macOS)." >&2
+    echo "  Exceptionnellement, sans vérification : git commit --no-verify" >&2
+    exit 1
+fi
+
+exec gitleaks git --pre-commit --staged --redact --no-banner --verbose .
