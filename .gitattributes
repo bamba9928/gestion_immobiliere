@@ -1,2 +1,5 @@
 # Les scripts shell tournent sur le VPS : toujours en LF, même depuis Windows.
 *.sh text eol=lf
+
+# Hook Gitleaks : exécuté par le sh de Git, il doit rester en LF même sous Windows.
+.githooks/* text eol=lf
