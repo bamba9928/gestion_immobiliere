@@ -1,0 +1,97 @@
+name: Sécurité
+
+# - Gitleaks : secrets (clés, jetons, mots de passe) dans tout l'historique git.
+# - Trivy    : failles connues des dépendances, erreurs de configuration
+#              (Dockerfile, IaC) et secrets dans les fichiers. Les résultats
+#              arrivent dans l'onglet Security > Code scanning.
+#
+# Volontairement SEPARE de ci.yml : une nouvelle faille publiée ne doit pas
+# bloquer le déploiement d'un correctif. Lundi 05:00 UTC pour détecter les
+# nouveaux avis même sans commit.
+#
+# Les deux outils sont installés depuis leur release officielle, vérifiée par
+# une empreinte SHA-256 figée ici : une release modifiée après coup fait
+# échouer le job au lieu de s'exécuter (trivy-action a été compromis en
+# mars 2026 par réécriture de ses tags).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: securite-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitleaks:
+    name: Gitleaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Installer Gitleaks
+        run: |
+          curl -fsSLo "$RUNNER_TEMP/gitleaks.tar.gz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+
+      # Faux positifs vérifiés à la main : voir .gitleaksignore
+      - name: Rechercher des secrets dans l'historique
+        run: '"$RUNNER_TEMP/gitleaks" git . --redact --no-banner --verbose'
+
+  trivy:
+    name: Trivy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write # envoi du rapport SARIF vers Code scanning
+    env:
+      TRIVY_VERSION: 0.75.0
+      TRIVY_SHA256: c6e65abddb348e25f10549df887045629cf28cc72453cd1c63acb717316b3f3f
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Installer Trivy
+        run: |
+          curl -fsSLo "$RUNNER_TEMP/trivy.tar.gz" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          echo "${TRIVY_SHA256}  $RUNNER_TEMP/trivy.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/trivy.tar.gz" -C "$RUNNER_TEMP" trivy
+
+      # Le tableau dans le journal, le SARIF pour l'onglet Security.
+      - name: Analyse Trivy
+        run: |
+          for format in table sarif; do
+            "$RUNNER_TEMP/trivy" fs . \
+              --scanners vuln,misconfig,secret \
+              --severity HIGH,CRITICAL \
+              --ignore-unfixed \
+              --format "$format" --output "$RUNNER_TEMP/trivy.$format"
+          done
+          cat "$RUNNER_TEMP/trivy.table"
+
+      # Une PR venant d'un fork n'a qu'un jeton en lecture : l'envoi échouerait.
+      - name: Envoyer les résultats vers Code scanning
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          sarif_file: ${{ runner.temp }}/trivy.sarif
+          category: trivy

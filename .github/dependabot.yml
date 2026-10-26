@@ -14,7 +14,15 @@ updates:
         applies-to: security-updates
         patterns: ["*"]
 
+  # Actions GitHub tenues à jour, en une seule PR par mois. Une version doit
+  # avoir 7 jours avant d'être proposée : une release piégée est en général
+  # repérée et retirée avant.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
