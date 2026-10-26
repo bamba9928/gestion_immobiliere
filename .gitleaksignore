@@ -1,0 +1,4 @@
+# Faux positifs Gitleaks vérifiés à la main (empreinte = commit:fichier:règle:ligne).
+# Jeton PUBLIC Mapbox (pk.*), fait pour être servi au navigateur. À restreindre
+# aux URL du site dans le compte Mapbox (Tokens > URL restrictions).
+953298bbf8a99945b131580851d3401f223bfa6b:templates/biens/annonce_detail.html:generic-api-key:137
