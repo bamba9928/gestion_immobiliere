@@ -1,7 +1,10 @@
 from django.contrib import admin
-from django.utils.html import format_html
+from django.db import models
+from django.urls import reverse
+from django.utils.html import format_html, format_html_join
 from .models import Transaction
 from .models import Bien, Bail, Loyer, HistoriqueRelance
+from .protected_files import ProtectedFileWidget
 
 # Configuration de l'interface gestionadmin
 admin.site.site_header = "MADA IMMO Administration"
@@ -42,11 +45,11 @@ class LocataireKycMixin:
         return None
 
     @staticmethod
-    def _file_link(file_field, label):
-        """Génère un lien HTML sécurisé vers un fichier."""
+    def _kyc_link(locataire, doc_type, label):
+        """Lien vers un document personnel, via la vue protégée (/media/ n'est pas servi publiquement)."""
         return format_html(
             '<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
-            file_field.url,
+            reverse("download_kyc", args=[locataire.pk, doc_type]),
             label
         )
 
@@ -70,11 +73,11 @@ class LocataireKycMixin:
 
         pieces = []
         if getattr(locataire, "piece_identite", None):
-            pieces.append(self._file_link(locataire.piece_identite, "Pièce"))
+            pieces.append(self._kyc_link(locataire, "cni", "Pièce"))
         if getattr(locataire, "justificatif_domicile", None):
-            pieces.append(self._file_link(locataire.justificatif_domicile, "Justif."))
+            pieces.append(self._kyc_link(locataire, "justificatif", "Justif."))
 
-        return format_html(" / ".join(pieces)) if pieces else "—"
+        return format_html_join(" / ", "{}", ((piece,) for piece in pieces)) if pieces else "—"
 
 
 @admin.register(Bien)
@@ -134,6 +137,8 @@ class BailAdmin(admin.ModelAdmin, LocataireKycMixin):
     search_fields = ('locataire__username', 'locataire__last_name', 'bien__titre')
     date_hierarchy = 'date_debut'
     autocomplete_fields = ['bien', 'locataire']
+    # le lien « Actuellement » du contrat signé passe par la vue protégée (download_contrat)
+    formfield_overrides = {models.FileField: {'widget': ProtectedFileWidget}}
 
     @admin.display(description="Signé", boolean=True)
     def est_signe_badge(self, obj):
@@ -156,6 +161,8 @@ class LoyerAdmin(admin.ModelAdmin, LocataireKycMixin):
     )
     list_filter = ('statut', 'periode_debut')
     search_fields = ('bail__locataire__username', 'bail__bien__titre')
+    # le lien « Actuellement » de la quittance passe par la vue protégée (download_quittance)
+    formfield_overrides = {models.FileField: {'widget': ProtectedFileWidget}}
 
     @admin.display(description="Locataire / Bien")
     def bail_info(self, obj):
