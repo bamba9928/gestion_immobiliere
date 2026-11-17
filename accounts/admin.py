@@ -45,18 +45,6 @@ class CustomUserAdmin(UserAdmin):
     kyc_badge.short_description = "KYC"
     kyc_badge.admin_order_field = "kyc_verified"  # Permet le tri
 
-    def _file_link(self, file_field, label: str) -> str:
-        """
-        Méthode utilitaire pour générer un lien vers un fichier.
-        """
-        if not file_field:
-            return "—"
-        return format_html(
-            '<a href="{}" target="_blank" rel="noopener">{}</a>',
-            file_field.url,
-            label
-        )
-
     def piece_identite_link(self, obj: CustomUser) -> str:
         """Affiche un lien sécurisé vers la pièce d'identité."""
         if not obj.piece_identite:
@@ -72,11 +60,4 @@ class CustomUserAdmin(UserAdmin):
         return format_html('<a href="{}" target="_blank" rel="noopener">🏠 Justif. (Sécurisé)</a>', url)
 
     piece_identite_link.short_description = "Pièce ID"
-
-    def justificatif_domicile_link(self, obj: CustomUser) -> str:
-        """
-        Affiche un lien vers le justificatif de domicile.
-        """
-        return self._file_link(obj.justificatif_domicile, "🏠 Justif.")
-
     justificatif_domicile_link.short_description = "Justif. domicile"
